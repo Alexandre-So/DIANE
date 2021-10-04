@@ -322,30 +322,59 @@ mod_differential_expression_analysis_server <-
     #   Buttons reactives                                                       ####
     
     
-    shiny::observeEvent((input$deg_test_btn), {
+### . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . ..
+### Dispersion estimation                                                   ####
+    
+    
+    shiny::observeEvent(input$deg_test_btn, {
       shiny::req(r$tcc)
-      if (is.null(r$fit)) {
-        r_dea$fit <- estimateDispersion(r$tcc)
-        r$fit <- r_dea$fit
-        
-        if (golem::get_golem_options("server_version"))
-          loggit::loggit(
-            custom_log_lvl = TRUE,
-            log_lvl = r$session_id,
-            log_msg = "DEA"
-          )
-      }
+      shiny::req(is.null(r$fit)) ###Compute only once. But do not set once in the observent because people may use multiple datasets per session.
       
+      print("Will estimate dispersion")
+        
+      future::plan(future::multisession)
+        
+          tcc <- r$tcc
+          promise <- promises::future_promise(seed = r$seed,{
+            estimateDispersion(tcc)
+          })
+       
+        promises::then(promise, function(value) {
+            r_dea$fit <- value #Why not using r$fit everywhere ?
+            r$fit <- value
+            
+            if (golem::get_golem_options("server_version"))
+              loggit::loggit(
+                custom_log_lvl = TRUE,
+                log_lvl = r$session_id,
+                log_msg = "DEA"
+              )
+            
+        })
+    })
+    
+    
+### . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . ..
+### DEG computation                                                         ####
+    
+    shiny::observeEvent({
+      input$deg_test_btn ###Compute when we click on the button
+      r$fit ###And when dispersion has been estimated.
+    }, {
+      print("Inside test DEG observer.")
       shiny::req(r$fit,
                  input$dea_fdr,
-                 input$reference,
+                 input$reference, 
                  input$perturbation)
+      
+      print("Will perform DGE computation")
       
       if (input$reference == input$perturbation) {
         shinyalert::shinyalert("You tried to compare the same conditions!
                                You may need some coffee...",
                                type = "error")
       }
+      ###TODO - Maybe put this stuff at the very top of the block ? And maybe display some message saying "dispersion estimation".
       shiny::req(!input$reference == input$perturbation)
       
       
@@ -355,14 +384,15 @@ mod_differential_expression_analysis_server <-
                      perturbation = input$perturbation)
       
       r_dea$top_tags <-
-        r_dea$tags$table[r_dea$tags$table$FDR < input$dea_fdr,]
+        r_dea$tags$table[r_dea$tags$table$FDR < input$dea_fdr, ]
       r_dea$top_tags <-
-        r_dea$top_tags[abs(r_dea$top_tags$logFC) > input$dea_lfc,]
+        r_dea$top_tags[abs(r_dea$top_tags$logFC) > input$dea_lfc, ]
       r_dea$DEGs <- r_dea$top_tags$genes
       r_dea$ref <- input$reference
       r_dea$trt <- input$perturbation
       r$DEGs[[paste(r_dea$ref, r_dea$trt)]] <- r_dea$DEGs
-      r$top_tags[[paste(r_dea$ref, r_dea$trt)]] <- r_dea$top_tags
+      r$top_tags[[paste(r_dea$ref, r_dea$trt)]] <-
+        r_dea$top_tags
       r_dea$go <- NULL
       
       r_dea$lfc <- input$dea_lfc
@@ -382,16 +412,13 @@ mod_differential_expression_analysis_server <-
         else
           ids <- rownames(top)
         top[, colnames(r$gene_info)] <-
-          r$gene_info[match(ids, rownames(r$gene_info)), ]
+          r$gene_info[match(ids, rownames(r$gene_info)),]
       }
       
       r_dea$gene_table <- top[, columns]
       
     })
-    
-    
-    
-    
+        
     #   ____________________________________________________________________________
     #   Summaries                                                               ####
     
