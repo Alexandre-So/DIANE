@@ -245,16 +245,22 @@ mod_normalisation_server <- function(input, output, session, r) {
     
     r$norm_method <- input$norm_method
     if(input$norm_method != "none"){
-      r$tcc <-
+      future::plan(future::multisession)
+      promise <- promises::future_promise(seed = r$seed, globals =  list(raw_counts = r$raw_counts, conditions = r$conditions, normalise = DIANE::normalize, norm_method=input$norm_method, iteration = input$prior_removal), {
         normalize(
-          r$raw_counts,
-          r$conditions,
-          norm_method = input$norm_method,
-          iteration = input$prior_removal
+          raw_counts,
+          conditions,
+          norm_method = norm_method,
+          iteration = iteration
         )
-      r$normalized_counts_pre_filter <- TCC::getNormalizedData(r$tcc)
-      # the filtering needs to be done again if previously made, so :
-      r$normalized_counts <- NULL
+      })
+      
+      promises::then(promise, function(value) {
+        r$tcc <- value
+        r$normalized_counts_pre_filter <- TCC::getNormalizedData(r$tcc)
+        # the filtering needs to be done again if previously made, so :
+        r$normalized_counts <- NULL
+      })
     }
     else{
       r$normalized_counts_pre_filter <- r$raw_counts
