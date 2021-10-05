@@ -342,30 +342,85 @@ mod_clustering_server <- function(input, output, session, r) {
       transfo <- input$transfo
     }
     
-    run <-
-      run_coseq(
+    # options(future.globals.onReference = "error")
+    future::plan(future::multisession)
+    
+    print("Will perform clustering")
+    # browser()
+    # data = r$normalized_counts
+    # # genes = genes,
+    # conds = input$input_conditions
+    # transfo = transfo
+    # model = mod
+    # K = seq(input$min_k, input$max_k)
+    # seed = r$seed
+    clustering_promise <- promises::future_promise(
+      seed = r$seed, 
+      globals = list(
         data = r$normalized_counts,
         genes = genes,
         conds = input$input_conditions,
         transfo = transfo,
         model = mod,
         K = seq(input$min_k, input$max_k),
-        seed = r$seed
-      )
+        seed = r$seed,
+        run_coseq = DIANE::run_coseq
+      ),
+      # packages = "DIANE",
+      {
+        cat("I will run...")
+        run_coseq(
+          data = data,
+          genes = genes,
+          conds = conds,
+          transfo = transfo,
+          model = model,
+          K = K,
+          seed = seed
+        )
+      }
+    )
     
-    r$clusterings[[input_genes_conditions()]]$model <- run$model
-    r$clusterings[[input_genes_conditions()]]$membership <-
-      run$membership
-    r$clusterings[[input_genes_conditions()]]$conditions <-
-      input$input_conditions
-    r$clusterings[[input_genes_conditions()]]$genes <- 
-      input_genes_conditions()
-    r$current_comparison <- input_genes_conditions()
+    promises::then(clustering_promise, function(run) {
+      r$clusterings[[input_genes_conditions()]]$model <- run$model
+      r$clusterings[[input_genes_conditions()]]$membership <-
+        run$membership
+      r$clusterings[[input_genes_conditions()]]$conditions <-
+        input$input_conditions
+      r$clusterings[[input_genes_conditions()]]$genes <-
+        input_genes_conditions()
+      r$current_comparison <- input_genes_conditions()
+      
+      if(golem::get_golem_options("server_version"))
+        loggit::loggit(custom_log_lvl = TRUE,
+                       log_lvl = r$session_id,
+                       log_msg = "clustering")
+    })
     
-    if(golem::get_golem_options("server_version"))
-      loggit::loggit(custom_log_lvl = TRUE,
-                   log_lvl = r$session_id,
-                   log_msg = "clustering")
+    # run <-
+    #   run_coseq(
+    #     data = r$normalized_counts,
+    #     genes = genes,
+    #     conds = input$input_conditions,
+    #     transfo = transfo,
+    #     model = mod,
+    #     K = seq(input$min_k, input$max_k),
+    #     seed = r$seed
+    #   )
+    # 
+    # r$clusterings[[input_genes_conditions()]]$model <- run$model
+    # r$clusterings[[input_genes_conditions()]]$membership <-
+    #   run$membership
+    # r$clusterings[[input_genes_conditions()]]$conditions <-
+    #   input$input_conditions
+    # r$clusterings[[input_genes_conditions()]]$genes <- 
+    #   input_genes_conditions()
+    # r$current_comparison <- input_genes_conditions()
+    # 
+    # if(golem::get_golem_options("server_version"))
+    #   loggit::loggit(custom_log_lvl = TRUE,
+    #                log_lvl = r$session_id,
+    #                log_msg = "clustering")
     
   })
   
