@@ -643,6 +643,14 @@ mod_differential_expression_analysis_server <-
     #   ____________________________________________________________________________
     #   Venn                                                                    ####
     
+    ###TODO : changer le nom du fichier tÃ©lÃ©chargeable
+    ###TODO : EmpÃªcher l'utilisateur de faire des intersections qui n'ont pas de sens
+    ###TODO : rendre la partie intersection plus intuitive DONE
+    ###TODO : utiliser de beaux boutons graphiques pour les up/down/all. DONE (mais pas super)
+    ###TODO : Trouver autre chose que FALSE DONE
+    ###TODO : echelle de l'image ! (trouvÃ©! changer simplement le "res"...)
+    ###FIXME : Boutons du choix de la mÃ©thode de normalisation (awesomeRadio) qui foire sur la page normalisation... Si j'ajoute un bouton de mÃªme type quelque part ici Ã§a remarche. En regardant, il manque une propriÃ©tÃ© (un petit padding) si j'ai pas un awesomeRadio (mÃªme inutile) dans cette partie du programme. Je ne comprends pas.
+    
     output$venn_lists_choice <- shiny::renderUI({
       shiny::req(length(r$DEGs) > 1)
       
@@ -1025,17 +1033,10 @@ mod_differential_expression_analysis_server <-
         
         shiny::req(length(universe) > length(genes))
         
-        future::plan(future::multisession)
+        r_dea$go <-
+          enrich_go_custom(genes, universe, GOs, GO_type = input$go_type)
         
-        go_type <- input$go_type
-        promise <- promises::future_promise(seed = r$seed,{
-          enrich_go_custom(genes, universe, GOs, GO_type = go_type)
-        })
         
-        promises::then(promise, function(value) {
-          r_dea$go <- value
-        })
-
         ################# known organisms
         
       } else{
