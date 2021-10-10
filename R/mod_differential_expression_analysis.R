@@ -1035,8 +1035,6 @@ mod_differential_expression_analysis_server <-
         
         r_dea$go <-
           enrich_go_custom(genes, universe, GOs, GO_type = input$go_type)
-        
-        
         ################# known organisms
         
       } else{
@@ -1058,57 +1056,16 @@ mod_differential_expression_analysis_server <-
         if (r$organism == "Lupinus albus") {
           GOs <- DIANE:::lupine$go_list
           universe <- intersect(background, GOs[, 1])
-          
-          ###Async start
-          # future::plan(future::multisession)
-          
-          go_type <- input$go_type
-          promise <- promises::future_promise(seed = r$seed, {
-            enrich_go_custom(genes, universe, GOs, GO_type = go_type)
-          })
-          
-          promises::then(promise, function(value) {
-            r_dea$go <- value
-            if (golem::get_golem_options("server_version"))
-              loggit::loggit(
-                custom_log_lvl = TRUE,
-                log_lvl = r$session_id,
-                log_msg = "GO enrichment DEA"
-              )
-          })
-          ###Async end
-          # 
-          # r_dea$go <- enrich_go_custom(genes, universe, GOs,
-          #                              GO_type = input$go_type)
+          r_dea$go <- enrich_go_custom(genes, universe, GOs,
+                                       GO_type = input$go_type)
         }
         else if (stringr::str_detect(r$organism, "Oryza")) {
           data("go_matchings", package = "DIANE")
           
           GOs <- go_matchings[[r$organism]]
           universe <- intersect(background, GOs[, 1])
-          print("Oryza go match - start.")
-          
-          ###Async start
-          # future::plan(future::multisession)
-          go_type <- input$go_type
-          promise <- promises::future_promise(seed = r$seed, {
-            enrich_go_custom(genes, universe, GOs, GO_type = go_type)
-          })
-          
-          promises::then(promise, function(value) {
-            r_dea$go <- value
-            print("Oryza go match - Then over")
-            if (golem::get_golem_options("server_version"))
-              loggit::loggit(
-                custom_log_lvl = TRUE,
-                log_lvl = r$session_id,
-                log_msg = "GO enrichment DEA"
-              )
-          })
-          ###Async end
-          # 
-          # r_dea$go <- enrich_go_custom(genes, universe, GOs,
-          #                              GO_type = input$go_type)
+          r_dea$go <- enrich_go_custom(genes, universe, GOs,
+                                       GO_type = input$go_type)
         }
         else{
           if (r$organism == "Arabidopsis thaliana") {
@@ -1149,26 +1106,6 @@ mod_differential_expression_analysis_server <-
           
           # TODO add check if it is entrez with regular expression here
           shiny::req(length(genes) > 0, length(background) > 0)
-          
-          ###NOTE : this future cause problem. The org packages are non exportable for future...
-          # options(future.globals.onReference = "error")
-          # future::plan(future::multisession)
-          # 
-          # go_type <- input$go_type
-          # print("Will compute GO enrichment")
-          # # browser()
-          # go_promise <- promises::future_promise(seed = r$seed, {
-          #   enrich_go(genes,
-          #             background,
-          #             org = org,
-          #             GO_type = go_type)
-          # })
-          # 
-          # promises::then(go_promise, function(value) {
-          #   r_dea$go <- value
-          # })
-          # 
-          
           r_dea$go <-
             enrich_go(genes,
                       background,
@@ -1177,12 +1114,12 @@ mod_differential_expression_analysis_server <-
         }
         
       }
-      # if (golem::get_golem_options("server_version"))
-      #   loggit::loggit(
-      #     custom_log_lvl = TRUE,
-      #     log_lvl = r$session_id,
-      #     log_msg = "GO enrichment DEA"
-      #   )
+      if (golem::get_golem_options("server_version"))
+        loggit::loggit(
+          custom_log_lvl = TRUE,
+          log_lvl = r$session_id,
+          log_msg = "GO enrichment DEA"
+        )
       
     })
     
