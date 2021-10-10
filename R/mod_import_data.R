@@ -275,6 +275,10 @@ mod_import_data_ui <- function(id) {
 mod_import_data_server <- function(input, output, session, r) {
   ns <- session$ns
   
+  if (golem::get_golem_options("server_version")){###Use future for async computing if server version.
+    future::plan(future::multisession(workers = 6))
+  }
+  
   # resets the global reactive variables that were maybe already created
   # when demo usage is toggled :
   

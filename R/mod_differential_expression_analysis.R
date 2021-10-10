@@ -332,25 +332,33 @@ mod_differential_expression_analysis_server <-
       
       print("Will estimate dispersion")
         
-      future::plan(future::multisession)
-        
-          tcc <- r$tcc
-          promise <- promises::future_promise(seed = r$seed,{
-            estimateDispersion(tcc)
-          })
-       
-        promises::then(promise, function(value) {
-            r_dea$fit <- value #Why not using r$fit everywhere ?
-            r$fit <- value
-            
-            if (golem::get_golem_options("server_version"))
-              loggit::loggit(
-                custom_log_lvl = TRUE,
-                log_lvl = r$session_id,
-                log_msg = "DEA"
-              )
-            
+      # future::plan(future::multisession(workers = 6))
+      print(golem::get_golem_options("server_version"))
+      
+      if (golem::get_golem_options("server_version")){
+
+        tcc <- r$tcc
+        promise <- promises::future_promise(seed = r$seed,{
+          estimateDispersion(tcc)
         })
+        
+        promises::then(promise, function(value) {
+          r_dea$fit <- value #Why not using r$fit everywhere ?
+          r$fit <- value
+          
+          loggit::loggit(
+            custom_log_lvl = TRUE,
+            log_lvl = r$session_id,
+            log_msg = "DEA"
+          )
+        })
+        
+      } else { ###If not server version
+        r_dea$fit <- estimateDispersion(r$tcc)
+        r$fit <- r_dea$fit
+      }
+        
+
     })
     
     
@@ -1035,6 +1043,8 @@ mod_differential_expression_analysis_server <-
         
         r_dea$go <-
           enrich_go_custom(genes, universe, GOs, GO_type = input$go_type)
+        
+        
         ################# known organisms
         
       } else{
