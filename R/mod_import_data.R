@@ -277,6 +277,8 @@ mod_import_data_server <- function(input, output, session, r) {
   
   if (golem::get_golem_options("server_version")){###Use future for async computing if server version.
     future::plan(future::multisession(workers = 6))
+  } else {
+    future::plan(future::sequential())
   }
   
   # resets the global reactive variables that were maybe already created

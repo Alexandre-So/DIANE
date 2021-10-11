@@ -805,7 +805,7 @@ mod_network_inference_server <- function(input, output, session, r){
         
         mat <- r$networks[[input$input_deg_genes_net]]$mat
         
-        future::plan(future::multisession)
+        # future::plan(future::multisession)
         
         # blocking function! ew!
         
@@ -883,6 +883,10 @@ mod_network_inference_server <- function(input, output, session, r){
     
   })
   
+  
+  shiny::observeEvent(r$edge_tests, {
+    
+  })
   
 #   ____________________________________________________________________________
 #   event reactive close modal                                              ####

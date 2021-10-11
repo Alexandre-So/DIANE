@@ -244,39 +244,34 @@ mod_normalisation_server <- function(input, output, session, r) {
     shiny::req(input$norm_method)
     
     r$norm_method <- input$norm_method
-    if(input$norm_method != "none"){
-      future::plan(future::multisession)
-      if (golem::get_golem_options("server_version")){ ##Async version
-        promise <- promises::future_promise(seed = r$seed, globals =  list(raw_counts = r$raw_counts, conditions = r$conditions, normalise = DIANE::normalize, norm_method=input$norm_method, iteration = input$prior_removal), {
-          normalize(
-            raw_counts,
-            conditions,
-            norm_method = norm_method,
-            iteration = iteration
-          )
-        })
-        
-        promises::then(promise, function(value) {
-          r$tcc <- value
-          r$normalized_counts_pre_filter <- TCC::getNormalizedData(r$tcc)
-          # the filtering needs to be done again if previously made, so :
-          r$normalized_counts <- NULL
-        })
-      } else { ##Not async version
-        r$tcc <-
-          normalize(
-            r$raw_counts,
-            r$conditions,
+    if (input$norm_method != "none") {
+      promise <-
+        promises::future_promise(
+          seed = r$seed,
+          globals =  list(
+            raw_counts = r$raw_counts,
+            conditions = r$conditions,
+            normalise = DIANE::normalize,
             norm_method = input$norm_method,
             iteration = input$prior_removal
-          )
-        r$normalized_counts_pre_filter <- TCC::getNormalizedData(r$tcc)
+          ),
+          {
+            normalize(raw_counts,
+                      conditions,
+                      norm_method = norm_method,
+                      iteration = iteration)
+          }
+        )
+      
+      promises::then(promise, function(value) {
+        r$tcc <- value
+        r$normalized_counts_pre_filter <-
+          TCC::getNormalizedData(r$tcc)
         # the filtering needs to be done again if previously made, so :
         r$normalized_counts <- NULL
-      }
-
-    }
-    else{
+      })
+      
+    } else{
       r$normalized_counts_pre_filter <- r$raw_counts
       r$normalized_counts <- NULL
     }

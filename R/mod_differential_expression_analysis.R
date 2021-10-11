@@ -332,11 +332,7 @@ mod_differential_expression_analysis_server <-
       
       print("Will estimate dispersion")
         
-      # future::plan(future::multisession(workers = 6))
-      print(golem::get_golem_options("server_version"))
       
-      if (golem::get_golem_options("server_version")){
-
         tcc <- r$tcc
         promise <- promises::future_promise(seed = r$seed,{
           estimateDispersion(tcc)
@@ -346,19 +342,13 @@ mod_differential_expression_analysis_server <-
           r_dea$fit <- value #Why not using r$fit everywhere ?
           r$fit <- value
           
+          if (golem::get_golem_options("server_version"))
           loggit::loggit(
             custom_log_lvl = TRUE,
             log_lvl = r$session_id,
             log_msg = "DEA"
           )
         })
-        
-      } else { ###If not server version
-        r_dea$fit <- estimateDispersion(r$tcc)
-        r$fit <- r_dea$fit
-      }
-        
-
     })
     
     
