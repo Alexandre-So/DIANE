@@ -66,8 +66,12 @@ app_ui <- function(request) {
           ),
           shinydashboard::menuItem(
             "Data import",
-            tabName = "data_import_tab",
-            icon = shiny::icon("table")
+            icon = shiny::icon("table"),
+            startExpanded = TRUE,
+            shinydashboard::menuSubItem(tabName = "data_import_tab",
+                                        text = "Species and dataset selection"),
+            shinydashboard::menuSubItem(tabName = "import_custom_gene_list",
+                                        text = "Custom gene list import")
           ),
           shinydashboard::menuItem(
             "Normalisation",
@@ -209,6 +213,8 @@ app_ui <- function(request) {
                                   mod_context_ui("context_ui_1")),
           shinydashboard::tabItem(tabName = "data_import_tab",
                                   mod_import_data_ui("import_data_ui_1")),
+          shinydashboard::tabItem(tabName = "import_custom_gene_list",
+                                  mod_import_gene_list_ui("import_gene_list_ui_1")),
           shinydashboard::tabItem(tabName = "normalisation_tab",
                                   mod_normalisation_ui("normalisation_ui_1")),
           shinydashboard::tabItem(

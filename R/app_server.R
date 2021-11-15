@@ -22,6 +22,7 @@ app_server <- function(input, output, session) {
     DEGs = list(),
     top_tags = list(),
     clusterings = list(),
+    custom_gene_list = list(),
     current_comparison = NULL,
     current_network = NULL,
     regulators = NULL,
@@ -70,6 +71,7 @@ app_server <- function(input, output, session) {
 
   shiny::callModule(mod_context_server, "context_ui_1")
   shiny::callModule(mod_import_data_server, "import_data_ui_1", r)
+  mod_import_gene_list_server("import_gene_list_ui_1", r)
   shiny::callModule(mod_normalisation_server, "normalisation_ui_1", r)
   
   shiny::callModule(mod_module_levels_server, "module_levels_ui_1", r)
