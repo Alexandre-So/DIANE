@@ -39,7 +39,7 @@ mod_import_gene_list_ui <- function(id) {
       shiny::fluidRow(
         shinydashboardPlus::box(
           title = "Informations", id = "gene_list_import_id",
-          width = 6,
+          width = 3,
           solidHeader = FALSE,
           status = "success",
           collapsible = FALSE,
@@ -55,14 +55,26 @@ mod_import_gene_list_ui <- function(id) {
           shiny::uiOutput(outputId = ns("import_gene_list_button_ui"))
         ),
         shinydashboardPlus::box(
-          title = "Stored gene list", id = "gene_list_import_id",
-          width = 6,
+          title = "Stored gene list",
+          width = 3,
           solidHeader = FALSE,
           status = "success",
           collapsible = FALSE,
           closable = FALSE,
           shiny::uiOutput(ns("stored_gene_list_ui"))
-      ))
+        ),
+        shinydashboardPlus::box(
+          title = "Custom gene list preview",
+          width = 6,
+          solidHeader = FALSE,
+          status = "success",
+          collapsible = FALSE,
+          closable = FALSE,
+          # shiny::plotOutput(ns("custom_gene_list_heatmap_preview"))
+          shiny::plotOutput(ns("custom_gene_list_heatmap_preview", height = 550))
+          ###TODO : reactive value for heatmap height
+        )
+      )
   )
 }
     
@@ -153,11 +165,6 @@ mod_import_gene_list_server <- function(id, r){
 
       ))
       }
-      # shiny::column(12,
-      #               hr(),
-      #               shiny::uiOutput(ns("invalid_genes_list"))),
-      # shiny::hr(), 
-      # 
     })
 
       ##### --------------------------------------
@@ -169,9 +176,9 @@ mod_import_gene_list_server <- function(id, r){
           shiny::textInput(
             inputId = ns("gene_list_name"),
             label = "List name",
-            value = "My gene list 1"
+            value = "My gene list 1", width = "40%",
           ),
-          shiny::actionButton(inputId = ns("import_gene_list"), label = "Import gene list")
+          shiny::actionButton(inputId = ns("import_gene_list"), label = "Import gene list"),
         )
       } else {
         shinydashboardPlus::descriptionBlock(
@@ -182,8 +189,30 @@ mod_import_gene_list_server <- function(id, r){
       }
     })
     
+    ###TODO
+    # Check that the name pattern cannot match a pattern from DEA/clustering
+    #NOTE - or maybe just separate both custom and not custom gene list (using sublist name for exemple...)
+    # Check that the name pattern does not exist
+    # Check that there is more than xx genes in the list
+    # Empty the UI when gene list is uploaded
+    # Check that name is not too long.
     shiny::observeEvent(input$import_gene_list, {
-      r$custom_gene_list[input$gene_list_name] <- gene_list()[gene_list() %in% rownames(r$raw_counts)]
+      if (stringr::str_detect(pattern = paste0(paste0("^",unique(r$conditions), " "), collapse = "|"), string =  input$gene_list_name)) { ###Search for a string that begins with the name of a condition, of by the name of a condition with a parenthesis.
+        shinyalert::shinyalert("This name may be the result of Differential expression analysis. You cannot choose it.",
+                               type = "error")
+      } else if (input$gene_list_name %in% names(r$custom_gene_list)) { #Check that the list does not exist.
+        shinyalert::shinyalert("This gene list already exist",
+                               type = "error")
+      } else if (nchar(input$gene_list_name) > 50 | nchar(input$gene_list_name) < 2){
+        shinyalert::shinyalert("You cannot use more than 50 characters/less than 2 characters in your gene list name.",
+                               type = "error")
+      } else if (stringr::str_detect(pattern = "[^a-zA-Z0-9 ]", string = input$gene_list_name)) 
+        shinyalert::shinyalert("You can only use characters, numbers and spaces in you list name.",
+                               type = "error")
+      else {
+        r$custom_gene_list[[input$gene_list_name]] <- gene_list()[gene_list() %in% rownames(r$raw_counts)]
+        shiny::updateTextAreaInput(inputId = "input_gene_list", value = "")
+      }
     })
     
     output$stored_gene_list_ui <- shiny::renderUI({
@@ -199,22 +228,17 @@ mod_import_gene_list_server <- function(id, r){
       )
     })
     
-    # output$invalid_genes_list <- shiny::renderUI({
-    #   if(!all(gene_list() %in% rownames(r$raw_counts))){
-    #     shiny::tagList(
-    #       shiny::HTML(
-    #         "<b>Warning</b> : some provided genes are absent from the count matrix and will not be used. For exemple :<br>"
-    #       ),
-    #       shiny::HTML(as.character(paste0(
-    #         head(gene_list()[! gene_list() %in% rownames(r$raw_counts)]), "<br>"
-    #       ))
-    #       ),
-    #       hr()
-    #     )
-    #   } else {
-    #     NULL
-    #   }
-    # })
+    output$custom_gene_list_heatmap_preview <- shiny::renderPlot({
+      shiny::req(r$raw_counts)
+      shiny::req(input$stored_gene_list)
+      # browser()
+      d <- r$raw_counts[rowSums(r$raw_counts),]
+      # d <- r$raw_counts[rowSums(r$raw_counts) > 0 & rownames(r$raw_counts) %in% r$custom_gene_list[[input$stored_gene_list]],]
+      
+      draw_heatmap(d, title = paste0(input$stored_gene_list, " preview"), subset = r$custom_gene_list[[input$stored_gene_list]])
+    })
+    
+
 
     
  
