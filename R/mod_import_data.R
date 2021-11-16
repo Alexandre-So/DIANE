@@ -285,6 +285,7 @@ mod_import_data_server <- function(input, output, session, r) {
     r$conditions = NULL
     r$design = NULL
     r$DEGs = list()
+    r$custom_gene_list = list()
     r$tcc = NULL
     r$clusterings = list()
     r$current_comparison = NULL
@@ -349,6 +350,7 @@ mod_import_data_server <- function(input, output, session, r) {
       r$conditions = NULL
       r$design = NULL
       r$DEGs = list()
+      r$custom_gene_list = list()
       r$tcc = NULL
       r$clusterings = list()
       r$current_comparison = NULL
