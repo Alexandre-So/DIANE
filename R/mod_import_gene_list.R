@@ -71,7 +71,7 @@ mod_import_gene_list_ui <- function(id) {
           collapsible = FALSE,
           closable = FALSE,
           # shiny::plotOutput(ns("custom_gene_list_heatmap_preview"))
-          shiny::plotOutput(ns("custom_gene_list_heatmap_preview", height = 550))
+          shiny::plotOutput(ns("custom_gene_list_heatmap_preview"))
           ###TODO : reactive value for heatmap height
         )
       )
@@ -231,11 +231,10 @@ mod_import_gene_list_server <- function(id, r){
     output$custom_gene_list_heatmap_preview <- shiny::renderPlot({
       shiny::req(r$raw_counts)
       shiny::req(input$stored_gene_list)
-      # browser()
-      d <- r$raw_counts[rowSums(r$raw_counts),]
-      # d <- r$raw_counts[rowSums(r$raw_counts) > 0 & rownames(r$raw_counts) %in% r$custom_gene_list[[input$stored_gene_list]],]
       
-      draw_heatmap(d, title = paste0(input$stored_gene_list, " preview"), subset = r$custom_gene_list[[input$stored_gene_list]])
+      d <- r$raw_counts[rowSums(r$raw_counts) > 0 & rownames(r$raw_counts) %in% r$custom_gene_list[[input$stored_gene_list]],]
+      
+      draw_heatmap(d, title = paste0(input$stored_gene_list, " preview"), subset = rownames(d))
     })
     
 
