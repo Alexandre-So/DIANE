@@ -53,6 +53,8 @@ mod_clustering_ui <- function(id) {
           ns("input_genes")
         )),
         
+        shiny::uiOutput(ns("input_genes_custom")),
+        
         col_12(shiny::uiOutput(
           ns("input_conditions_choice")
         )),
@@ -193,11 +195,43 @@ mod_clustering_server <- function(input, output, session, r) {
     }
   })
   
-  input_genes_conditions <- shiny::reactive({
-    req(input$input_deg_genes)
-    return(paste(input$input_deg_genes, collapse = ' + '))
+  ###Display a list of custom gene list.
+  output$input_genes_custom <- shiny::renderUI({
+    # shiny::req(r$normalized_counts)
+    if(length(names(r$custom_gene_list)) > 0 & !is.null(r$normalized_counts)){
+      shiny::column(12,
+      shinyWidgets::checkboxGroupButtons(
+        inputId = ns('input_custom_genes'),
+        label = "Input custom gene list for clustering :",
+        choiceValues = names(r$custom_gene_list),
+        justified = TRUE,
+        checkIcon = list(yes = shiny::icon("ok",
+                                           lib = "glyphicon")),
+        direction = "vertical",
+        choiceNames = paste(names(r$custom_gene_list), paste(lengths(r$custom_gene_list), "genes"))
+      ))
+    } else if (length(names(r$custom_gene_list)) > 0) {
+      shiny::column(12,
+      shinydashboardPlus::descriptionBlock(
+        number = "Please perform count data normalisation before using a custom gene list for clustering.",
+        numberColor = "orange",
+        rightBorder = FALSE
+      ))
+    } 
   })
   
+  # input_genes_conditions <- shiny::reactive({
+  #   req(input$input_deg_genes)
+  #   return(paste(input$input_deg_genes, collapse = ' + '))
+  # })
+
+  input_genes_conditions <- shiny::reactive({
+    if(!is.null(input$input_deg_genes) | !is.null(input$input_custom_genes)){
+      return(paste(c(input$input_deg_genes, input$input_custom_genes) , collapse = ' + '))
+    }
+    NULL
+  })
+
   
   #   ____________________________________________________________________________
   #   conditions selection                                                    ####
@@ -226,8 +260,12 @@ mod_clustering_server <- function(input, output, session, r) {
   
   
   output$profiles_clusters_choice <- shiny::renderUI({
-    shiny::req(r$clusterings, input$input_deg_genes)
+    shiny::req(r$clusterings)
+    # shiny::req(r$clusterings, input$input_deg_genes)
+    shiny::req(r$clusterings, (!is.null(input$input_deg_genes) | !is.null(input$input_custom_genes)))
+    # (!is.null(input$input_deg_genes) | !is.null(input$input_custom_genes))
     shiny::req(r$clusterings[[input_genes_conditions()]]$membership)
+    print('profiles_clusters_choice')
     tagList(
       shinyWidgets::checkboxGroupButtons(
         inputId = ns("clusters"),
@@ -269,6 +307,8 @@ mod_clustering_server <- function(input, output, session, r) {
   
   output$coseq_summary <- shiny::renderUI({
     shiny::req(r$clusterings)
+    # browser()
+    shiny::req(input_genes_conditions())
     shiny::req(r$clusterings[[input_genes_conditions()]])
     if (is.null(r$clusterings[[input_genes_conditions()]]$model)) {
       numberColor = "orange"
@@ -304,35 +344,53 @@ mod_clustering_server <- function(input, output, session, r) {
   shiny::observeEvent((input$launch_coseq_btn), {
     shiny::req(r$normalized_counts, r$conditions)
     
-
-    if(is.null(input$input_deg_genes)){
+    genes = NULL
+    
+    if(is.null(input$input_deg_genes) & is.null(input$input_custom_genes)){
       shinyalert::shinyalert(
         "Please select an input gene list in the menu above",
         type = "error"
       )
-    }
+    } else {
     
-    shiny::req(input$input_deg_genes)
+    ###TODO : au lieu de s'arréter, vérifier si y'a une liste de gènes perso. 
+    # shiny::req(input$input_deg_genes)
+    print("One")
 
-    genes_conditions <- unique(as.vector(
-      stringr::str_split_fixed(input$input_deg_genes, ' ',2)))
+    # genes_conditions <- unique(as.vector(
+    #   stringr::str_split_fixed(input$input_deg_genes, ' ',2)))
     
-    if (sum(genes_conditions %in% input$input_conditions) < length(genes_conditions)) {
-      shinyalert::shinyalert(
-        paste0( "Please select at least the conditions ",
-          
-          paste0(genes_conditions, collapse = ', ')
-        ),
-        "The conditions for clustering should contain the conditions
+    if(!is.null(input$input_deg_genes)){ ##If Some conditions are inputed, we test them.
+      
+      print("There is DEG list")
+      
+      genes_conditions <- unique(as.vector(
+        stringr::str_split_fixed(input$input_deg_genes, ' ',2)))
+      
+      if (sum(genes_conditions %in% input$input_conditions) < length(genes_conditions)) {
+        shinyalert::shinyalert(
+          paste0( "Please select at least the conditions ",
+                  
+                  paste0(genes_conditions, collapse = ', ')
+          ),
+          "The conditions for clustering should contain the conditions
           used to compute the input differentially expressed genes.",
-        type = "error"
-      )
+          type = "error"
+        )
+      }
+      
+      shiny::req(sum(genes_conditions %in% input$input_conditions) == length(genes_conditions))
+      # union of all the input comparisons
+      genes <- unique(unlist(r$DEGs[input$input_deg_genes]))
     }
-
-    shiny::req(sum(genes_conditions %in% input$input_conditions) == length(genes_conditions))
-    # union of all the input comparisons
-    genes <- unique(unlist(r$DEGs[input$input_deg_genes]))
     
+    if(!is.null(input$input_custom_genes)){ ###TODO: check is it's the right way to check the existence of value. maybe is.na or is.null...
+      print("There is Custom list")
+      genes <- c(genes, unique(unlist(r$custom_gene_list[input$input_custom_genes])))
+    }
+    
+    print(length(genes))
+      
     if(input$coseq_model){
       mod <- "Poisson"
       transfo <- "none"
@@ -366,7 +424,7 @@ mod_clustering_server <- function(input, output, session, r) {
       loggit::loggit(custom_log_lvl = TRUE,
                    log_lvl = r$session_id,
                    log_msg = "clustering")
-    
+    }
   })
   
   
@@ -377,6 +435,7 @@ mod_clustering_server <- function(input, output, session, r) {
   output$dl_bttns <- shiny::renderUI({
     shiny::req(r$DEGs)
     shiny::req(r$clusterings)
+    shiny::req(input_genes_conditions()) ###Needed.
     shiny::req(r$clusterings[[input_genes_conditions()]]$model)
     tagList(
       shiny::hr(),
@@ -446,7 +505,7 @@ mod_clustering_server <- function(input, output, session, r) {
   
   output$clusters_profiles <- shiny::renderPlot({
     shiny::req(r$DEGs)
-    shiny::req(r$clusterings, input$input_deg_genes)
+    shiny::req(r$clusterings, (!is.null(input$input_deg_genes) | !is.null(input$input_custom_genes)))
     shiny::req(r$clusterings[[input_genes_conditions()]]$membership, r$DEGs)
     shiny::req(input$clusters)
     draw_profiles(
