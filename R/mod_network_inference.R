@@ -258,8 +258,7 @@ mod_network_inference_server <- function(input, output, session, r){
 
   output$input_genes_net <- shiny::renderUI({
     shiny::req(all_gene_list()) ###Usless. List() pass req.
-    
-    if(length(all_gene_list()) > 0){
+    if(length(all_gene_list()) > 0 & !is.null(r$normalized_counts)){
       tagList(
           shinyWidgets::pickerInput(
             inputId = ns('input_deg_genes_net'),
@@ -272,8 +271,14 @@ mod_network_inference_server <- function(input, output, session, r){
           
           
       )
-    }
-    else{
+    } else if (length(r$custom_gene_list) > 0 & is.null(r$normalized_counts)){
+      shinydashboardPlus::descriptionBlock(
+        number = "Please perform the normalisation step 
+        before network inference.",
+        numberColor = "orange",
+        rightBorder = FALSE
+      )
+    } else{
       shinydashboardPlus::descriptionBlock(
         number = "Please perform one or more differential 
         expression analysis before network inference",
@@ -633,7 +638,6 @@ mod_network_inference_server <- function(input, output, session, r){
 
   
   shiny::observeEvent((input$launch_genie_btn), {
-    browser()
     shiny::req(r$normalized_counts, input$input_deg_genes_net, 
                r$regulators, all_gene_list(), input_net(),input$input_conditions_net)
     
