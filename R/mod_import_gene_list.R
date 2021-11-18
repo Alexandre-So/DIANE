@@ -14,7 +14,19 @@ mod_import_gene_list_ui <- function(id) {
     tags$head(tags$style(HTML('
    .gene_information_squaure .description-header {
     color: rgb(255, 255, 255) !important;
-    font-size: 24px;
+    font-size: 20px;
+   }
+   
+   .gene_information_squaure .description-block {
+    text-align: left;
+    margin: 0 0 0 0;
+   }
+   
+      .gene_information_squaure .description-percentage {
+    color: rgb(255, 255, 255) !important;
+    font-size: 30px;
+    font-weight: 700;
+    margin: 0 0 10px 0;
    }
   
      .gene_information_squaure .description-text {
@@ -95,8 +107,6 @@ mod_import_gene_list_server <- function(id, r){
     
     output$gene_information <- shiny::renderUI({
       
-      print("iris est gentille !")
-      
       if(is.null(r$raw_counts)) {
         shinydashboardPlus::descriptionBlock(
           number = "Please first import some count data in the previous tab.",
@@ -115,44 +125,47 @@ mod_import_gene_list_server <- function(id, r){
                       shinydashboardPlus::boxPad(
                         color = ifelse(total_number_of_genes > 0, "aqua", "red"),
                         shinydashboardPlus::descriptionBlock(
-                          header = total_number_of_genes,
-                          text = "Genes in dataset",
+                          number = total_number_of_genes,
+                          header = "Genes",
+                          text = "in dataset", 
                           rightBorder = FALSE,
                           marginBottom = TRUE
                         ),
-                        style = "flex: 1; height: 100px;"
+                        style = "border-radius: 12px;"
                       )
         ),
         shiny::column(3,
                       shinydashboardPlus::boxPad(
                         color = ifelse(number_of_genes > 0, "teal", "gray"),
                         shinydashboardPlus::descriptionBlock(
-                          header = number_of_genes,
-                          text = "Genes in gene list",
+                          number = number_of_genes,
+                          header = "Genes",
+                          text = "in gene list", 
                           rightBorder = FALSE,
                           marginBottom = TRUE
                         ),
-                        style = "flex: 1; height: 100px;;"
+                        style = "border-radius: 12px;"
                       )
         ),
         shiny::column(3,
                       shinydashboardPlus::boxPad(
                         color = ifelse(number_of_genes == 0, "gray", ifelse(number_genes_in_table == number_of_genes, "green", ifelse(number_genes_in_table == 0, "red", "orange"))),
                         shinydashboardPlus::descriptionBlock(
-                          header = number_genes_in_table,
-                          text = "Common genes",
+                          number = number_genes_in_table,
+                          header = "Genes",
+                          text = "shared in both", 
                           rightBorder = FALSE,
                           marginBottom = TRUE
                         ),
-                        style = "flex: 1;  height: 100px;"
+                        style = "border-radius: 12px;"
                       )
                       
                       
         ),
         if(number_genes_in_table != number_of_genes && number_of_genes > 0){
           shiny::tagList(
-            shiny::column(12,
-                          br(),
+            shiny::column(6,
+                          # br(),
             shiny::HTML(
               "<b>Warning</b> : some provided genes are absent from the count matrix and will not be used. For exemple :<br>"
             ),
@@ -171,7 +184,7 @@ mod_import_gene_list_server <- function(id, r){
       
     output$import_gene_list_button_ui <- shiny::renderUI({
       req(r$raw_counts)
-      if(sum(gene_list() %in% rownames(r$raw_counts)) > 0){
+      if(sum(gene_list() %in% rownames(r$raw_counts)) > 1){
         shiny::tagList(
           shiny::textInput(
             inputId = ns("gene_list_name"),
@@ -182,7 +195,7 @@ mod_import_gene_list_server <- function(id, r){
         )
       } else {
         shinydashboardPlus::descriptionBlock(
-          number = "You must provide at least one valid gene in your gene list",
+          number = "You must provide at least two valid genes in your gene list",
           numberColor = "orange",
           rightBorder = FALSE
         )
@@ -216,16 +229,24 @@ mod_import_gene_list_server <- function(id, r){
     })
     
     output$stored_gene_list_ui <- shiny::renderUI({
-      req(length(names(r$custom_gene_list)) > 0)
-      shinyWidgets::radioGroupButtons(
-        inputId = ns("stored_gene_list"),
-        label = "Stored gene list",
-        choices = names(r$custom_gene_list),
-        justified = TRUE,
-        direction = "vertical",
-        checkIcon = list(yes = shiny::icon("ok",
-                                           lib = "glyphicon"))
-      )
+      # req(length(names(r$custom_gene_list)) > 0)
+      if(length(names(r$custom_gene_list)) > 0){
+        shinyWidgets::radioGroupButtons(
+          inputId = ns("stored_gene_list"),
+          label = "Stored gene list",
+          choices = names(r$custom_gene_list),
+          justified = TRUE,
+          direction = "vertical",
+          checkIcon = list(yes = shiny::icon("ok",
+                                             lib = "glyphicon"))
+        )
+      } else {
+        shinydashboardPlus::descriptionBlock(
+          number = "You have no custom gene list yet. You can create one using the gene list tab on the left.",
+          numberColor = "orange",
+          rightBorder = FALSE
+        )
+      }
     })
     
     output$custom_gene_list_heatmap_preview <- shiny::renderPlot({
