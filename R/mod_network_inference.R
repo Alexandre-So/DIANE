@@ -246,6 +246,11 @@ mod_network_inference_server <- function(input, output, session, r){
     r$clusterings[[r$current_comparison]]$membership
   })
   
+  ###Merge all computed gene list
+  ###FIXME : check that normalisation has been done !
+  all_gene_list <- shiny::reactive({
+    c(r$DEGs, r$custom_gene_list)
+  })
   
   
 #   ____________________________________________________________________________
@@ -254,13 +259,13 @@ mod_network_inference_server <- function(input, output, session, r){
   output$input_genes_net <- shiny::renderUI({
     shiny::req(r$DEGs)
     
-    if(length(r$DEGs) > 0){
+    if(length(all_gene_list()) > 0){
       tagList(
           shinyWidgets::pickerInput(
             inputId = ns('input_deg_genes_net'),
             label = "Input genes for network inference:",
-            choices = names(r$DEGs),
-            choicesOpt = list(subtext = paste(lengths(r$DEGs), "genes"))
+            choices = names(all_gene_list()),
+            choicesOpt = list(subtext = paste(lengths(all_gene_list()), "genes"))
           ),
           col_6(shiny::uiOutput(ns("input_conditions_choice_net"))),
           col_6(shiny::uiOutput(ns("input_cluster_genes")))
