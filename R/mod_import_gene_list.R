@@ -38,12 +38,12 @@ mod_import_gene_list_ui <- function(id) {
     ######################### Title and text
     
     shiny::h1("Import custom gene list"),
+    shiny::p("Here you can input any gene list you want. This lists may be use for network inference, GO enrichment, and clustering."),
+    
     shiny::hr(),
     
     shiny::fluidRow(
-      
-      
-      shiny::column(6,
+      shiny::column(12,
                     shiny::uiOutput(ns("gene_information"))
       )),
     br(),
@@ -121,7 +121,7 @@ mod_import_gene_list_server <- function(id, r){
       shiny::tagList(
       shiny::tags$div(
         class = "gene_information_squaure",
-        shiny::column(3,
+        shiny::column(2,
                       shinydashboardPlus::boxPad(
                         color = ifelse(total_number_of_genes > 0, "aqua", "red"),
                         shinydashboardPlus::descriptionBlock(
@@ -134,7 +134,7 @@ mod_import_gene_list_server <- function(id, r){
                         style = "border-radius: 12px;"
                       )
         ),
-        shiny::column(3,
+        shiny::column(2,
                       shinydashboardPlus::boxPad(
                         color = ifelse(number_of_genes > 0, "teal", "gray"),
                         shinydashboardPlus::descriptionBlock(
@@ -147,7 +147,7 @@ mod_import_gene_list_server <- function(id, r){
                         style = "border-radius: 12px;"
                       )
         ),
-        shiny::column(3,
+        shiny::column(2,
                       shinydashboardPlus::boxPad(
                         color = ifelse(number_of_genes == 0, "gray", ifelse(number_genes_in_table == number_of_genes, "green", ifelse(number_genes_in_table == 0, "red", "orange"))),
                         shinydashboardPlus::descriptionBlock(
