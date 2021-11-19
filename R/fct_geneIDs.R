@@ -86,7 +86,7 @@ get_locus <- function(gene_ids, unique = TRUE){
 #' organism = "Arabidopsis thaliana")
 #' check_IDs(rownames(abiotic_stresses$raw_counts),
 #' organism = "Homo sapiens")
-check_IDs <- function(ids, organism){
+check_IDs_legacy <- function(ids, organism){
   if(organism == "Arabidopsis thaliana")
     pattern = "^AT[[:alnum:]]G[[:digit:]]{5}"
   
@@ -116,6 +116,83 @@ check_IDs <- function(ids, organism){
   
   if(organism == "Oryza glaberrima")
     pattern = "^ORGLA[[:digit:]]{2}G[[:digit:]]{7}"
+  
+  matched <- sum(stringr::str_detect(ids, pattern = pattern))
+  if( matched == length(ids))
+    return(TRUE)
+  else{
+    if(matched > 0 & matched < length(ids)){
+      warning("Some of the gene IDs do not match the expected regex")
+      return(FALSE)
+    }
+    else{
+      warning("None of the gene IDs match the expected regex")
+      return(FALSE)
+    }
+  }
+}
+
+
+
+#' Check compatibility between gene IDs and an organism
+#'
+#' @param ids character vector of gene identifiers to be tested
+#' @param organism organism, should be betwwen "Arabidopsis thaliana", "Homo sapiens", "Mus musculus", 
+#' "Caenorhabditis elegans", "Escherichia coli", "Drosophilia melanogaster",
+#' "Lupinus albus"
+#' @param custom_pattern regular expression pattern for custom organism.
+#'
+#' @return boolean, TRUE if all of the gene IDs match the expected regex for
+#' the specified organism.
+#' @export
+#'
+#' @examples 
+#' data("abiotic_stresses")
+#' check_IDs(rownames(abiotic_stresses$raw_counts),
+#' organism = "Arabidopsis thaliana")
+#' check_IDs(rownames(abiotic_stresses$raw_counts),
+#' organism = "Homo sapiens")
+check_IDs <- function(ids, organism = "", custom_pattern = NULL){
+  
+  if(organism == "" && is.null(custom_pattern)){
+    stop("You must provied either an organism or a custom pattern.")
+  }
+  
+  if(organism == "Arabidopsis thaliana")
+    pattern = "^AT[[:alnum:]]G[[:digit:]]{5}"
+  
+  if(organism == "Homo sapiens")
+    pattern = "^ENSG[[:digit:]]{11}"
+  
+  if(organism == "Mus musculus")
+    pattern = "^ENSMUSG[[:digit:]]{11}"
+  
+  if(organism == "Drosophilia melanogaster")
+    pattern = "^FBgn[[:digit:]]{7}"
+  
+  if(organism == "Caenorhabditis elegans")
+    pattern = "^WBGene[[:digit:]]{8}"
+  
+  if(organism == "Escherichia coli")
+    pattern = "^[a-z]{3}"
+  
+  # if(organism == "Lupinus albus")
+  #   pattern = "^Lalb_Chr[[:digit:]]{2}(c[[:digit:]]{2})?g[[:digit:]]{7}"
+  # 
+  # if(organism == "Oryza sativa (rapdb)")
+  #   pattern = "^Os[[:digit:]]{2}g[[:digit:]]{7}"
+  # 
+  # if(organism == "Oryza sativa (msu)")
+  #   pattern = "^LOC_Os[[:digit:]]{2}g[[:digit:]]{5}|fgenesh.gene"
+  # 
+  # if(organism == "Oryza glaberrima")
+  #   pattern = "^ORGLA[[:digit:]]{2}G[[:digit:]]{7}"
+  
+  if(organism %in% names(DIANE::custom_organisms))
+    pattern = DIANE::custom_organisms[[organism]][["gene_name_pattern"]]
+  
+  if(!is.null(custom_pattern) && organism == "")
+    pattern = custom_pattern
   
   matched <- sum(stringr::str_detect(ids, pattern = pattern))
   if( matched == length(ids))
