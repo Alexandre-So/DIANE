@@ -403,16 +403,14 @@ get_gene_information <- function(ids, organism){
    data("gene_annotations", package = "DIANE")
     d <- gene_annotations$`Arabidopsis thaliana`[
       match(ids, rownames(gene_annotations$`Arabidopsis thaliana`)),]
-  }
-  else if (stringr::str_detect(organism, "Oryza")){
+  } else if (organism %in%  names(DIANE::custom_organisms)){ ###If the user choose a custom organism
     data("gene_annotations", package = "DIANE")
-    d <- gene_annotations[[organism]][
-      match(ids, rownames(gene_annotations[[organism]])),]
-    if(ncol(gene_annotations[[organism]]) == 1)
+    d <- DIANE::custom_organisms[[organism]][["annotation"]][
+      match(ids, rownames(DIANE::custom_organisms[[organism]][["annotation"]])),]
+    if(ncol(DIANE::custom_organisms[[organism]][["annotation"]]) == 1)
       d <- data.frame(description = d)
-      rownames(d) <- ids
-  }
-  else{
+    rownames(d) <- ids
+  } else{
     annotate_org <- function(organism){
       
       mapping <- setNames(c(convert_from_ensembl, convert_from_ensembl_mus,
