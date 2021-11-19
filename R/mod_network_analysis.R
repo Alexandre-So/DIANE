@@ -657,17 +657,24 @@ mod_network_analysis_server <- function(input, output, session, r) {
         background <- get_locus(background)
       }
       
-      if (r$organism == "Lupinus albus") {
-        GOs <- DIANE:::lupine$go_list
+      if (r$organism  %in% names(DIANE::custom_organisms)){ ###Go enrichment for custom organism
+        GOs <- DIANE::custom_organisms[[r$organism]][["go_matching"]]
         universe <- intersect(background, GOs[, 1])
-        r_mod$go <- enrich_go_custom(genes, universe, GOs)
+        r_mod$go <- enrich_go_custom(genes, universe, GOs,
+                                       GO_type = input$go_type)
       }
-      else if (stringr::str_detect(r$organism, "Oryza")) {
-        data("go_matchings", package = "DIANE")
-        GOs <- go_matchings[[r$organism]]
-        universe <- intersect(background, GOs[, 1])
-        r_mod$go <- enrich_go_custom(genes, universe, GOs)
-      }
+      
+      # if (r$organism == "Lupinus albus") {
+      #   GOs <- DIANE:::lupine$go_list
+      #   universe <- intersect(background, GOs[, 1])
+      #   r_mod$go <- enrich_go_custom(genes, universe, GOs)
+      # }
+      # else if (stringr::str_detect(r$organism, "Oryza")) {
+      #   data("go_matchings", package = "DIANE")
+      #   GOs <- go_matchings[[r$organism]]
+      #   universe <- intersect(background, GOs[, 1])
+      #   r_mod$go <- enrich_go_custom(genes, universe, GOs)
+      # }
       else{
         if (r$organism == "Arabidopsis thaliana") {
           genes <- convert_from_agi(genes)

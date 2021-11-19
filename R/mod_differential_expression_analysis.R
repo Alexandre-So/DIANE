@@ -622,6 +622,7 @@ mod_differential_expression_analysis_server <-
     ###TODO : echelle de l'image ! (trouvÃ©! changer simplement le "res"...)
     ###FIXME : Boutons du choix de la mÃ©thode de normalisation (awesomeRadio) qui foire sur la page normalisation... Si j'ajoute un bouton de mÃªme type quelque part ici Ã§a remarche. En regardant, il manque une propriÃ©tÃ© (un petit padding) si j'ai pas un awesomeRadio (mÃªme inutile) dans cette partie du programme. Je ne comprends pas.
     
+    ##TODO: this thing is not used ?
     output$venn_lists_choice <- shiny::renderUI({
       shiny::req(length(r$DEGs) > 1)
       
@@ -645,6 +646,9 @@ mod_differential_expression_analysis_server <-
                         inputId = ns("venn_list_1"),
                         label = "Gene list 1",
                         choices = c("None" = FALSE, names(r$DEGs))
+                        # choices = ifelse(length(names(r$custom_gene_list)) == 0,
+                        #                  yes = c("None" = FALSE, names(r$DEGs)),
+                        #                  no = list(DEA = names(r$DEGs), custom = names(r$custom_gene_list)))
                       )),
         shiny::column(3,
                       shinyWidgets::pickerInput(
@@ -1025,20 +1029,27 @@ mod_differential_expression_analysis_server <-
           background <- get_locus(background)
         }
         
-        if (r$organism == "Lupinus albus") {
-          GOs <- DIANE:::lupine$go_list
+        if (r$organism  %in% names(DIANE::custom_organisms)){ ###Go enrichment for custom organism
+          GOs <- DIANE::custom_organisms[[r$organism]][["go_matching"]]
           universe <- intersect(background, GOs[, 1])
           r_dea$go <- enrich_go_custom(genes, universe, GOs,
                                        GO_type = input$go_type)
         }
-        else if (stringr::str_detect(r$organism, "Oryza")) {
-          data("go_matchings", package = "DIANE")
-          
-          GOs <- go_matchings[[r$organism]]
-          universe <- intersect(background, GOs[, 1])
-          r_dea$go <- enrich_go_custom(genes, universe, GOs,
-                                       GO_type = input$go_type)
-        }
+        # 
+        # if (r$organism == "Lupinus albus") {
+        #   GOs <- DIANE:::lupine$go_list
+        #   universe <- intersect(background, GOs[, 1])
+        #   r_dea$go <- enrich_go_custom(genes, universe, GOs,
+        #                                GO_type = input$go_type)
+        # }
+        # else if (stringr::str_detect(r$organism, "Oryza")) {
+        #   data("go_matchings", package = "DIANE")
+        #   
+        #   GOs <- go_matchings[[r$organism]]
+        #   universe <- intersect(background, GOs[, 1])
+        #   r_dea$go <- enrich_go_custom(genes, universe, GOs,
+        #                                GO_type = input$go_type)
+        # }
         else{
           if (r$organism == "Arabidopsis thaliana") {
             genes <- convert_from_agi(genes)
