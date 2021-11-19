@@ -334,12 +334,12 @@ mod_import_data_server <- function(input, output, session, r) {
   
   
   raw_data <- shiny::reactive({
-    if (input$use_demo) {
+    if (input$use_demo) { ###Import demo count data
       r$use_demo = input$use_demo
       data("abiotic_stresses", package = "DIANE")
       d <- abiotic_stresses$raw_counts
     }
-    else{
+    else{ ###Import user defined count data
       req(input$raw_data)
       path = input$raw_data$datapath
       
@@ -425,19 +425,23 @@ mod_import_data_server <- function(input, output, session, r) {
         if (r$organism == "Caenorhabditis elegans")
           ex = "WBGene00000042"
         
-        if (r$organism == "Lupinus albus")
-          ex = "Lalb_Chr00c02g0404151"
-        
         if (r$organism == "Escherichia coli")
           ex = "acpS"
-        if (r$organism == "Oryza sativa (rapdb)")
-          ex = "Os01g0100600"
         
-        if (r$organism == "Oryza sativa (msu)")
-          ex = "LOC_Os01g11460"
+        if(organism %in% names(DIANE::custom_organisms))
+          ex = sample(rownames(DIANE::custom_organisms[[organism]][["annotation"]]), 1)
         
-        if (r$organism == "Oryza glaberrima")
-          ex = "ORGLA01G0099700"
+        # if (r$organism == "Lupinus albus")
+        #   ex = "Lalb_Chr00c02g0404151"
+        # 
+        # if (r$organism == "Oryza sativa (rapdb)")
+        #   ex = "Os01g0100600"
+        # 
+        # if (r$organism == "Oryza sativa (msu)")
+        #   ex = "LOC_Os01g11460"
+        # 
+        # if (r$organism == "Oryza glaberrima")
+        #   ex = "ORGLA01G0099700"
         
         shinyalert::shinyalert(
           "Invalid gene IDs",
@@ -551,16 +555,18 @@ mod_import_data_server <- function(input, output, session, r) {
     c(
       "Other",
       choices,
-      "Lupinus albus",
-      "Oryza sativa (rapdb)",
-      "Oryza sativa (msu)",
-      "Oryza glaberrima"
+      sort(names(DIANE::custom_organisms))
+      # "Lupinus albus",
+      # "Oryza sativa (rapdb)",
+      # "Oryza sativa (msu)",
+      # "Oryza glaberrima"
     )
   })
   
   
   output$org_selection <- shiny::renderUI({
     shiny::req(!input$use_demo)
+    print("Inside org_selection renderUI")
     shiny::selectInput(
       ns("org_select"),
       label = "Your organism :",
@@ -611,12 +617,12 @@ mod_import_data_server <- function(input, output, session, r) {
     }
   })
   
-  shiny::observeEvent(input$org_chosen, {
-    r$organism <- input$organism
-    shiny::removeModal()
-    shiny::updateSelectInput(session, "org_select", selected = r$organism)
-    
-  })
+  # shiny::observeEvent(input$org_chosen, {
+  #   r$organism <- input$organism
+  #   shiny::removeModal()
+  #   shiny::updateSelectInput(session, "org_select", selected = r$organism)
+  #   
+  # })
   
   shiny::observe({
     shiny::req(!input$use_demo)
@@ -636,13 +642,13 @@ mod_import_data_server <- function(input, output, session, r) {
       if (r$splicing_aware) {
         ids <- get_locus(rownames(r$raw_counts))
       }
-      if (r$organism == "Lupinus albus") {
-        d <-
-          DIANE:::lupine$annotation[intersect(ids, rownames(DIANE:::lupine$annotation)),]
-      }
-      else{
-        d <- get_gene_information(ids, r$organism)
-      }
+      # if (r$organism == "Lupinus albus") {
+      #   d <-
+      #     DIANE:::lupine$annotation[intersect(ids, rownames(DIANE:::lupine$annotation)),]
+      # }
+      # else{
+        d <- get_gene_information(ids, r$organism) #FIXME : check that data are not loaded twice.
+      # }
       
     }
     else{
@@ -705,12 +711,14 @@ mod_import_data_server <- function(input, output, session, r) {
     
     if (r$organism == "Other")
       txt <- "No gene ID requirement"
-    else if (r$organism == "Oryza sativa (rapdb)")
-      txt <- c("Os01g0100600")
-    else if (r$organism == "Oryza sativa (msu)")
-      txt <- c("LOC_Os01g11590")
-    else if (r$organism == "Oryza glaberrima")
-      txt <- c("ORGLA01G0099000")
+    else if (r$organism  %in% names(DIANE::custom_organisms))
+      txt <- sample(rownames(DIANE::custom_organisms[[r$organism]][["annotation"]]), 1)
+    # else if (r$organism == "Oryza sativa (rapdb)")
+    #   txt <- c("Os01g0100600")
+    # else if (r$organism == "Oryza sativa (msu)")
+    #   txt <- c("LOC_Os01g11590")
+    # else if (r$organism == "Oryza glaberrima")
+    #   txt <- c("ORGLA01G0099000")
     else{
       data("regulators_per_organism", package = "DIANE")
       txt <- regulators_per_organism[[r$organism]]
