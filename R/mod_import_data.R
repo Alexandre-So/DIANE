@@ -574,19 +574,14 @@ mod_import_data_server <- function(input, output, session, r) {
       r$organism <- "Arabidopsis thaliana"
     }
     else{
-      shiny::showModal(
-        shiny::modalDialog(
-          title = "Organism to study",
-          shiny::htmlOutput(ns("org_install")),
-          shinyWidgets::pickerInput(
-            inputId = ns('organism'),
-            label = "Choose your organism :",
-            choices = c(org_choices()),
-            selected = "Other"
-          ),
-          footer = list(shiny::actionButton(ns("org_chosen"), "OK"))
-        )
-      )
+      NULL
+      # shiny::showModal(
+      #   shiny::modalDialog(
+      #     title = "Organism to study",
+      #     shiny::htmlOutput(ns("org_install")),
+      #     footer = list(shiny::actionButton(ns("org_chosen"), "OK"))
+      #   )
+      # )
     }
   })
   
