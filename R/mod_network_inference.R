@@ -332,10 +332,21 @@ mod_network_inference_server <- function(input, output, session, r){
   regulators <- shiny::reactive({
     shiny::req(r$raw_counts, r$organism)
     d <- NULL
-    if (r$organism != "Other") {
+    
+    if (r$organism %in%  c(
+      "Arabidopsis thaliana",
+      "Homo sapiens",
+      "Mus musculus",
+      "Drosophilia melanogaster",
+      "Caenorhabditis elegans",
+      "Escherichia coli"
+    )) {
       data("regulators_per_organism", package = "DIANE")
       d <- regulators_per_organism[[r$organism]]
     }
+    
+    if(organism %in% names(DIANE::custom_organisms)) ##Custom organism
+      d <- DIANE::custom_organisms[[r$organism]][["regulators"]]
     
     if(!is.null(input$TFs_list_input)){
       path = input$TFs_list_input$datapath
