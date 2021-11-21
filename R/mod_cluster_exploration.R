@@ -453,20 +453,6 @@ mod_cluster_exploration_server <-
                                        GO_type = input$go_type)
         }
         
-        # if (r$organism == "Lupinus albus") {
-        #   GOs <- DIANE:::lupine$go_list
-        #   universe <- intersect(background, GOs[, 1])
-        #   r_clust$go <- enrich_go_custom(genes, universe, GOs,
-        #                                  GO_type = input$go_type)
-        # }
-        # else if (stringr::str_detect(r$organism, "Oryza")) {
-        #   data("go_matchings", package = "DIANE")
-        #   GOs <- go_matchings[[r$organism]]
-        #   universe <- intersect(background, GOs[,1])
-        #   r_clust$go <- enrich_go_custom(genes, universe, GOs,
-        #                                  GO_type = input$go_type)
-        # }
-        
         else{
           if (r$organism == "Arabidopsis thaliana") {
             genes <- convert_from_agi(genes)
