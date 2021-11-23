@@ -556,6 +556,7 @@ mod_import_data_server <- function(input, output, session, r) {
   #   Design import UI                                                        ####
   
   output$design_import_ui <- shiny::renderUI({
+    req(input$use_demo)
     print("Design UI import")
     if(!input$use_demo){
     shiny::tagList(
@@ -929,6 +930,8 @@ mod_import_data_server <- function(input, output, session, r) {
     req(r$conditions)
     req(r$organism)
     
+    print("Gene information reactive")
+    
     if (r$organism != "Other") {
       ids <- rownames(r$raw_counts)
       if (r$splicing_aware) {
@@ -975,12 +978,18 @@ mod_import_data_server <- function(input, output, session, r) {
         d <- NULL
       }
     }
+    print("END - Gene information reactive")
     d
   })
   ########### table view
   
   output$raw_data_preview <- DT::renderDataTable({
+    shiny::req(r$organism)
+    if(input$use_demo){
+      shiny::req(r$integrated_dataset)
+    }
     print("Raw data preview")
+    print(paste0("Organism and data ", r$organism, " - ", r$integrated_dataset))
     raw_data()
     shiny::req(r$raw_counts)
     head(r$raw_counts)
@@ -1003,6 +1012,7 @@ mod_import_data_server <- function(input, output, session, r) {
   
   output$gene_ids <- shiny::renderUI({
     shiny::req(r$organism)
+    print("Output gene ID")
     
     if (r$organism == "Other")
       txt <- "No gene ID requirement"
@@ -1030,6 +1040,8 @@ mod_import_data_server <- function(input, output, session, r) {
   
   output$data_dim <- shinydashboard::renderValueBox({
     shiny::req(r$raw_counts)
+    
+    print("output$data_dim")
     
     shinydashboard::valueBox(
       value = dim(r$raw_counts)[1],
@@ -1059,6 +1071,7 @@ mod_import_data_server <- function(input, output, session, r) {
     shiny::req(r$raw_counts)
     shiny::req(r$organism)
     
+    print("output$gene_info_summary")
     
     ######## setting gene info here
     r$gene_info <- gene_info()
@@ -1083,6 +1096,7 @@ mod_import_data_server <- function(input, output, session, r) {
       text = header,
       rightBorder = FALSE
     )
+    print("END - output$gene_info_summary")
   })
   
   output$organism_summary <- shiny::renderUI({
