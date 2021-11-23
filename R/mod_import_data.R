@@ -280,7 +280,7 @@ mod_import_data_server <- function(input, output, session, r) {
   # when demo usage is toggled :
   
   shiny::observeEvent(priority = 50, {
-    input$use_demo
+    # input$use_demo
     # r$selected_preloaded_dataset
     input$org_select
   }, {
@@ -305,7 +305,6 @@ mod_import_data_server <- function(input, output, session, r) {
     r$integrated_dataset = NULL
     # r$integrated_dataset = NULL
     r$custom_go = NULL
-    # browser()
   })
   
   
@@ -347,26 +346,28 @@ mod_import_data_server <- function(input, output, session, r) {
     req(r$integrated_dataset)
     req(r$organism)
     print("Inside raw_data, after conditions.")
+    
+    ###FIXME : we could put this in the first else, by putting req(input$raw_data) after
+    r$raw_counts = NULL
+    r$normalized_counts = NULL
+    r$normalized_counts_pre_filter = NULL
+    r$conditions = NULL
+    r$design = NULL
+    r$DEGs = list()
+    r$tcc = NULL
+    r$clusterings = list()
+    r$current_comparison = NULL
+    r$current_network = NULL
+    r$top_tags = list()
+    r$fit = NULL
+    r$regulators = NULL
+    r$use_demo = input$use_demo
+    r$splicing_aware = NULL
+    r$gene_info = NULL
+    r$custom_go = NULL
+    
     if (input$use_demo) { ###Import demo count data
     
-      r$raw_counts = NULL
-      r$normalized_counts = NULL
-      r$normalized_counts_pre_filter = NULL
-      r$conditions = NULL
-      r$design = NULL
-      r$DEGs = list()
-      r$tcc = NULL
-      r$clusterings = list()
-      r$current_comparison = NULL
-      r$current_network = NULL
-      r$top_tags = list()
-      r$fit = NULL
-      r$regulators = NULL
-      r$use_demo = input$use_demo
-      r$splicing_aware = NULL
-      r$gene_info = NULL
-      r$custom_go = NULL
-      
       print(paste0("Organism and dataset : ", r$organism, " - ", r$integrated_dataset))
     
       if(r$integrated_dataset == "Abiotic Stresses"){
@@ -718,14 +719,10 @@ mod_import_data_server <- function(input, output, session, r) {
   
   # shiny::observe(priority = 10, {
   shiny::observeEvent(input$dataset_selection,{
-    # shiny::req(input$use_demo)
     if(input$use_demo){
       print(paste0("Integrated dataset will be ", input$dataset_selection))
       r$integrated_dataset <- input$dataset_selection
-    } # else {
-    #   print(paste0("Integrated dataset (BG) will be ", dataset_choices()[1]))
-    #   r$integrated_dataset <- dataset_choices()[1]
-    # }
+    }
   })
   
   
