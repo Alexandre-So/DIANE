@@ -220,39 +220,41 @@ mod_import_data_ui <- function(id) {
       status = "success",
       collapsible = TRUE,
       closable = FALSE,
-      shiny::radioButtons(
-        ns('sep_design'),
-        
-        'Separator : ',
-        c(
-          Comma = ',',
-          Semicolon = ';',
-          Tab = '\t'
-        ),
-        
-        inline = TRUE
-      ),
-      shinyWidgets::dropdownButton(
-        size = 'xs',
-        label = "Design file requirements",
-        shiny::includeMarkdown(system.file("extdata", "designFile.md",
-                                           package = "DIANE")),
-        circle = TRUE,
-        status = "primary",
-        icon = shiny::icon("question"),
-        width = "550px",
-        tooltip = shinyWidgets::tooltipOptions(title = "More details")
-      ),
-      shiny::fileInput(
-        ns('design'),
-        'Choose CSV/TXT design file (optional)',
-        accept = c(
-          'text/csv',
-          'text/comma-separated-values,text/plain',
-          '.csv',
-          '.txt'
-        )
-      ),
+      
+      shiny::uiOutput(ns("design_import_ui")),
+      # shiny::radioButtons(
+      #   ns('sep_design'),
+      #   
+      #   'Separator : ',
+      #   c(
+      #     Comma = ',',
+      #     Semicolon = ';',
+      #     Tab = '\t'
+      #   ),
+      #   
+      #   inline = TRUE
+      # ),
+      # shinyWidgets::dropdownButton(
+      #   size = 'xs',
+      #   label = "Design file requirements",
+      #   shiny::includeMarkdown(system.file("extdata", "designFile.md",
+      #                                      package = "DIANE")),
+      #   circle = TRUE,
+      #   status = "primary",
+      #   icon = shiny::icon("question"),
+      #   width = "550px",
+      #   tooltip = shinyWidgets::tooltipOptions(title = "More details")
+      # ),
+      # shiny::fileInput(
+      #   ns('design'),
+      #   'Choose CSV/TXT design file (optional)',
+      #   accept = c(
+      #     'text/csv',
+      #     'text/comma-separated-values,text/plain',
+      #     '.csv',
+      #     '.txt'
+      #   )
+      # ),
       DT::dataTableOutput(ns("design_preview")),
       
       
@@ -555,6 +557,50 @@ mod_import_data_server <- function(input, output, session, r) {
   #     NULL
   #   }
   # })
+  
+  #   ____________________________________________________________________________
+  #   Design import UI      
+  
+  output$design_import_ui <- shiny::renderUI({
+    if(!input$use_demo){
+    shiny::tagList(
+    shiny::radioButtons(
+      ns('sep_design'),
+      
+      'Separator : ',
+      c(
+        Comma = ',',
+        Semicolon = ';',
+        Tab = '\t'
+      ),
+      
+      inline = TRUE
+    ),
+    shinyWidgets::dropdownButton(
+      size = 'xs',
+      label = "Design file requirements",
+      shiny::includeMarkdown(system.file("extdata", "designFile.md",
+                                         package = "DIANE")),
+      circle = TRUE,
+      status = "primary",
+      icon = shiny::icon("question"),
+      width = "550px",
+      tooltip = shinyWidgets::tooltipOptions(title = "More details")
+    ),
+    shiny::fileInput(
+      ns('design'),
+      'Choose CSV/TXT design file (optional)',
+      accept = c(
+        'text/csv',
+        'text/comma-separated-values,text/plain',
+        '.csv',
+        '.txt'
+      )
+    ))
+    } else {
+      NULL
+    }
+  })
   
   
   #   ____________________________________________________________________________
