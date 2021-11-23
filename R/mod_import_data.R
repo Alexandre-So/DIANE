@@ -627,7 +627,7 @@ mod_import_data_server <- function(input, output, session, r) {
   
   ###Print a warning when no dataset are available for selected org
   output$no_dataset_warning <- shiny::renderText({
-    shiny::req(length(dataset_choices())==0)
+    shiny::req(input$use_demo, length(dataset_choices())==0)
     "<b>Information</b> : There is no pre-integrated dataset for this organism. But you can still import your own count data for this organism !"
   })
   
