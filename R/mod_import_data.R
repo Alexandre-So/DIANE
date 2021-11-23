@@ -270,21 +270,15 @@ mod_import_data_server <- function(input, output, session, r) {
     r$gene_info = NULL
     r$custom_go = NULL
     
-    print("Reset from raw_data")
-    
     if (input$use_demo) { ###Import demo count data
       
       req(r$integrated_dataset)
       req(all(r$integrated_dataset %in% dataset_choices()))
       
-      print("Will look for datasets")
-      
       if(r$integrated_dataset == "Abiotic Stresses" & r$organism == "Arabidopsis thaliana"){
-        print("Will use Abiotic stress data *_*")
         r$use_demo = input$use_demo
         d <- DIANE::abiotic_stresses[["raw_counts"]]
       } else {
-        print(paste0("Will use ",r$integrated_dataset," data"))
         r$use_demo = input$use_demo
         d <- DIANE::custom_datasets[[r$organism]][[r$integrated_dataset]][["count"]]
         # browser()
@@ -359,7 +353,6 @@ mod_import_data_server <- function(input, output, session, r) {
     
     ############### checking organism compatibility
     shiny::req(r$organism, d)
-    print("Will check ID")
     if (r$organism != "Other") {
       if (!check_IDs(rownames(d), r$organism)) {
         if (r$organism == "Arabidopsis thaliana")
@@ -412,8 +405,6 @@ mod_import_data_server <- function(input, output, session, r) {
       }
       shiny::req(check_IDs(rownames(d), r$organism))
     }
-    
-    print("IDs have been checked.")
     
     r$conditions <-
       stringr::str_split_fixed(colnames(d), "_", 2)[, 1]
@@ -632,7 +623,6 @@ mod_import_data_server <- function(input, output, session, r) {
   })
   
   output$dataset_selection_ui <- shiny::renderUI({
-    # if(input$use_demo){
     shiny::req(input$use_demo)
       shiny::selectInput(
         ns("dataset_selection"),
@@ -640,9 +630,6 @@ mod_import_data_server <- function(input, output, session, r) {
         choices = dataset_choices(), ###Will be "" if no existing dataset.
         selected = shiny::isolate(r$integrated_dataset)
       )
-    # } #else {
-      # NULL
-    # }
   })
   
   shiny::observeEvent({
