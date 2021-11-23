@@ -39,14 +39,14 @@ mod_import_data_ui <- function(id) {
       closable = FALSE,
       
       shiny::fluidRow(
-        col_4(
+        shiny::column(4,
           shinyWidgets::switchInput(
             ns("use_demo"),
-            "Toggle to import your data",
+            "Toggle to import your Data",
             value = TRUE,
-            onLabel = "Preloaded datasets",
+            onLabel = "Embeded data",
             offLabel = "Your dataset",
-            onStatus = "success"
+            onStatus = "success", width = "100%"
             
           )
         )
@@ -59,86 +59,10 @@ mod_import_data_ui <- function(id) {
       
       shiny::uiOutput(ns("dataset_selection_ui")),
       
-      shiny::uiOutput(ns("data_import_ui")),
+      shiny::uiOutput(ns("count_import_ui")),
+      shiny::uiOutput(ns("custom_organism_ui")),
       
       shiny::htmlOutput(ns("dataset_description")),
-      # 
-      # col_8(shiny::radioButtons(
-      #   ns('sep'),
-      #   'Separator : ',
-      #   c(
-      #     Comma = ',',
-      #     Semicolon = ';',
-      #     Tab = '\t'
-      #   ),
-      #   inline = TRUE
-      # )),
-      # 
-      # shiny::fluidRow(col_4(
-      #   shinyWidgets::dropdownButton(
-      #     size = 'xs',
-      #     label = "Input file requirements",
-      #     shiny::includeMarkdown(
-      #       system.file("extdata", "expressionFile.md", package = "DIANE")
-      #     ),
-      #     circle = TRUE,
-      #     status = "primary",
-      #     icon = shiny::icon("question"),
-      #     width = "1200px",
-      #     tooltip = shinyWidgets::tooltipOptions(title = "More details")
-      #   )
-      # )),
-      # 
-      # col_12(
-      #   shiny::fileInput(
-      #     ns('raw_data'),
-      #     'Choose CSV/TXT expression file',
-      #     accept = c(
-      #       'text/csv',
-      #       'text/comma-separated-values,text/plain',
-      #       '.csv',
-      #       '.txt'
-      #     )
-      #   )
-      # ),
-      # 
-      # 
-      # 
-      # #   ____________________________________________________________________________
-      # #   gene infos upload                                                           ####
-      # 
-      # 
-      # col_8(shiny::radioButtons(
-      #   ns('sep_gene_info'),
-      #   'Separator : ',
-      #   c(Tab = '\t'),
-      #   inline = TRUE
-      # )),
-      # 
-      # shiny::fluidRow(col_4(
-      #   shinyWidgets::dropdownButton(
-      #     size = 'xs',
-      #     label = "Gene information file requirements",
-      #     shiny::includeMarkdown(system.file("extdata", "infoFile.md",
-      #                                        package = "DIANE")),
-      #     circle = TRUE,
-      #     status = "primary",
-      #     icon = shiny::icon("question"),
-      #     width = "1200px",
-      #     tooltip = shinyWidgets::tooltipOptions(title = "More details")
-      #   )
-      # )),
-      # 
-      # shiny::fileInput(
-      #   ns('gene_info_input'),
-      #   'Choose CSV/TXT gene information file (optional)',
-      #   accept = c(
-      #     'text/csv',
-      #     'text/comma-separated-values,text/plain',
-      #     '.csv',
-      #     '.txt'
-      #   )
-      # ),
       
       shinydashboard::valueBoxOutput(ns("data_dim")),
       shinydashboard::valueBoxOutput(ns("conditions")),
@@ -673,7 +597,6 @@ mod_import_data_server <- function(input, output, session, r) {
 
   dataset_choices <- shiny::reactive({
     req(r$organism)
-    print("dataset choices")
     if(r$organism == "Arabidopsis thaliana"){
       c("Abiotic Stresses", names(DIANE::custom_datasets[[r$organism]]))
     } else {
@@ -690,7 +613,8 @@ mod_import_data_server <- function(input, output, session, r) {
         selected = shiny::isolate(r$integrated_dataset)
       )
     } else {
-      NULL
+      print("None")
+      h2("none")
     }
   })
   
@@ -704,8 +628,9 @@ mod_import_data_server <- function(input, output, session, r) {
   #   ____________________________________________________________________________
   #   import user data UI                                                     ####
   
-  output$data_import_ui <- shiny::renderUI({
+  output$count_import_ui <- shiny::renderUI({
       req(!input$use_demo)
+      print("output$data_import_ui")
       shiny::tagList(
         col_8(shiny::radioButtons(
           ns('sep'),
@@ -744,14 +669,17 @@ mod_import_data_server <- function(input, output, session, r) {
               '.txt'
             )
           )
-        ),
+        )
+      )
+  })
         
       
       
       #   ____________________________________________________________________________
       #   gene infos upload                                                           ####
       
-      if(r$organism == "Other"){
+  output$custom_organism_ui <- shiny::renderUI({
+      shiny::req(r$organism == "Other")
         shiny::tagList(
           col_8(shiny::radioButtons(
             ns('sep_gene_info'),
@@ -774,7 +702,7 @@ mod_import_data_server <- function(input, output, session, r) {
             )
           )),
           
-          shiny::fileInput(
+          col_12(shiny::fileInput(
             ns('gene_info_input'),
             'Choose CSV/TXT gene information file (optional)',
             accept = c(
@@ -782,11 +710,10 @@ mod_import_data_server <- function(input, output, session, r) {
               'text/comma-separated-values,text/plain',
               '.csv',
               '.txt'
-            )
+            ))
           ))
-      }
-    )
-  })
+      })
+
   
   #   ____________________________________________________________________________
   #   Dataset description                                                     ####
@@ -883,7 +810,6 @@ mod_import_data_server <- function(input, output, session, r) {
         d <- NULL
       }
     }
-    print("END - Gene information reactive")
     d
   })
   ########### table view
