@@ -44,7 +44,7 @@ mod_import_data_ui <- function(id) {
             ns("use_demo"),
             "Toggle to import your data",
             value = TRUE,
-            onLabel = "Demo Arabidopsis data",
+            onLabel = "Preloaded datasets",
             offLabel = "Your dataset",
             onStatus = "success"
             
@@ -82,6 +82,16 @@ mod_import_data_ui <- function(id) {
           tooltip = shinyWidgets::tooltipOptions(title = "More details")
         )
       )),
+      
+      # col_12(
+        shiny::uiOutput(ns("dataset_selection_ui")),
+        # shiny::selectInput(
+        #   ns("org_select"),
+        #   label = "Dataset",
+        #   choices = dataset_choices(),
+        #   selected = "Abiotic stresses"
+        # )
+      # ),
       
       
       col_12(
@@ -278,7 +288,12 @@ mod_import_data_server <- function(input, output, session, r) {
   # resets the global reactive variables that were maybe already created
   # when demo usage is toggled :
   
-  shiny::observeEvent(input$use_demo, {
+  shiny::observeEvent(priority = 50, {
+    input$use_demo
+    # r$selected_preloaded_dataset
+    input$org_select
+  }, {
+    print("Reseting all the values")
     r$raw_counts = NULL
     r$normalized_counts = NULL
     r$normalized_counts_pre_filter = NULL
@@ -291,11 +306,12 @@ mod_import_data_server <- function(input, output, session, r) {
     r$current_network = NULL
     r$top_tags = list()
     r$fit = NULL
-    r$regulators = NULL
+    # r$regulators = NULL
     r$use_demo = input$use_demo
     r$splicing_aware = NULL
-    r$gene_info = NULL
-    r$organism = NULL
+    # r$gene_info = NULL
+    # r$organism = NULL
+    r$integrated_dataset = NULL
     r$custom_go = NULL
   })
   
@@ -334,11 +350,41 @@ mod_import_data_server <- function(input, output, session, r) {
   
   
   raw_data <- shiny::reactive({
+    print("Inside raw_data")
+    req(r$integrated_dataset)
+    req(r$organism)
+    print("Inside raw_data, after conditions.")
     if (input$use_demo) { ###Import demo count data
+    
+      r$raw_counts = NULL
+      r$normalized_counts = NULL
+      r$normalized_counts_pre_filter = NULL
+      r$conditions = NULL
+      r$design = NULL
+      r$DEGs = list()
+      r$tcc = NULL
+      r$clusterings = list()
+      r$current_comparison = NULL
+      r$current_network = NULL
+      r$top_tags = list()
+      r$fit = NULL
+      r$regulators = NULL
       r$use_demo = input$use_demo
-      data("abiotic_stresses", package = "DIANE")
-      d <- abiotic_stresses$raw_counts
-    }
+      r$splicing_aware = NULL
+      r$gene_info = NULL
+      r$custom_go = NULL
+      
+      print(paste0("Organism and dataset : ", r$organism, " - ", r$integrated_dataset))
+    
+      if(r$integrated_dataset == "Abiotic Stresses"){
+        r$use_demo = input$use_demo
+        data("abiotic_stresses", package = "DIANE")
+        d <- abiotic_stresses$raw_counts
+      } else {
+        r$use_demo = input$use_demo
+        d <- DIANE::custom_datasets[[r$organism]][[r$integrated_dataset]][["count"]]
+      }
+  }
     else{ ###Import user defined count data
       req(input$raw_data)
       path = input$raw_data$datapath
@@ -428,8 +474,8 @@ mod_import_data_server <- function(input, output, session, r) {
         if (r$organism == "Escherichia coli")
           ex = "acpS"
         
-        if(organism %in% names(DIANE::custom_organisms))
-          ex = sample(rownames(DIANE::custom_organisms[[organism]][["annotation"]]), 1)
+        if(r$organism %in% names(DIANE::custom_organisms))
+          ex = sample(rownames(DIANE::custom_organisms[[r$organism]][["annotation"]]), 1)
         
         # if (r$organism == "Lupinus albus")
         #   ex = "Lalb_Chr00c02g0404151"
@@ -565,31 +611,31 @@ mod_import_data_server <- function(input, output, session, r) {
   
   
   output$org_selection <- shiny::renderUI({
-    shiny::req(!input$use_demo)
+    # shiny::req(!input$use_demo)
     print("Inside org_selection renderUI")
     shiny::selectInput(
       ns("org_select"),
       label = "Your organism :",
       choices = org_choices(),
-      selected = "Other"
+      selected = "Arabidopsis thaliana"
     )
   })
   
-  shiny::observe({
-    if (input$use_demo) {
-      r$organism <- "Arabidopsis thaliana"
-    }
-    else{
-      NULL
-      # shiny::showModal(
-      #   shiny::modalDialog(
-      #     title = "Organism to study",
-      #     shiny::htmlOutput(ns("org_install")),
-      #     footer = list(shiny::actionButton(ns("org_chosen"), "OK"))
-      #   )
-      # )
-    }
-  })
+  # shiny::observe({
+  #   if (input$use_demo) {
+  #     r$organism <- "Arabidopsis thaliana"
+  #   }
+  #   else{
+  #     NULL
+  #     # shiny::showModal(
+  #     #   shiny::modalDialog(
+  #     #     title = "Organism to study",
+  #     #     shiny::htmlOutput(ns("org_install")),
+  #     #     footer = list(shiny::actionButton(ns("org_chosen"), "OK"))
+  #     #   )
+  #     # )
+  #   }
+  # })
   
   output$org_install <- shiny::renderText({
     if (!golem::get_golem_options("server_version")) {
@@ -624,10 +670,41 @@ mod_import_data_server <- function(input, output, session, r) {
   #   
   # })
   
-  shiny::observe({
-    shiny::req(!input$use_demo)
+  shiny::observe(priority = 40,{
+    # shiny::req(!input$use_demo)
     r$organism <- input$org_select
   })
+  
+  output$dataset_selection_ui <- shiny::renderUI({
+    if(input$use_demo){
+      shiny::selectInput(
+        ns("dataset_selection"),
+        label = "Integrated dataset selection",
+        choices = dataset_choices(),
+        selected = dataset_choices()[1]
+      )
+    } else {
+      NULL
+    }
+  })
+  
+  dataset_choices <- shiny::reactive({
+    req(r$organism)
+    if(r$organism == "Arabidopsis thaliana"){
+      c("Abiotic Stresses", names(DIANE::custom_datasets[[r$organism]]))
+    } else {
+      names(DIANE::custom_datasets[[r$organism]])
+    }
+  })
+
+  # shiny::observe(priority = 10, {
+  shiny::observe({
+    shiny::req(input$use_demo)
+    print(paste0("Integrated dataset will be ", input$dataset_selection))
+    r$integrated_dataset <- input$dataset_selection
+  })
+  
+  
   
   #   ____________________________________________________________________________
   #   genes info                                                              ####
