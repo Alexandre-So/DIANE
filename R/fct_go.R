@@ -400,11 +400,13 @@ draw_enrich_go <- function(go_data, max_go = dim(go_data)[1]){
 #' organism = "Caenorhabditis elegans")
 get_gene_information <- function(ids, organism){
   if(organism == "Arabidopsis thaliana"){
-   data("gene_annotations", package = "DIANE")
-    d <- gene_annotations$`Arabidopsis thaliana`[
-      match(ids, rownames(gene_annotations$`Arabidopsis thaliana`)),]
+   # data("gene_annotations", package = "DIANE")
+    # d <- gene_annotations$`Arabidopsis thaliana`[
+    #   match(ids, rownames(gene_annotations$`Arabidopsis thaliana`)),]
+    d <- DIANE::gene_annotations[["Arabidopsis thaliana"]][
+      match(ids, rownames(DIANE::gene_annotations[["Arabidopsis thaliana"]])),]
   } else if (organism %in%  names(DIANE::custom_organisms)){ ###If the user choose a custom organism
-    data("gene_annotations", package = "DIANE")
+    # data("gene_annotations", package = "DIANE")
     d <- DIANE::custom_organisms[[organism]][["annotation"]][
       match(ids, rownames(DIANE::custom_organisms[[organism]][["annotation"]])),]
     if(ncol(DIANE::custom_organisms[[organism]][["annotation"]]) == 1)
