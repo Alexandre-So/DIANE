@@ -307,6 +307,13 @@ mod_import_data_server <- function(input, output, session, r) {
     r$custom_go = NULL
   })
   
+  # shiny::observeEvent(priority = 45, {
+  #   input$use_demo
+  #   # r$selected_preloaded_dataset
+  #   # input$org_select
+  # }, {
+  #   r$integrated_dataset = NULL
+  # })
   
   #   ____________________________________________________________________________
   #   seed setting                                                            ####
@@ -709,8 +716,9 @@ mod_import_data_server <- function(input, output, session, r) {
       shiny::selectInput(
         ns("dataset_selection"),
         label = "Integrated dataset selection",
-        choices = dataset_choices()
+        choices = dataset_choices(),
         # selected = dataset_choices()[1]
+        selected = shiny::isolate(r$integrated_dataset)
       )
     } else {
       NULL
