@@ -224,42 +224,8 @@ mod_import_data_ui <- function(id) {
       closable = FALSE,
       
       shiny::uiOutput(ns("design_import_ui")),
-      # shiny::radioButtons(
-      #   ns('sep_design'),
-      #   
-      #   'Separator : ',
-      #   c(
-      #     Comma = ',',
-      #     Semicolon = ';',
-      #     Tab = '\t'
-      #   ),
-      #   
-      #   inline = TRUE
-      # ),
-      # shinyWidgets::dropdownButton(
-      #   size = 'xs',
-      #   label = "Design file requirements",
-      #   shiny::includeMarkdown(system.file("extdata", "designFile.md",
-      #                                      package = "DIANE")),
-      #   circle = TRUE,
-      #   status = "primary",
-      #   icon = shiny::icon("question"),
-      #   width = "550px",
-      #   tooltip = shinyWidgets::tooltipOptions(title = "More details")
-      # ),
-      # shiny::fileInput(
-      #   ns('design'),
-      #   'Choose CSV/TXT design file (optional)',
-      #   accept = c(
-      #     'text/csv',
-      #     'text/comma-separated-values,text/plain',
-      #     '.csv',
-      #     '.txt'
-      #   )
-      # ),
+     
       DT::dataTableOutput(ns("design_preview")),
-      
-      
       
       footer = "Describe the levels of each factors for your conditions"
     ),
@@ -313,13 +279,6 @@ mod_import_data_server <- function(input, output, session, r) {
     r$custom_go = NULL
   })
   
-  # shiny::observeEvent(priority = 45, {
-  #   input$use_demo
-  #   # r$selected_preloaded_dataset
-  #   # input$org_select
-  # }, {
-  #   r$integrated_dataset = NULL
-  # })
   
   #   ____________________________________________________________________________
   #   seed setting                                                            ####
@@ -355,10 +314,7 @@ mod_import_data_server <- function(input, output, session, r) {
   
   
   raw_data <- shiny::reactive({
-    print("Inside raw_data")
-    # req(r$integrated_dataset)
     req(r$organism)
-    print("Inside raw_data, after conditions.")
     
     ###FIXME : we could put this in the first else, by putting req(input$raw_data) after
     r$raw_counts = NULL
@@ -382,19 +338,14 @@ mod_import_data_server <- function(input, output, session, r) {
     if (input$use_demo) { ###Import demo count data
       
       req(r$integrated_dataset)
-      print(paste0("Organism and dataset : ", r$organism, " - ", r$integrated_dataset))
-    
-      print("Starting to load data")
+      
       if(r$integrated_dataset == "Abiotic Stresses"){
         r$use_demo = input$use_demo
-        # data("abiotic_stresses", package = "DIANE")
-        # d <- abiotic_stresses$raw_counts
         d <- DIANE::abiotic_stresses[["raw_counts"]]
       } else {
         r$use_demo = input$use_demo
         d <- DIANE::custom_datasets[[r$organism]][[r$integrated_dataset]][["count"]]
       }
-      print("Data loaded.")
   }
     else{ ###Import user defined count data
       req(input$raw_data)
@@ -465,7 +416,6 @@ mod_import_data_server <- function(input, output, session, r) {
     
     ############### checking organism compatibility
     shiny::req(r$organism)
-    print("Start to check ID")
     if (r$organism != "Other") {
       if (!check_IDs(rownames(d), r$organism)) {
         if (r$organism == "Arabidopsis thaliana")
@@ -518,13 +468,11 @@ mod_import_data_server <- function(input, output, session, r) {
       }
       shiny::req(check_IDs(rownames(d), r$organism))
     }
-    print("ID checked.")
     
     r$conditions <-
       stringr::str_split_fixed(colnames(d), "_", 2)[, 1]
     r$splicing_aware <- are_splice_variants(row.names(d))
     r$raw_counts <- d
-    print("Count import is done.")
     d
   })
   
@@ -556,46 +504,41 @@ mod_import_data_server <- function(input, output, session, r) {
   #   Design import UI                                                        ####
   
   output$design_import_ui <- shiny::renderUI({
-    req(input$use_demo)
-    print("Design UI import")
-    if(!input$use_demo){
+    req(!input$use_demo)
     shiny::tagList(
-    shiny::radioButtons(
-      ns('sep_design'),
-      
-      'Separator : ',
-      c(
-        Comma = ',',
-        Semicolon = ';',
-        Tab = '\t'
+      shiny::radioButtons(
+        ns('sep_design'),
+        
+        'Separator : ',
+        c(
+          Comma = ',',
+          Semicolon = ';',
+          Tab = '\t'
+        ),
+        
+        inline = TRUE
       ),
-      
-      inline = TRUE
-    ),
-    shinyWidgets::dropdownButton(
-      size = 'xs',
-      label = "Design file requirements",
-      shiny::includeMarkdown(system.file("extdata", "designFile.md",
-                                         package = "DIANE")),
-      circle = TRUE,
-      status = "primary",
-      icon = shiny::icon("question"),
-      width = "550px",
-      tooltip = shinyWidgets::tooltipOptions(title = "More details")
-    ),
-    shiny::fileInput(
-      ns('design'),
-      'Choose CSV/TXT design file (optional)',
-      accept = c(
-        'text/csv',
-        'text/comma-separated-values,text/plain',
-        '.csv',
-        '.txt'
-      )
-    ))
-    } else {
-      NULL
-    }
+      shinyWidgets::dropdownButton(
+        size = 'xs',
+        label = "Design file requirements",
+        shiny::includeMarkdown(system.file("extdata", "designFile.md",
+                                           package = "DIANE")),
+        circle = TRUE,
+        status = "primary",
+        icon = shiny::icon("question"),
+        width = "550px",
+        tooltip = shinyWidgets::tooltipOptions(title = "More details")
+      ),
+      shiny::fileInput(
+        ns('design'),
+        'Choose CSV/TXT design file (optional)',
+        accept = c(
+          'text/csv',
+          'text/comma-separated-values,text/plain',
+          '.csv',
+          '.txt'
+        )
+      ))
   })
   
   
@@ -604,7 +547,6 @@ mod_import_data_server <- function(input, output, session, r) {
   
   design <- shiny::reactive({
     req(r$organism)
-    print("design loading ")
     if (input$use_demo) { ###Import demo count data
       req(r$integrated_dataset)
       if(r$integrated_dataset == "Abiotic Stresses"){
@@ -680,8 +622,6 @@ mod_import_data_server <- function(input, output, session, r) {
   
   
   output$org_selection <- shiny::renderUI({
-    # shiny::req(!input$use_demo)
-    print("Inside org_selection renderUI")
     shiny::selectInput(
       ns("org_select"),
       label = "Your organism :",
@@ -691,30 +631,14 @@ mod_import_data_server <- function(input, output, session, r) {
   })
   
   shiny::observeEvent(input$org_select,{
-    # print(paste0("We have : ", input$org_select, " - ", input$use_demo))
     if(input$org_select == "Other" & input$use_demo == TRUE){
       print("Pouet")
       shinyWidgets::updateSwitchInput(session = session, inputId = "use_demo", value = FALSE)
     }
   })
   
-  # shiny::observe({
-  #   if (input$use_demo) {
-  #     r$organism <- "Arabidopsis thaliana"
-  #   }
-  #   else{
-  #     NULL
-  #     # shiny::showModal(
-  #     #   shiny::modalDialog(
-  #     #     title = "Organism to study",
-  #     #     shiny::htmlOutput(ns("org_install")),
-  #     #     footer = list(shiny::actionButton(ns("org_chosen"), "OK"))
-  #     #   )
-  #     # )
-  #   }
-  # })
-  
   output$org_install <- shiny::renderText({
+    print("output$org_install")
     if (!golem::get_golem_options("server_version")) {
       "<b>The organisms listed below are the one detected on the system.</b> <br>
     To use new organisms, please close DIANE and install the corresponding
@@ -740,18 +664,10 @@ mod_import_data_server <- function(input, output, session, r) {
     }
   })
   
-  # shiny::observeEvent(input$org_chosen, {
-  #   r$organism <- input$organism
-  #   shiny::removeModal()
-  #   shiny::updateSelectInput(session, "org_select", selected = r$organism)
-  #   
-  # })
-
   #   ____________________________________________________________________________
   #   Custom datasets  oading                                                 ####
   
   shiny::observe(priority = 40,{
-    # shiny::req(!input$use_demo)
     r$organism <- input$org_select
   })
 
@@ -766,13 +682,11 @@ mod_import_data_server <- function(input, output, session, r) {
   })
   
   output$dataset_selection_ui <- shiny::renderUI({
-    print("dataset_selection_ui")
     if(input$use_demo){
       shiny::selectInput(
         ns("dataset_selection"),
         label = "Integrated dataset selection",
         choices = dataset_choices(),
-        # selected = dataset_choices()[1]
         selected = shiny::isolate(r$integrated_dataset)
       )
     } else {
@@ -780,10 +694,8 @@ mod_import_data_server <- function(input, output, session, r) {
     }
   })
   
-  # shiny::observe(priority = 10, {
   shiny::observeEvent(input$dataset_selection,{
     if(input$use_demo){
-      print(paste0("Integrated dataset will be ", input$dataset_selection))
       r$integrated_dataset <- input$dataset_selection
     }
   })
@@ -793,48 +705,47 @@ mod_import_data_server <- function(input, output, session, r) {
   #   import user data UI                                                     ####
   
   output$data_import_ui <- shiny::renderUI({
-    if(!input$use_demo){
-      print("import user data UI")
-    shiny::tagList(
-      col_8(shiny::radioButtons(
-        ns('sep'),
-        'Separator : ',
-        c(
-          Comma = ',',
-          Semicolon = ';',
-          Tab = '\t'
-        ),
-        inline = TRUE
-      )),
-      
-      shiny::fluidRow(col_4(
-        shinyWidgets::dropdownButton(
-          size = 'xs',
-          label = "Input file requirements",
-          shiny::includeMarkdown(
-            system.file("extdata", "expressionFile.md", package = "DIANE")
+      req(!input$use_demo)
+      shiny::tagList(
+        col_8(shiny::radioButtons(
+          ns('sep'),
+          'Separator : ',
+          c(
+            Comma = ',',
+            Semicolon = ';',
+            Tab = '\t'
           ),
-          circle = TRUE,
-          status = "primary",
-          icon = shiny::icon("question"),
-          width = "1200px",
-          tooltip = shinyWidgets::tooltipOptions(title = "More details")
-        )
-      )),
-      
-      col_12(
-        shiny::fileInput(
-          ns('raw_data'),
-          'Choose CSV/TXT expression file',
-          accept = c(
-            'text/csv',
-            'text/comma-separated-values,text/plain',
-            '.csv',
-            '.txt'
+          inline = TRUE
+        )),
+        
+        shiny::fluidRow(col_4(
+          shinyWidgets::dropdownButton(
+            size = 'xs',
+            label = "Input file requirements",
+            shiny::includeMarkdown(
+              system.file("extdata", "expressionFile.md", package = "DIANE")
+            ),
+            circle = TRUE,
+            status = "primary",
+            icon = shiny::icon("question"),
+            width = "1200px",
+            tooltip = shinyWidgets::tooltipOptions(title = "More details")
           )
-        )
-      ),
-      
+        )),
+        
+        col_12(
+          shiny::fileInput(
+            ns('raw_data'),
+            'Choose CSV/TXT expression file',
+            accept = c(
+              'text/csv',
+              'text/comma-separated-values,text/plain',
+              '.csv',
+              '.txt'
+            )
+          )
+        ),
+        
       
       
       #   ____________________________________________________________________________
@@ -875,9 +786,6 @@ mod_import_data_server <- function(input, output, session, r) {
           ))
       }
     )
-    } else { 
-      NULL
-    }
   })
   
   #   ____________________________________________________________________________
@@ -917,7 +825,6 @@ mod_import_data_server <- function(input, output, session, r) {
     } else {
       dataset_description <- "<p>No dataset description provided<p><hr>"
     }
-    
     dataset_description
   })
   
@@ -929,8 +836,6 @@ mod_import_data_server <- function(input, output, session, r) {
     req(r$raw_counts)
     req(r$conditions)
     req(r$organism)
-    
-    print("Gene information reactive")
     
     if (r$organism != "Other") {
       ids <- rownames(r$raw_counts)
@@ -988,8 +893,6 @@ mod_import_data_server <- function(input, output, session, r) {
     if(input$use_demo){
       shiny::req(r$integrated_dataset)
     }
-    print("Raw data preview")
-    print(paste0("Organism and data ", r$organism, " - ", r$integrated_dataset))
     raw_data()
     shiny::req(r$raw_counts)
     head(r$raw_counts)
@@ -998,11 +901,9 @@ mod_import_data_server <- function(input, output, session, r) {
   ########## matrix preview
   output$heatmap_preview <- shiny::renderPlot({
     shiny::req(r$raw_counts)
-    print("Begin heatmap draw")
     d <- r$raw_counts[rowSums(r$raw_counts) > 0,]
     
     draw_heatmap(d, title = "Expression data preview")
-    print("End heatmap draw")
   })
   
   
@@ -1012,7 +913,6 @@ mod_import_data_server <- function(input, output, session, r) {
   
   output$gene_ids <- shiny::renderUI({
     shiny::req(r$organism)
-    print("Output gene ID")
     
     if (r$organism == "Other")
       txt <- "No gene ID requirement"
@@ -1040,8 +940,6 @@ mod_import_data_server <- function(input, output, session, r) {
   
   output$data_dim <- shinydashboard::renderValueBox({
     shiny::req(r$raw_counts)
-    
-    print("output$data_dim")
     
     shinydashboard::valueBox(
       value = dim(r$raw_counts)[1],
@@ -1071,8 +969,6 @@ mod_import_data_server <- function(input, output, session, r) {
     shiny::req(r$raw_counts)
     shiny::req(r$organism)
     
-    print("output$gene_info_summary")
-    
     ######## setting gene info here
     r$gene_info <- gene_info()
     
@@ -1096,7 +992,6 @@ mod_import_data_server <- function(input, output, session, r) {
       text = header,
       rightBorder = FALSE
     )
-    print("END - output$gene_info_summary")
   })
   
   output$organism_summary <- shiny::renderUI({
