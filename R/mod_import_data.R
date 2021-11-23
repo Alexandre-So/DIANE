@@ -60,6 +60,8 @@ mod_import_data_ui <- function(id) {
       shiny::uiOutput(ns("dataset_selection_ui")),
       
       shiny::uiOutput(ns("data_import_ui")),
+      
+      shiny::htmlOutput(ns("dataset_description")),
       # 
       # col_8(shiny::radioButtons(
       #   ns('sep'),
@@ -382,14 +384,17 @@ mod_import_data_server <- function(input, output, session, r) {
       req(r$integrated_dataset)
       print(paste0("Organism and dataset : ", r$organism, " - ", r$integrated_dataset))
     
+      print("Starting to load data")
       if(r$integrated_dataset == "Abiotic Stresses"){
         r$use_demo = input$use_demo
-        data("abiotic_stresses", package = "DIANE")
-        d <- abiotic_stresses$raw_counts
+        # data("abiotic_stresses", package = "DIANE")
+        # d <- abiotic_stresses$raw_counts
+        d <- DIANE::abiotic_stresses[["raw_counts"]]
       } else {
         r$use_demo = input$use_demo
         d <- DIANE::custom_datasets[[r$organism]][[r$integrated_dataset]][["count"]]
       }
+      print("Data loaded.")
   }
     else{ ###Import user defined count data
       req(input$raw_data)
@@ -460,6 +465,7 @@ mod_import_data_server <- function(input, output, session, r) {
     
     ############### checking organism compatibility
     shiny::req(r$organism)
+    print("Start to check ID")
     if (r$organism != "Other") {
       if (!check_IDs(rownames(d), r$organism)) {
         if (r$organism == "Arabidopsis thaliana")
@@ -512,11 +518,13 @@ mod_import_data_server <- function(input, output, session, r) {
       }
       shiny::req(check_IDs(rownames(d), r$organism))
     }
+    print("ID checked.")
     
     r$conditions <-
       stringr::str_split_fixed(colnames(d), "_", 2)[, 1]
     r$splicing_aware <- are_splice_variants(row.names(d))
     r$raw_counts <- d
+    print("Count import is done.")
     d
   })
   
@@ -544,24 +552,11 @@ mod_import_data_server <- function(input, output, session, r) {
     )
   })
   
-  
   #   ____________________________________________________________________________
-  #   Custom import data UI                                                   ####
-  
-  
-  # ###FIXME : Should be merged with custom dataset import.
-  # import_user_data_ui <- shiny::renderUI({
-  #   if( input$use_demo){
-  #     
-  #   } else {
-  #     NULL
-  #   }
-  # })
-  
-  #   ____________________________________________________________________________
-  #   Design import UI      
+  #   Design import UI                                                        ####
   
   output$design_import_ui <- shiny::renderUI({
+    print("Design UI import")
     if(!input$use_demo){
     shiny::tagList(
     shiny::radioButtons(
@@ -608,12 +603,14 @@ mod_import_data_server <- function(input, output, session, r) {
   
   design <- shiny::reactive({
     req(r$organism)
+    print("design loading ")
     if (input$use_demo) { ###Import demo count data
       req(r$integrated_dataset)
       if(r$integrated_dataset == "Abiotic Stresses"){
         r$use_demo = input$use_demo
-        data("abiotic_stresses", package = "DIANE")
-        d <- abiotic_stresses$design
+        # data("abiotic_stresses", package = "DIANE")
+        # d <- abiotic_stresses$design
+        d <- DIANE::abiotic_stresses[["design"]]
       } else {
         r$use_demo = input$use_demo
         d <- DIANE::custom_datasets[[r$organism]][[r$integrated_dataset]][["design"]]
@@ -750,7 +747,7 @@ mod_import_data_server <- function(input, output, session, r) {
   # })
 
   #   ____________________________________________________________________________
-  #   Custom datasets                                                         ####
+  #   Custom datasets  oading                                                 ####
   
   shiny::observe(priority = 40,{
     # shiny::req(!input$use_demo)
@@ -796,6 +793,7 @@ mod_import_data_server <- function(input, output, session, r) {
   
   output$data_import_ui <- shiny::renderUI({
     if(!input$use_demo){
+      print("import user data UI")
     shiny::tagList(
       col_8(shiny::radioButtons(
         ns('sep'),
@@ -876,9 +874,50 @@ mod_import_data_server <- function(input, output, session, r) {
           ))
       }
     )
-    } else {
+    } else { 
       NULL
     }
+  })
+  
+  #   ____________________________________________________________________________
+  #   Dataset description                                                     ####
+  
+  output$dataset_description <- shiny::renderText({
+    req(r$organism)
+    req(r$integrated_dataset)
+    req(input$use_demo)
+    
+    dataset_informations <- DIANE::custom_datasets[[r$organism]][[r$integrated_dataset]][["description"]]
+    dataset_description = ""
+    string = ""
+    url_pattern <- "(http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\\(\\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+)" ###Use to detect URL. Need that the field contains ONLY and url.
+    if(!is.null(dataset_informations)){
+    ###We need to have everything stored in a string. So we just create this string field by field. And then we just print her.
+    for(i in 1:nrow(dataset_informations)){
+      if(stringr::str_detect(string = dataset_informations[i,2], pattern = url_pattern)){
+        text_with_url <- stringr::str_replace_all(string = dataset_informations[i,2], pattern = url_pattern, replacement = paste0("<a href=","\\1",">","\\1","</a>"))
+        string = paste(string, paste(tags$b(dataset_informations[i,1]), " : ", text_with_url, "</br>"), " ")
+      } else {
+        string = paste(string, paste(tags$b(dataset_informations[i,1]), " : ", dataset_informations[i,2], "</br>"), " ")
+      }
+    }
+    dataset_description <- paste0(string, "<hr>")
+    } else if (r$integrated_dataset == "Abiotic Stresses" & r$organism == "Arabidopsis thaliana"){
+      dataset_description <- '
+                  <b>Dataset name</b> : Response to abiotic stress</br>
+                  <b>Organism</b> : Arabidopsis thaliana</br>
+                  <b>Description</b> : This dataset contians (typo!) the transcriptome of Arabidopsis thaliana plants exposed to global warming induced conditions. The experimental perturbations studied are high tempreature, hight salinity and osmotic changes in the soil. Each factors has two levels, one of them considered as the reference, and the other one as the stress level.</br>
+                  <b>Name correspondance</b> : C = control ; H = heat ; S = salt , M = mannitol</br>
+                  <b>Authors</b> : Nasser Sewelam, Dominik Brilhaus, Andrea Bräutigam, Saleh Alseekh, Alisdair R Fernie, Veronica G Maurino</br>
+                  <b>Article</b> : Molecular plant responses to combined abiotic stresses put a spotlight on unknown and abundant genes</br>
+                  <b>DOI</b> : <a href="https://doi.org/10.1093/jxb/eraa250">https://doi.org/10.1093/jxb/eraa250</a>
+                  <hr>
+                '
+    } else {
+      dataset_description <- "<p>No dataset description provided<p><hr>"
+    }
+    
+    dataset_description
   })
   
   
@@ -941,6 +980,7 @@ mod_import_data_server <- function(input, output, session, r) {
   ########### table view
   
   output$raw_data_preview <- DT::renderDataTable({
+    print("Raw data preview")
     raw_data()
     shiny::req(r$raw_counts)
     head(r$raw_counts)
@@ -949,9 +989,11 @@ mod_import_data_server <- function(input, output, session, r) {
   ########## matrix preview
   output$heatmap_preview <- shiny::renderPlot({
     shiny::req(r$raw_counts)
+    print("Begin heatmap draw")
     d <- r$raw_counts[rowSums(r$raw_counts) > 0,]
     
     draw_heatmap(d, title = "Expression data preview")
+    print("End heatmap draw")
   })
   
   
