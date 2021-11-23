@@ -58,6 +58,7 @@ mod_import_data_ui <- function(id) {
       shiny::uiOutput(ns("org_selection")),
       
       shiny::uiOutput(ns("dataset_selection_ui")),
+      shiny::htmlOutput(ns("no_dataset_warning")),
       
       shiny::uiOutput(ns("count_import_ui")),
       shiny::uiOutput(ns("custom_organism_ui")),
@@ -589,7 +590,7 @@ mod_import_data_server <- function(input, output, session, r) {
   })
   
   #   ____________________________________________________________________________
-  #   Custom datasets  oading                                                 ####
+  #   Custom datasets loading                                                 ####
   
   shiny::observe(priority = 40,{
     r$organism <- input$org_select
@@ -605,23 +606,29 @@ mod_import_data_server <- function(input, output, session, r) {
   })
   
   output$dataset_selection_ui <- shiny::renderUI({
-    if(input$use_demo){
+    # if(input$use_demo){
+    shiny::req(input$use_demo)
       shiny::selectInput(
         ns("dataset_selection"),
         label = "Integrated dataset selection",
-        choices = dataset_choices(),
+        choices = dataset_choices(), ###Will be "" if no existing dataset.
         selected = shiny::isolate(r$integrated_dataset)
       )
-    } else {
-      print("None")
-      h2("none")
-    }
+    # } else {
+      # NULL
+    # }
   })
   
   shiny::observeEvent(input$dataset_selection,{
     if(input$use_demo){
       r$integrated_dataset <- input$dataset_selection
     }
+  })
+  
+  ###Print a warning when no dataset are available for selected org
+  output$no_dataset_warning <- shiny::renderText({
+    shiny::req(length(dataset_choices())==0)
+    "<b>Information</b> : There is no pre-integrated dataset for this organism. But you can still import your own count data for this organism !"
   })
   
   
