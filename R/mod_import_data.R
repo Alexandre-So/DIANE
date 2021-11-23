@@ -305,6 +305,7 @@ mod_import_data_server <- function(input, output, session, r) {
     r$integrated_dataset = NULL
     # r$integrated_dataset = NULL
     r$custom_go = NULL
+    # browser()
   })
   
   
@@ -682,79 +683,18 @@ mod_import_data_server <- function(input, output, session, r) {
   #   shiny::updateSelectInput(session, "org_select", selected = r$organism)
   #   
   # })
-  
-  # shiny::observe(priority = 40,{
-  #   # shiny::req(!input$use_demo)
-  #   r$organism <- input$org_select
-  # })
 
   #   ____________________________________________________________________________
   #   Custom datasets                                                         ####
-  
-  # dataset_choices <- shiny::reactive({
-  #   req(r$organism)
-  #   if(r$organism == "Arabidopsis thaliana"){
-  #     print(paste0("Ractive dataset choices : ", c("Abiotic Stresses", names(DIANE::custom_datasets[[r$organism]]))))
-  #     c("Abiotic Stresses", names(DIANE::custom_datasets[[r$organism]]))
-  #   } else {
-  #     print(paste0("Ractive dataset choices : ",  names(DIANE::custom_datasets[[r$organism]])))
-  #     names(DIANE::custom_datasets[[r$organism]])
-  #   }
-  # })
-  # 
-  # # shiny::observe(priority = 10, {
-  # shiny::observe({
-  #   # shiny::req(input$use_demo)
-  #   shiny::req(r$organism)
-  #   if(input$use_demo){
-  #     print(paste0("Integrated dataset will be ", input$dataset_selection))
-  #     r$integrated_dataset <- input$dataset_selection
-  #   } else {
-  #     print(paste0("Integrated dataset be RESET"))
-  #     r$integrated_dataset <- NULL
-  #   }
-  # })
-  # 
-  # 
-  # output$dataset_selection_ui <- shiny::renderUI({
-  #   req(r$organism)
-  #   print("renderUI dataset_selection_ui")
-  #   if(input$use_demo){
-  #     shiny::selectInput(
-  #       ns("dataset_selection"),
-  #       label = "Integrated dataset selection",
-  #       choices = dataset_choices(),
-  #       selected = dataset_choices()[1]
-  #     )
-  #   } else {
-  #     NULL
-  #   }
-  # })
-  # 
-  
-  ### --------------------------------------------------------------------------
-  
   
   shiny::observe(priority = 40,{
     # shiny::req(!input$use_demo)
     r$organism <- input$org_select
   })
-  
-  output$dataset_selection_ui <- shiny::renderUI({
-    if(input$use_demo){
-      shiny::selectInput(
-        ns("dataset_selection"),
-        label = "Integrated dataset selection",
-        choices = dataset_choices(),
-        selected = dataset_choices()[1]
-      )
-    } else {
-      NULL
-    }
-  })
-  
+
   dataset_choices <- shiny::reactive({
     req(r$organism)
+    print("dataset choices")
     if(r$organism == "Arabidopsis thaliana"){
       c("Abiotic Stresses", names(DIANE::custom_datasets[[r$organism]]))
     } else {
@@ -762,11 +702,30 @@ mod_import_data_server <- function(input, output, session, r) {
     }
   })
   
+  output$dataset_selection_ui <- shiny::renderUI({
+    print("dataset_selection_ui")
+    if(input$use_demo){
+      shiny::selectInput(
+        ns("dataset_selection"),
+        label = "Integrated dataset selection",
+        choices = dataset_choices()
+        # selected = dataset_choices()[1]
+      )
+    } else {
+      NULL
+    }
+  })
+  
   # shiny::observe(priority = 10, {
-  shiny::observe({
-    shiny::req(input$use_demo)
-    print(paste0("Integrated dataset will be ", input$dataset_selection))
-    r$integrated_dataset <- input$dataset_selection
+  shiny::observeEvent(input$dataset_selection,{
+    # shiny::req(input$use_demo)
+    if(input$use_demo){
+      print(paste0("Integrated dataset will be ", input$dataset_selection))
+      r$integrated_dataset <- input$dataset_selection
+    } # else {
+    #   print(paste0("Integrated dataset (BG) will be ", dataset_choices()[1]))
+    #   r$integrated_dataset <- dataset_choices()[1]
+    # }
   })
   
   
