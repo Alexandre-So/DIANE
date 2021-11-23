@@ -55,7 +55,7 @@ mod_import_data_ui <- function(id) {
         
       ),
       
-      shiny::actionButton(ns("debug"), label = "Debug"),
+      # shiny::actionButton(ns("debug"), label = "Debug"),
       
       shiny::uiOutput(ns("org_selection")),
       
@@ -159,8 +159,8 @@ mod_import_data_ui <- function(id) {
     
     shiny::br(),
     shiny::hr(),
-    DT::dataTableOutput(ns("raw_data_preview"))
-    
+
+    DT::dataTableOutput(ns("raw_data_preview")),
     
   )
 }
@@ -576,11 +576,16 @@ mod_import_data_server <- function(input, output, session, r) {
     )
   })
   
-  shiny::observeEvent(input$org_select,{
-    if(input$org_select == "Other" & input$use_demo == TRUE){
-      print("Pouet")
-      shinyWidgets::updateSwitchInput(session = session, inputId = "use_demo", value = FALSE)
-    }
+  shiny::observeEvent({
+    input$org_select
+    input$use_demo
+    # r$use_demo
+    },{
+      req(input$use_demo)
+      req(r$organism)
+      if(input$org_select == "Other" & input$use_demo == TRUE){
+        shinyWidgets::updateSwitchInput(session = session, inputId = "use_demo", value = FALSE)
+      }
   })
   
   output$org_install <- shiny::renderText({
