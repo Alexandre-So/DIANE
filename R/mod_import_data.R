@@ -852,8 +852,9 @@ mod_import_data_server <- function(input, output, session, r) {
   ########## matrix preview
   output$heatmap_preview <- shiny::renderPlot({
     shiny::req(r$raw_counts)
-    d <- r$raw_counts[rowSums(r$raw_counts) > 0,]
     
+    d <- r$raw_counts[rowSums(r$raw_counts) > 0,]
+    # d <- r$raw_counts[sample(which(rowSums(r$raw_counts) > 0), 100),]
     draw_heatmap(d, title = "Expression data preview")
   })
   
