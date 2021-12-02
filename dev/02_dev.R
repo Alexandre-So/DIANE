@@ -106,6 +106,7 @@ golem::add_module( name = "module_levels" )
 golem::add_module( name = "datasets" )
 golem::add_module( name = "legal_mentions" )
 golem::add_module( name = "versions" )
+golem::add_module( name = "import_gene_list" ) # For user specific gene list.
 
 
 
