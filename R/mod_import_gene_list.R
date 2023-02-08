@@ -165,7 +165,6 @@ mod_import_gene_list_server <- function(id, r){
         if(number_genes_in_table != number_of_genes && number_of_genes > 0){
           shiny::tagList(
             shiny::column(6,
-                          # br(),
             shiny::HTML(
               "<b>Warning</b> : some provided genes are absent from the count matrix and will not be used. For exemple :<br>"
             ),
@@ -184,7 +183,8 @@ mod_import_gene_list_server <- function(id, r){
       
     output$import_gene_list_button_ui <- shiny::renderUI({
       req(r$raw_counts)
-      if(sum(gene_list() %in% rownames(r$raw_counts)) > 1){
+      number_of_valid_genes <- sum(gene_list() %in% rownames(r$raw_counts))
+      if(number_of_valid_genes > 1 && number_of_valid_genes < 5000){
         shiny::tagList(
           shiny::textInput(
             inputId = ns("gene_list_name"),
@@ -192,6 +192,18 @@ mod_import_gene_list_server <- function(id, r){
             value = "My gene list 1", width = "40%",
           ),
           shiny::actionButton(inputId = ns("import_gene_list"), label = "Import gene list"),
+        )
+      } else if (length(gene_list()) == 0) {
+        shinydashboardPlus::descriptionBlock(
+          number = "You can put a list of genes in the above form.",
+          numberColor = "black",
+          rightBorder = FALSE
+        )
+      } else if (number_of_valid_genes > 5000){
+        shinydashboardPlus::descriptionBlock(
+          number = "You cannot import gene list of more than 5000 genes.",
+          numberColor = "orange",
+          rightBorder = FALSE
         )
       } else {
         shinydashboardPlus::descriptionBlock(
@@ -209,6 +221,7 @@ mod_import_gene_list_server <- function(id, r){
     # Check that there is more than xx genes in the list
     # Empty the UI when gene list is uploaded
     # Check that name is not too long.
+    # Check that there is less than yyy genes in the list.
     shiny::observeEvent(input$import_gene_list, {
       if (stringr::str_detect(pattern = paste0(paste0("^",unique(r$conditions), " "), collapse = "|"), string =  input$gene_list_name)) { ###Search for a string that begins with the name of a condition, of by the name of a condition with a parenthesis.
         shinyalert::shinyalert("This name may be the result of Differential expression analysis. You cannot choose it.",
@@ -234,7 +247,8 @@ mod_import_gene_list_server <- function(id, r){
         shinyWidgets::radioGroupButtons(
           inputId = ns("stored_gene_list"),
           label = "Stored gene list",
-          choices = names(r$custom_gene_list),
+          choiceValues = names(r$custom_gene_list),
+          choiceNames = paste(names(r$custom_gene_list), paste("(",lengths(r$custom_gene_list), " genes)")),
           justified = TRUE,
           direction = "vertical",
           checkIcon = list(yes = shiny::icon("ok",
