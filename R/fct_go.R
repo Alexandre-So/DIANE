@@ -373,6 +373,7 @@ draw_enrich_go <- function(go_data, max_go = dim(go_data)[1]){
   
   plotly::ggplotly(
     ggplot2::ggplot(data = res, ggplot2::aes(x = Count, y = Description, color = p.adjust)) +
+      ggplot2::theme_bw() +
       ggplot2::geom_point(ggplot2::aes(size = Count))+
       ggplot2::ylab("") + ggplot2::ggtitle("Enriched ontologies and their gene count") +
       ggplot2::scale_color_gradient(low="#114223", high="#92D9A2"), 
@@ -495,7 +496,7 @@ draw_enrich_go_map <- function(go){
   layout$GeneCount <- go[match(layout$name, go$ID),"Count"]
   layout$adj.p.value <- go[match(layout$name, go$ID),"p.adjust"]
   layout$label <- go[match(layout$name, go$ID),"Description"]
-  ggraph::ggraph(layout) + 
+  ggraph::ggraph(layout) + ggplot2::theme_bw() +
     ggraph::geom_edge_link(
       width = 2.2, ggplot2::aes(alpha = 0.1 + 0.2*common_genes/max(pairs$common_genes))) + #
     ggraph::geom_node_point(ggplot2::aes(size = GeneCount, color=adj.p.value)) +

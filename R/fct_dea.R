@@ -204,6 +204,7 @@ draw_DEGs <- function(tags,
   if (MA)
     g <-
     ggplot2::ggplot(data = top, ggplot2::aes(x = logCPM, y = logFC, color = isDE)) + 
+    ggplot2::theme_bw() +
     ggplot2::ggtitle("M-A plot")
   else
     g <-
@@ -211,7 +212,8 @@ draw_DEGs <- function(tags,
       y = -log10(FDR),
       x = logFC,
       color = isDE
-    )) + ggplot2::ggtitle("Volcano plot")
+    )) + ggplot2::theme_bw() +
+    ggplot2::ggtitle("Volcano plot")
   g <-
     g + ggplot2::geom_point(size = 1.5, alpha = 0.75) + 
     ggplot2::scale_color_manual(name = "DEG", values = c("#999999", "#25BA40"))

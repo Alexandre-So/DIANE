@@ -101,7 +101,7 @@ draw_coseq_run <- function(clustering_run, plot = "ICL") {
   if (plot == "ICL")
     p <- coseq::plot(clustering_run, graphs = c("ICL"))
   if (plot == "barplots") {
-    p <- coseq::plot(clustering_run, graphs = c("probapost_barplots"))
+    p <- coseq::plot(clustering_run, graphs = c("probapost_barplots")) 
   }
   p
 }
@@ -217,7 +217,7 @@ draw_profiles <-
         color = "black",
         outlier.color = "black",
         outlier.alpha = 0.1
-      ) +
+      ) + ggplot2::theme_bw() +
       ggplot2::geom_jitter(width = 0.1, alpha = 0.0015) +
       ggplot2::ggtitle("Normalized expression profiles")
     
@@ -227,12 +227,13 @@ draw_profiles <-
         strip.text.x = ggplot2::element_text(size = 20),
         legend.position = leg, legend.text = ggplot2::element_text(size = 20),
         legend.title = ggplot2::element_text(size = 20, face = "bold"),
-        axis.text.y = ggplot2::element_text(size = 12, angle = 30),
+        axis.text.y = ggplot2::element_text(size = 12, angle = 30, face = "bold"),
         axis.text.x = ggplot2::element_text(
           size = 12,
           hjust = 0,
           angle = -50,
-          colour = "grey50"
+          colour = "grey10",
+          face = "bold"
         ),
         legend.text.align = 1,
         axis.title = ggplot2::element_text(size = 19)

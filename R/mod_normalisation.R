@@ -143,7 +143,7 @@ mod_normalisation_ui <- function(id) {
       shinydashboard::tabBox(
         title = "Data exploration",
         width = 9,
-        height = "1000px",
+        height = "1030px",
         
         shiny::tabPanel(
           title = "Samples distributions",

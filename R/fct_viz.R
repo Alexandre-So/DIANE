@@ -126,6 +126,7 @@ draw_distributions <- function(data, boxplot = TRUE) {
 }
 
 
+
 #' Draw PCA results Legacy
 #'
 #'
@@ -368,6 +369,7 @@ draw_expression_levels <-
                     ggplot2::aes(x = condition,
                                  y = value,
                                  color = replicate)) + 
+      ggplot2::theme_bw() + 
      {if(start_from_zero) ggplot2::expand_limits(y=0)} + ###Make the y axis start at 0
       ggplot2::geom_point(size = 4, alpha = 0.8) +
       ggplot2::facet_wrap(~ gene, scales = "free") +
@@ -485,7 +487,9 @@ draw_specific_pca <- function(pca, component_1, component_2, legend = TRUE){
                                 color = "condition",
                                 label = "condition",
                                 shape = "replicate"
-                              )) + ggrepel::geom_text_repel( ###REQUIRE ggrepel PACKAGE https://github.com/slowkow/ggrepel (geom_label_repel)
+                              )) + 
+                                ggplot2::theme_bw() +
+                                ggrepel::geom_text_repel( ###REQUIRE ggrepel PACKAGE https://github.com/slowkow/ggrepel (geom_label_repel)
                                 color = "black",
                                 size = 6,
                                 alpha = 0.5,
@@ -543,6 +547,7 @@ draw_pca_scree <- function(pca){
                                   fill = component,
                                   label = paste(round(explained.variance, 1), '%')
                                 )) +
+    ggplot2::theme_bw() +
     ggplot2::geom_bar(stat = "identity") + ggplot2::geom_text(size = max(4, 8-0.5*ncol(pca$c1)),
                                                               vjust = 1.6,
                                                               color = "white") +
