@@ -106,7 +106,7 @@ draw_distributions <- function(data, boxplot = TRUE) {
   }
   
   g <-
-    g + ggplot2::theme(
+    g + ggplot2::theme_bw() + ggplot2::theme(
       plot.title = ggplot2::element_text(size = 22, face = "bold"),
       strip.text.x = ggplot2::element_text(size = 20),
       legend.position = "bottom",
