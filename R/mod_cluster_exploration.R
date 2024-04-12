@@ -404,7 +404,7 @@ mod_cluster_exploration_server <-
       shiny::req(r$normalized_counts)
       shiny::req(membership())
       
-      if (r$organism == "Other") {
+      if (r$organism == "Other" || is.null(DIANE::organisms[[r$organism]][["go_mapping"]])) {
         if (is.null(r$custom_go)) {
           if (!is.null(input$go_data)) {
             pathName = input$go_data$datapath
@@ -467,18 +467,24 @@ mod_cluster_exploration_server <-
         }
         
         
-        if (r$organism == "Lupinus albus") {
-          GOs <- DIANE:::lupine$go_list
+        # if (r$organism == "Lupinus albus") {
+        #   GOs <- DIANE:::lupine$go_list
+        #   universe <- intersect(background, GOs[, 1])
+        #   r_clust$go <- enrich_go_custom(genes, universe, GOs,
+        #                                  GO_type = input$go_type)
+        # }
+        # else if (stringr::str_detect(r$organism, "Oryza")) {
+        #   data("go_matchings", package = "DIANE")
+        #   GOs <- go_matchings[[r$organism]]
+        #   universe <- intersect(background, GOs[,1])
+        #   r_clust$go <- enrich_go_custom(genes, universe, GOs,
+        #                                  GO_type = input$go_type)
+        # }
+        if (r$organism  %in% names(DIANE::organisms)){ ###Go enrichment for custom organism
+          GOs <- DIANE::organisms[[r$organism]][["go_mapping"]]
           universe <- intersect(background, GOs[, 1])
           r_clust$go <- enrich_go_custom(genes, universe, GOs,
-                                         GO_type = input$go_type)
-        }
-        else if (stringr::str_detect(r$organism, "Oryza")) {
-          data("go_matchings", package = "DIANE")
-          GOs <- go_matchings[[r$organism]]
-          universe <- intersect(background, GOs[,1])
-          r_clust$go <- enrich_go_custom(genes, universe, GOs,
-                                         GO_type = input$go_type)
+                                       GO_type = input$go_type)
         }
         
         else{

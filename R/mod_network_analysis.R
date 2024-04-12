@@ -597,7 +597,7 @@ mod_network_analysis_server <- function(input, output, session, r) {
     shiny::req(input$cluster_to_explore != "All")
     
     
-    if (r$organism == "Other") {
+    if (r$organism == "Other" || is.null(DIANE::organisms[[r$organism]][["go_mapping"]])) {
       if (is.null(r$custom_go)) {
         if (!is.null(input$go_data)) {
           pathName = input$go_data$datapath
@@ -696,17 +696,13 @@ mod_network_analysis_server <- function(input, output, session, r) {
         background <- get_locus(background)
       }
       
-      if (r$organism == "Lupinus albus") {
-        GOs <- DIANE:::lupine$go_list
+      if (r$organism  %in% names(DIANE::organisms)){ ###Go enrichment for custom organism
+        GOs <- DIANE::organisms[[r$organism]][["go_mapping"]]
         universe <- intersect(background, GOs[, 1])
-        r_mod$go <- enrich_go_custom(genes, universe, GOs)
+        r_mod$go <- enrich_go_custom(genes, universe, GOs,
+                                     GO_type = input$go_type)
       }
-      else if (stringr::str_detect(r$organism, "Oryza")) {
-        data("go_matchings", package = "DIANE")
-        GOs <- go_matchings[[r$organism]]
-        universe <- intersect(background, GOs[, 1])
-        r_mod$go <- enrich_go_custom(genes, universe, GOs)
-      }
+      
       else{
         if (r$organism == "Arabidopsis thaliana") {
           genes <- convert_from_agi(genes)

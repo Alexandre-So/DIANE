@@ -142,6 +142,9 @@ usethis::use_data(gene_annotations , version = 3, overwrite = T)
 usethis::use_data(regulators_per_organism , version = 3, overwrite = T)
 usethis::use_data(lupine, version = 3, overwrite = T, internal = TRUE)
 usethis::use_data(go_matchings, version = 3, overwrite = T)
+usethis::use_data(organisms, version = 3, overwrite = T)
+usethis::use_data(integrated_datasets, version = 3, overwrite = T)
+
 
 #usethis::use_data_raw( name = "raw_data_demo", open = FALSE ) 
 
@@ -163,7 +166,8 @@ devtools::build_vignettes()
 
 usethis::use_pkgdown()
 
-pkgdown::build_site()
+pkgdown::build_site(lazy = TRUE)
+# pkgdown::build_site()
 
 
 usethis::use_github_action("pkgdown")

@@ -31,6 +31,7 @@ app_server <- function(input, output, session) {
     splicing_aware = NULL,
     gene_info = NULL,
     organism = NULL,
+    integrated_dataset =  NULL,
     custom_go = NULL,
     session_id = as.character(floor(runif(1)*1e20)),
     seed = golem::get_golem_options("seed"),

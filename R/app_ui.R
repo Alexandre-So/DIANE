@@ -28,7 +28,7 @@ logo_diane <- dashboardthemes::shinyDashboardLogoDIY(
 
 )
 
-dbHeader <- shinydashboard::dashboardHeader(title = logo_diane,
+dbHeader <- shinydashboard::dashboardHeader(title = logo_diane, titleWidth = "300px",
                                             shiny::tags$li(class = "dropdown",
                                                            shiny::tags$li(shiny::actionButton("plot_params", label = NULL, icon = shiny::icon("image", class = "duotone"), class = "btn-success"), style = "padding-top: 8px; display: inline-block;  color:#0098f8;")
                                             ),
