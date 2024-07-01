@@ -27,8 +27,8 @@ mod_module_levels_ui <- function(id){
         position = 'top-left',
         margins = c(70, 1200)
       ),
-      
-      shiny::fluidRow(
+    
+    shiny::fluidRow(
       shinydashboard::tabBox(
         title = "Explore normalized data",
         width = 12,
@@ -45,15 +45,15 @@ mod_module_levels_ui <- function(id){
                             solidHeader = FALSE,
                             status = "success",
                             collapsible = TRUE,
-                            closable = FALSE,
-                            width = 12,
-                            
-                            shiny::uiOutput(ns("gene_choice")),
-                            
-                            shiny::uiOutput(ns("condition_choice")),
-                            
-                            shiny::column(2,
-                              shiny::checkboxInput(inputId = ns("take_log_count"), label = "Take log2 of count", value = FALSE, width = "100%")
+                          closable = FALSE,
+                          width = 12,
+                          
+                          shiny::uiOutput(ns("gene_choice")),
+                          
+                          shiny::uiOutput(ns("condition_choice")),
+                          
+                          shiny::column(2,
+                            shiny::checkboxInput(inputId = ns("take_log_count"), label = "Take log2 of count", value = FALSE, width = "100%")
                             ),
                             shiny::column(2,
                               shiny::checkboxInput(inputId = ns("start_y_from_zero"), label = "Y axis start from 0", value = FALSE, width = "100%")
@@ -71,7 +71,32 @@ mod_module_levels_ui <- function(id){
                                                                                            color = "success", icon = shiny::icon("image"), size = "sm"))
                           )
                         )  
-        )
+        ),
+        shiny::tabPanel(title = "Correlation plot",
+                        shiny::fluidRow(
+                          shinydashboardPlus::box(
+                            title = "Parameters",
+                            solidHeader = FALSE,
+                            status = "success",
+                            collapsible = TRUE,
+                            closable = FALSE,
+                            width = 12,
+                            shiny::uiOutput(ns("correlation_condition_choice_ui"))
+                          ),
+                          shinydashboardPlus::box(
+                            title = "Plot",
+                            solidHeader = FALSE,
+                            status = "success",
+                            collapsible = TRUE,
+                            closable = FALSE,
+                            width = 12,
+                            shiny::plotOutput(outputId = ns("correlation_heatmap"), height = "700px"),
+                            shiny::column(width = 12, align = "right", class="download_plot_button",
+                                          shinyWidgets::downloadBttn(outputId = ns("download_correlation_plot"), "Download correlation plot", style = "material-flat",
+                                                                     color = "success", icon = shiny::icon("image"), size = "sm"))
+                          )
+                          )
+                        )
       )
     ))
 }
@@ -94,6 +119,21 @@ mod_module_levels_server <- function(input, output, session, r){
     shinyWidgets::checkboxGroupButtons(
       inputId = ns('input_conditions'),
       label = "Conditions to include to the expression levels plot:",
+      choices = unique(r$conditions),
+      justified = TRUE,
+      checkIcon = list(yes = shiny::icon("ok",
+                                         lib = "glyphicon")),
+      selected = unique(r$conditions)
+    )
+  })
+  
+  
+  output$correlation_condition_choice_ui <- shiny::renderUI({
+    shiny::req(r$normalized_counts, r$conditions)
+    
+    shinyWidgets::checkboxGroupButtons(
+      inputId = ns('correlation_condition_choice'),
+      label = "Conditions to include to correlation plot",
       choices = unique(r$conditions),
       justified = TRUE,
       checkIcon = list(yes = shiny::icon("ok",
@@ -240,6 +280,7 @@ mod_module_levels_server <- function(input, output, session, r){
     golem::print_dev("specific_pca_plot")
     specific_pca_plot_plot()
   })
+
   
   ##  ............................................................................
   ##  PCA plot correlation                                                    ####
@@ -279,6 +320,24 @@ mod_module_levels_server <- function(input, output, session, r){
     )
   })
   
+  
+  ##  ............................................................................
+  # Correlation heatmap                                                       ####
+  
+  correlation_heatmap_plot <- shiny::reactive({
+    req(r$normalized_counts, input$correlation_condition_choice)
+    golem::print_dev("correlation heatmap reactive")
+    draw_correlation_heatmap(data = r$normalized_counts, conds = input$correlation_condition_choice)
+    
+  })
+  
+  output$correlation_heatmap <- shiny::renderPlot({
+    shiny::validate(
+      need(r$normalized_counts, message = "You must normalize your count data."),
+      need(input$correlation_condition_choice, message = "No condition seleced")
+    )
+    correlation_heatmap_plot()
+  })
   
 #   ____________________________________________________________________________
 #   Download Handler                                                        ####
@@ -332,6 +391,17 @@ mod_module_levels_server <- function(input, output, session, r){
       } else {
         download_plot_hd(file = file, plot_error = TRUE, format = r[["plots_params"]][["format"]])
       }
+    }
+  )
+  
+  output$download_correlation_plot <- downloadHandler(
+    filename = function() {
+      time = format(Sys.time(), "%Y-%m-%d_%H-%M")
+      paste0(time, "_correlation_DIANE.", r[["plots_params"]][["format"]])
+    },
+    contentType = "image",
+    content = function(file) {
+      download_plot_hd(correlation_heatmap_plot(), file = file, format = r[["plots_params"]][["format"]], res =  r[["plots_params"]][["res"]], width = r[["plots_params"]][["width"]], height = r[["plots_params"]][["height"]], type = "ggplot")
     }
   )
   
