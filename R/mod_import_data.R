@@ -169,8 +169,6 @@ mod_import_data_ui <- function(id) {
 mod_import_data_server <- function(input, output, session, r) {
   ns <- session$ns
   
-  message("Huitre")
-  
   #   ____________________________________________________________________________
   #   Data reset                                                              ####
   
@@ -178,7 +176,7 @@ mod_import_data_server <- function(input, output, session, r) {
   # when demo usage is toggled :
   
   shiny::observeEvent(priority = 50, {
-    # input$use_demo
+    input$use_demo
     # r$selected_preloaded_dataset
     input$org_select
   }, {
@@ -241,7 +239,7 @@ mod_import_data_server <- function(input, output, session, r) {
   
   raw_data <- shiny::reactive({
     req(r$organism)
-    golem::print_dev("raw_data")
+    golem::print_dev("raw_data reactive")
     
     ###FIXME : we could put this in the first else, by putting req(input$raw_data) after
     r$raw_counts = NULL
@@ -266,6 +264,7 @@ mod_import_data_server <- function(input, output, session, r) {
       
       req(r$integrated_dataset)
       req(all(r$integrated_dataset %in% dataset_choices()))
+      golem::print_dev("Import demo count data.")
       
       if(r$integrated_dataset == "Abiotic Stresses" & r$organism == "Arabidopsis thaliana"){
         r$use_demo = input$use_demo
@@ -278,6 +277,7 @@ mod_import_data_server <- function(input, output, session, r) {
     }
     else{ ###Import user defined count data
       req(input$raw_data)
+      golem::print_dev("User defined count data")
       path = input$raw_data$datapath
       
       r$raw_counts = NULL
@@ -346,6 +346,7 @@ mod_import_data_server <- function(input, output, session, r) {
     ############### checking organism compatibility
     shiny::req(r$organism)
     if (r$organism != "Other") {
+      golem::print_dev("Organism != other")
       # Check compatibility for legacy organisms, using regex
       if ((! r$organism %in% names(DIANE::organisms)) && !check_IDs(rownames(d), r$organism)) {
       # if (!check_IDs(rownames(d), r$organism)) {
@@ -500,6 +501,7 @@ mod_import_data_server <- function(input, output, session, r) {
   
   design <- shiny::reactive({
     req(r$organism)
+    golem::print_dev("Design reactive")
     if (input$use_demo) { ###Import demo count data
       req(r$integrated_dataset)
       if(r$integrated_dataset == "Abiotic Stresses"){
@@ -508,6 +510,7 @@ mod_import_data_server <- function(input, output, session, r) {
         # d <- abiotic_stresses$design
         d <- DIANE::abiotic_stresses[["design"]]
       } else {
+        # TODO: if there is not design ?? variable is set to NULL.
         r$use_demo = input$use_demo
         d <- DIANE::integrated_datasets[[r$organism]][[r$integrated_dataset]][["design"]]
       }
@@ -621,10 +624,12 @@ mod_import_data_server <- function(input, output, session, r) {
   #   ____________________________________________________________________________
   #   Custom datasets loading                                                 ####
   
+  # Store selected organism (witht a high priority.)
   shiny::observe(priority = 40,{
     r$organism <- input$org_select
   })
   
+  # Contain a vector of possible datasets for any organism.
   dataset_choices <- shiny::reactive({
     req(r$organism)
     if(r$organism == "Arabidopsis thaliana"){
@@ -634,31 +639,46 @@ mod_import_data_server <- function(input, output, session, r) {
     }
   })
   
+  # TODO : could be hidden !
+  # Allow user to chose an integrated dataset.
+  # TODO : Could be an UIupdate. 
+  # NOTE : the req(dataset_choices()) was not there before. I had a bug without him I think, but cannot find it anymore.
+  # Be carefull.
   output$dataset_selection_ui <- shiny::renderUI({
     shiny::req(input$use_demo)
+    # req(dataset_choices())
+    # if(!is.null(dataset_choices())){
     shiny::selectInput(
       ns("dataset_selection"),
       label = "Integrated dataset selection",
       choices = dataset_choices(), ###Will be "" if no existing dataset.
       selected = shiny::isolate(r$integrated_dataset)
     )
+    # } 
+    
+      
+    # }
   })
   
+  
+  # Store integrated dataset value.
   shiny::observeEvent({
     input$dataset_selection
     input$use_demo
   }, {
     if(input$use_demo){
       req(r$organism)
+      req(dataset_choices())
+      # browser()
       r$integrated_dataset <- input$dataset_selection
-      print(paste0("Dataset and organism : ", r$integrated_dataset, " - ", r$organism))
+      golem::print_dev(paste0("Dataset and organism : ", r$integrated_dataset, " - ", r$organism))
     }
   })
   
-  ###Print a warning when no dataset are available for selected org
+  ##Print a warning when no dataset are available for selected org
   output$no_dataset_warning <- shiny::renderText({
     shiny::req(input$use_demo, length(dataset_choices())==0)
-    "<b>Information</b> : There is no pre-integrated dataset for this organism. But you can still import your own count data for this organism !"
+    "<div style='color: orange'><b>Information</b> : There is no pre-integrated dataset for this organism. But you can import your own count data ! Click on on the big green button above to do so.</div>"
   })
   
   
@@ -666,7 +686,7 @@ mod_import_data_server <- function(input, output, session, r) {
   #   import user data UI                                                     ####
   
   output$count_import_ui <- shiny::renderUI({
-    req(!input$use_demo)
+    shiny::req(!input$use_demo)
     print("output$data_import_ui")
     shiny::tagList(
       shinyWidgets::awesomeRadio(
@@ -778,7 +798,7 @@ mod_import_data_server <- function(input, output, session, r) {
       dataset_description <- '
                   <b>Dataset name</b> : Response to abiotic stress</br>
                   <b>Organism</b> : Arabidopsis thaliana</br>
-                  <b>Description</b> : This dataset contians (typo!) the transcriptome of Arabidopsis thaliana plants exposed to global warming induced conditions. The experimental perturbations studied are high tempreature, hight salinity and osmotic changes in the soil. Each factors has two levels, one of them considered as the reference, and the other one as the stress level.</br>
+                  <b>Description</b> : This dataset contains the transcriptome of Arabidopsis thaliana plants exposed to global warming induced conditions. The experimental perturbations studied are high tempreature, hight salinity and osmotic changes in the soil. Each factors has two levels, one of them considered as the reference, and the other one as the stress level.</br>
                   <b>Name correspondance</b> : C = control ; H = heat ; S = salt , M = mannitol</br>
                   <b>Authors</b> : Nasser Sewelam, Dominik Brilhaus, Andrea Bräutigam, Saleh Alseekh, Alisdair R Fernie, Veronica G Maurino</br>
                   <b>Article</b> : Molecular plant responses to combined abiotic stresses put a spotlight on unknown and abundant genes</br>
@@ -864,6 +884,7 @@ mod_import_data_server <- function(input, output, session, r) {
   output$heatmap_preview <- shiny::renderPlot({
     shiny::req(r$raw_counts)
     
+    golem::print_dev("Print heatmap")
     d <- r$raw_counts[rowSums(r$raw_counts) > 0,]
     # d <- r$raw_counts[sample(which(rowSums(r$raw_counts) > 0), 100),]
     draw_heatmap(d, title = "Expression data preview")
