@@ -158,12 +158,17 @@ mod_normalisation_ui <- function(id) {
             )
           ),
           col_4(
-            shinyWidgets::switchInput(
-              inputId = ns("violin_preview"),
-              value = TRUE,
-              onLabel = "Boxplots",
-              offLabel = "Distributions",
-              onStatus = "success"
+              shinyWidgets::radioGroupButtons(
+                inputId = ns("count_distribution_type"),
+                label = NULL,
+                choices = c("Boxplot" = "boxplot", "Density" = "density", "Density waves" = "density_ridges"),
+                # checkIcon = list(
+                #   yes = tags$i(class = "fa fa-circle", 
+                #                style = "color: #28a745"),
+                #   no = tags$i(class = "fa fa-circle-o", 
+                #               style = "color: #28a745"))
+                status = "success"
+
             )
           ),
           shiny::plotOutput(ns('heatmap_preview_norm'), height = "900px")
@@ -375,7 +380,7 @@ mod_normalisation_server <- function(input, output, session, r) {
         d <- r$normalized_counts
       }
     }
-    draw_distributions(d, boxplot = input$violin_preview)+ 
+    draw_distributions(data = d, type = input$count_distribution_type) + 
       ggplot2::ggtitle("Per-condition expression ditributions")
   })
   
