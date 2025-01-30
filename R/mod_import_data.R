@@ -56,17 +56,32 @@ mod_import_data_ui <- function(id) {
         
         # Organism selection
         shiny::uiOutput(ns("org_selection")),
+            shiny::uiOutput(ns("dataset_selection_ui")),
         
-        # UI for integrated dataset
-        shiny::uiOutput(ns("dataset_selection_ui")),
+        # # UI for integrated dataset
+        # shiny::tabsetPanel(
+        #   shiny::tabPanel("Dataset information",
+        #            
+        #            ),
+        #   shiny::tabPanel("Organism informations", "Ouiiiiiiiiiiiiiii")
+        # ),
         # Display a message if no datasets are available for a specific organism
-        shiny::htmlOutput(ns("no_dataset_warning")),
+        
+        shiny::tabsetPanel(id="dataset-description-tabsetPanel",
+          shiny::tabPanel(title = "Dataset description", 
+                          shiny::htmlOutput(ns('dataset_description')),
+                          shiny::htmlOutput(ns("no_dataset_warning"))
+          ),
+          shiny::tabPanel("Organism description",
+                          shiny::htmlOutput(ns('organism_description'))
+          )
+         ),
         
         
         shiny::uiOutput(ns("count_import_ui")),
         shiny::uiOutput(ns("custom_organism_ui")),
         
-        shiny::htmlOutput(ns("dataset_description")),
+        # shiny::htmlOutput(ns("dataset_description")),
         
         shiny::fluidRow(
           shinydashboard::valueBoxOutput(ns("data_dim")),
@@ -141,7 +156,7 @@ mod_import_data_ui <- function(id) {
       #   design                                                                  ####
       
       shinydashboardPlus::box(
-        title = "Design and gene information files",
+        title = "Design",
         width = 4,
         solidHeader = FALSE,
         status = "success",
@@ -549,6 +564,8 @@ mod_import_data_server <- function(input, output, session, r) {
   
   
   org_choices <- shiny::reactive({
+    ## TODO : check if these packages are always loaded. Could reduce RAM usage.
+    ## TODO : check for arabidopsis.
     choices = c("Arabidopsis thaliana")
     if (requireNamespace("org.Mm.eg.db", quietly = TRUE))
       choices <- c(choices, "Mus musculus")
@@ -594,6 +611,7 @@ mod_import_data_server <- function(input, output, session, r) {
     }
   })
   
+  ## TODO : Not used anymore. Could be commented out.
   output$org_install <- shiny::renderText({
     print("output$org_install. This should not be.")
     if (!golem::get_golem_options("server_version")) {
@@ -677,8 +695,58 @@ mod_import_data_server <- function(input, output, session, r) {
   
   ##Print a warning when no dataset are available for selected org
   output$no_dataset_warning <- shiny::renderText({
-    shiny::req(input$use_demo, length(dataset_choices())==0)
-    "<div style='color: orange'><b>Information</b> : There is no pre-integrated dataset for this organism. But you can import your own count data ! Click on on the big green button above to do so.</div>"
+    # shiny::req(input$use_demo, length(dataset_choices())==0)
+    # shiny::req(length(dataset_choices())==0)
+    if(input$use_demo && length(dataset_choices())==0){
+      "<div style='color: orange'><b>Information</b> : There is no pre-integrated dataset for this organism. But you can import your own count data ! Click on on the big green button above to do so.</div><hr>"
+    } else if (!input$use_demo) {
+      "<div>Import your own dataset.</div><hr>"
+    }
+  })
+  
+        
+  #   ____________________________________________________________________________
+  #   Organism description                                                    ####
+  
+  ## Informations about integrated organism data.
+  output$organism_description <- shiny::renderText({
+    req(r$organism)
+    if (r$organism %in% c(
+      "Escherichia coli",
+      "Drosophilia melanogaster",
+      "Caenorhabditis elegans",
+      "Homo sapiens",
+      "Mus musculus"
+    )) {
+      "<p>This organism was installed using the corresponding orgdb package from bioconductor.
+            You can check the specific version in the \"Software versions\" tab<p><hr>"
+    } else {
+      "Nothing"
+      req(r$organism)
+      # req(input$use_demo)
+      
+      organism_informations <- DIANE::organisms[[r$organism]][["description"]]
+      organism_description = ""
+      string = "<div class='descriptive-field'>"
+      url_pattern <- "(http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\\(\\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+)" ###Use to detect URL. Need that the field contains ONLY and url.
+      if(!is.null(organism_informations)){
+        ###We need to have everything stored in a string. So we just create this string field by field. And then we just print her.
+        for(i in 1:nrow(organism_informations)){
+          if(stringr::str_detect(string = organism_informations[i,2], pattern = url_pattern)){
+            text_with_url <- stringr::str_replace_all(string = organism_informations[i,2], pattern = url_pattern, replacement = paste0("<a target=\"_blank\" href=","\\1",">","\\1","</a>"))
+            string = paste(string, paste(tags$b(organism_informations[i,1]), " : ", text_with_url, "</br>"), " ")
+          } else {
+            string = paste(string, paste(tags$b(organism_informations[i,1]), " : ", organism_informations[i,2], "</br>"), " ")
+          }
+        }
+        organism_description <- paste0(string, "</div><hr>")
+      } else {
+        organism_description <- "<p>No organism description provided<p><hr>"
+      }
+      organism_description
+    }
+    # These organism are installed via orgdb. 
+    
   })
   
   
@@ -770,30 +838,29 @@ mod_import_data_server <- function(input, output, session, r) {
       )
   })
   
-  
   #   ____________________________________________________________________________
   #   Dataset description                                                     ####
   
   output$dataset_description <- shiny::renderText({
     req(r$organism)
     req(r$integrated_dataset)
-    req(input$use_demo)
+    # req(input$use_demo)
     
     dataset_informations <- DIANE::integrated_datasets[[r$organism]][[r$integrated_dataset]][["description"]]
     dataset_description = ""
-    string = ""
+    string = "<div class='descriptive-field'"
     url_pattern <- "(http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\\(\\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+)" ###Use to detect URL. Need that the field contains ONLY and url.
     if(!is.null(dataset_informations)){
       ###We need to have everything stored in a string. So we just create this string field by field. And then we just print her.
       for(i in 1:nrow(dataset_informations)){
         if(stringr::str_detect(string = dataset_informations[i,2], pattern = url_pattern)){
-          text_with_url <- stringr::str_replace_all(string = dataset_informations[i,2], pattern = url_pattern, replacement = paste0("<a href=","\\1",">","\\1","</a>"))
+          text_with_url <- stringr::str_replace_all(string = dataset_informations[i,2], pattern = url_pattern, replacement = paste0("<a  target=\"_blank\" href=","\\1",">","\\1","</a>"))
           string = paste(string, paste(tags$b(dataset_informations[i,1]), " : ", text_with_url, "</br>"), " ")
         } else {
           string = paste(string, paste(tags$b(dataset_informations[i,1]), " : ", dataset_informations[i,2], "</br>"), " ")
         }
       }
-      dataset_description <- paste0(string, "<hr>")
+      dataset_description <- paste0(string, "</div><hr>")
     } else if (r$integrated_dataset == "Abiotic Stresses" & r$organism == "Arabidopsis thaliana"){
       dataset_description <- '
                   <b>Dataset name</b> : Response to abiotic stress</br>
@@ -802,7 +869,7 @@ mod_import_data_server <- function(input, output, session, r) {
                   <b>Name correspondance</b> : C = control ; H = heat ; S = salt , M = mannitol</br>
                   <b>Authors</b> : Nasser Sewelam, Dominik Brilhaus, Andrea Bräutigam, Saleh Alseekh, Alisdair R Fernie, Veronica G Maurino</br>
                   <b>Article</b> : Molecular plant responses to combined abiotic stresses put a spotlight on unknown and abundant genes</br>
-                  <b>DOI</b> : <a href="https://doi.org/10.1093/jxb/eraa250">https://doi.org/10.1093/jxb/eraa250</a>
+                  <b>DOI</b> : <a  target=\"_blank\" href="https://doi.org/10.1093/jxb/eraa250">https://doi.org/10.1093/jxb/eraa250</a>
                   <hr>
                 '
     } else {
