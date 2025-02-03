@@ -216,6 +216,11 @@ mod_import_data_server <- function(input, output, session, r) {
     r$integrated_dataset = NULL
     # r$integrated_dataset = NULL
     r$custom_go = NULL
+    
+    # golem::message_dev("Reseting pre-selected organisms and dataset")
+    # r$preselected_organism <-  NULL
+    # r$preselected_dataset <-  NULL
+    
   })
   
   
@@ -275,12 +280,13 @@ mod_import_data_server <- function(input, output, session, r) {
     r$gene_info = NULL
     r$custom_go = NULL
     
-    if (input$use_demo) { ###Import demo count data
+    if (input$use_demo) { ###Import demo count data. Demo also stands for integrated datasets.
       
       req(r$integrated_dataset)
       req(all(r$integrated_dataset %in% dataset_choices()))
       golem::print_dev("Import demo count data.")
       
+      # Import DIANE legacy demo data if Arabidopsis and this specific dataset is selected.
       if(r$integrated_dataset == "Abiotic Stresses" & r$organism == "Arabidopsis thaliana"){
         r$use_demo = input$use_demo
         d <- DIANE::abiotic_stresses[["raw_counts"]]
@@ -562,11 +568,11 @@ mod_import_data_server <- function(input, output, session, r) {
   #   ____________________________________________________________________________
   #   organism                                                                ####
   
-  
+  # Reactive vector of organism to chose from.
   org_choices <- shiny::reactive({
     ## TODO : check if these packages are always loaded. Could reduce RAM usage.
     ## TODO : check for arabidopsis.
-    choices = c("Arabidopsis thaliana")
+    choices <- c("Arabidopsis thaliana")
     if (requireNamespace("org.Mm.eg.db", quietly = TRUE))
       choices <- c(choices, "Mus musculus")
     
@@ -582,11 +588,36 @@ mod_import_data_server <- function(input, output, session, r) {
     if (requireNamespace("org.EcK12.eg.db", quietly = TRUE))
       choices <- c(choices, "Escherichia coli")
     
-    c(
-      "Other",
-      choices,
-      sort(names(DIANE::organisms))
-    )
+    
+    choices <- c("other", choices)
+    
+    # Give name (genus) to pre-integrated data. We call them 'model".
+    names(choices) <- c("other", rep("model", length(choices)-1))
+    
+    # import custom data
+    custom_orgs <- names(DIANE::organisms)
+    genus_custom_orgs <- c()
+    # Give a name to custom orgs. Either genus, or just the name of the organism.
+    for(i in custom_orgs){
+      if(!is.null(DIANE::organisms[[i]][["genus"]])){
+        genus_custom_orgs <- c(genus_custom_orgs, DIANE::organisms[[i]][["genus"]])
+      } else {
+        genus_custom_orgs <- c(genus_custom_orgs, i)
+      }
+    }
+    names(custom_orgs) <- genus_custom_orgs
+    
+    choices <- c(choices, custom_orgs)
+    
+    # Chose organism based on url query and integrated data
+    if(!is.null(r$included_genus)){
+      if(all(r$included_genus %in% names(choices))){
+        choices <-choices[names(choices) %in% r$included_genus]
+      }
+    }
+
+    golem::print_dev(unname(choices))
+    unname(choices)
   })
   
   
@@ -725,18 +756,18 @@ mod_import_data_server <- function(input, output, session, r) {
       req(r$organism)
       # req(input$use_demo)
       
-      organism_informations <- DIANE::organisms[[r$organism]][["description"]]
+      organism_informations <- DIANE::organisms[[r$organism]][["informations"]]
       organism_description = ""
       string = "<div class='descriptive-field'>"
-      url_pattern <- "(http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\\(\\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+)" ###Use to detect URL. Need that the field contains ONLY and url.
+      url_pattern <- "(http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\\(\\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+)" ###Use to detect URL. Need that the field contains ONLY an url.
       if(!is.null(organism_informations)){
         ###We need to have everything stored in a string. So we just create this string field by field. And then we just print her.
-        for(i in 1:nrow(organism_informations)){
-          if(stringr::str_detect(string = organism_informations[i,2], pattern = url_pattern)){
-            text_with_url <- stringr::str_replace_all(string = organism_informations[i,2], pattern = url_pattern, replacement = paste0("<a target=\"_blank\" href=","\\1",">","\\1","</a>"))
-            string = paste(string, paste(tags$b(organism_informations[i,1]), " : ", text_with_url, "</br>"), " ")
+        for(i in names(organism_informations)){
+          if(stringr::str_detect(string = organism_informations[[i]], pattern = url_pattern)){
+            text_with_url <- stringr::str_replace_all(string =organism_informations[[i]], pattern = url_pattern, replacement = paste0("<a target=\"_blank\" href=","\\1",">","\\1","</a>"))
+            string = paste(string, paste(tags$b(i), " : ", text_with_url, "</br>"), " ")
           } else {
-            string = paste(string, paste(tags$b(organism_informations[i,1]), " : ", organism_informations[i,2], "</br>"), " ")
+            string = paste(string, paste(tags$b(i), " : ", organism_informations[[i]], "</br>"), " ")
           }
         }
         organism_description <- paste0(string, "</div><hr>")
@@ -964,7 +995,7 @@ mod_import_data_server <- function(input, output, session, r) {
   
   output$gene_ids <- shiny::renderUI({
     shiny::req(r$organism)
-    
+    # browser()
     if (r$organism == "Other")
       txt <- "No gene ID requirement"
     else if (r$organism  %in% names(DIANE::organisms))

@@ -7,7 +7,6 @@
 #' 
 options(shiny.maxRequestSize=30*1024^2)
 app_server <- function(input, output, session) {
- 
   
 #   ____________________________________________________________________________
 #   reactive values                                                         ####
@@ -40,8 +39,19 @@ app_server <- function(input, output, session) {
       res = 300,
       width = 20,
       height = 14
-    )
+    ),
+    included_genus = NULL, ### Allow to filter genus
+    preselected_organism = NULL, ### Allow to pre-select a specific organism
+    preselected_dataset = NULL ### Allow to pre-select a specific dataset.
   )
+  
+  shiny::observe({
+    query <- shiny::parseQueryString(session$clientData$url_search)
+    r$included_genus <- query$organism
+    r$preselected_organism <- query$organism_selected
+    r$preselected_dataset <- query$data_selected
+    print(query)
+  })
   
   
   
@@ -76,7 +86,7 @@ app_server <- function(input, output, session) {
 #   ____________________________________________________________________________
 #   Server modules                                                          ####
 
-  shiny::callModule(mod_context_server, "context_ui_1")
+  shiny::callModule(mod_context_server, "context_ui_1", r)
   shiny::callModule(mod_import_data_server, "import_data_ui_1", r)
   shiny::callModule(mod_normalisation_server, "normalisation_ui_1", r)
   
