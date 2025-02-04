@@ -415,14 +415,18 @@ mod_import_data_server <- function(input, output, session, r) {
                  (!all(rownames(d) %in% rownames(DIANE::organisms[[r$organism]][["annotation"]])))) {
         
         # Take gene_exemple if exist, otherwise take a random gene for exemple.
-        ex = ifelse(is.null(DIANE::organisms[[r$organism]][["gene_exemple"]]),
+        ex = ifelse(!is.null(DIANE::organisms[[r$organism]][["gene_exemple"]]),
                     DIANE::organisms[[r$organism]][["gene_exemple"]],
                     sample(rownames(DIANE::organisms[[r$organism]][["annotation"]]), size = 1))
         
+        # Percentage of missing genes.
+        missing_genes <-  (1- round(sum(rownames(d) %in% rownames(DIANE::organisms[[r$organism]][["annotation"]])) / length(rownames(d)), digits = 3)) * 100
+        
+        # Display alert that shows percentage of genes without annotation.
         shinyalert::shinyalert(
           "Invalid gene IDs",
-          paste(
-            "Some or all of the gene IDs in your Gene column are not in the gene 
+          paste(missing_genes,
+            "% of the gene IDs in your Gene column are not in the gene 
             annotation of the selected organism.
             For",
             r$organism,
@@ -430,7 +434,7 @@ mod_import_data_server <- function(input, output, session, r) {
             ex,
             "for example."
           ),
-          type = "error"
+          type = ifelse(missing_genes > 50, yes = "error", "warning")
         )
         
       }
