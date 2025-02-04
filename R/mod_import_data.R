@@ -626,11 +626,20 @@ mod_import_data_server <- function(input, output, session, r) {
   
   
   output$org_selection <- shiny::renderUI({
+    
+    # Check if URL organism is in the list.
+    org_select <- "Arabidopsis thaliana"
+    if(!is.null(r$preselected_organism)){
+      if(r$preselected_organism %in% names(DIANE::organisms)){
+        org_select <- r$preselected_organism
+      }
+    }
+    
     shiny::selectInput(
       ns("org_select"),
       label = "Your organism :",
       choices = org_choices(),
-      selected = "Arabidopsis thaliana"
+      selected = org_select
     )
   })
   
@@ -699,13 +708,20 @@ mod_import_data_server <- function(input, output, session, r) {
   # Be carefull.
   output$dataset_selection_ui <- shiny::renderUI({
     shiny::req(input$use_demo)
-    # req(dataset_choices())
+    req(dataset_choices())
     # if(!is.null(dataset_choices())){
+    selected_dataset <- NULL
+    shiny::isolate({
+      if(!is.null(dataset_choices())){
+        selected_dataset <- dataset_choices()[dataset_choices() %in% r$preselected_dataset]
+      }
+    })
+    
     shiny::selectInput(
       ns("dataset_selection"),
       label = "Integrated dataset selection",
       choices = dataset_choices(), ###Will be "" if no existing dataset.
-      selected = shiny::isolate(r$integrated_dataset)
+      selected = shiny::isolate(selected_dataset)
     )
     # } 
     
@@ -747,6 +763,7 @@ mod_import_data_server <- function(input, output, session, r) {
   output$organism_description <- shiny::renderText({
     req(r$organism)
     if (r$organism %in% c(
+      "Arabidopsis thaliana",
       "Escherichia coli",
       "Drosophilia melanogaster",
       "Caenorhabditis elegans",
