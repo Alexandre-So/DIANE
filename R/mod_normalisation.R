@@ -196,7 +196,8 @@ mod_normalisation_server <- function(input, output, session, r) {
   
   output$norm_choice <-  shiny::renderUI({
     shiny::req(!is.null(r$use_demo))
-    if(!r$use_demo) sel <- 'tmm'
+    # Demo dataset has normalized counts. 
+    if(r$integrated_dataset != "Abiotic Stresses") sel <- 'tmm'
     else sel <- 'none'
     
     col_12(
