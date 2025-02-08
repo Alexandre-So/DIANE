@@ -593,10 +593,10 @@ mod_import_data_server <- function(input, output, session, r) {
       choices <- c(choices, "Escherichia coli")
     
     
-    choices <- c("other", choices)
+    choices <- c("Other", choices)
     
     # Give name (genus) to pre-integrated data. We call them 'model".
-    names(choices) <- c("other", rep("model", length(choices)-1))
+    names(choices) <- c("Other", rep("Model", length(choices)-1))
     
     # import custom data
     custom_orgs <- names(DIANE::organisms)
@@ -1017,7 +1017,7 @@ mod_import_data_server <- function(input, output, session, r) {
   output$gene_ids <- shiny::renderUI({
     shiny::req(r$organism)
     # browser()
-    if (r$organism == "Other")
+    if (r$organism == "Other" || r$organism == "other")
       txt <- "No gene ID requirement"
     else if (r$organism  %in% names(DIANE::organisms))
       txt <- sample(rownames(DIANE::organisms[[r$organism]][["annotation"]]), 1)
