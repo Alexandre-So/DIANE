@@ -58,15 +58,7 @@ mod_import_data_ui <- function(id) {
         shiny::uiOutput(ns("org_selection")),
             shiny::uiOutput(ns("dataset_selection_ui")),
         
-        # # UI for integrated dataset
-        # shiny::tabsetPanel(
-        #   shiny::tabPanel("Dataset information",
-        #            
-        #            ),
-        #   shiny::tabPanel("Organism informations", "Ouiiiiiiiiiiiiiii")
-        # ),
-        # Display a message if no datasets are available for a specific organism
-        
+        # UI for integrated dataset
         shiny::tabsetPanel(id="dataset-description-tabsetPanel",
           shiny::tabPanel(title = "Dataset description", 
                           shiny::htmlOutput(ns('dataset_description')),
@@ -422,6 +414,8 @@ mod_import_data_server <- function(input, output, session, r) {
         # Percentage of missing genes.
         missing_genes <-  (1- round(sum(rownames(d) %in% rownames(DIANE::organisms[[r$organism]][["annotation"]])) / length(rownames(d)), digits = 3)) * 100
         
+        # Popup if high number of missing genes.
+        if(missing_genes > 10){
         # Display alert that shows percentage of genes without annotation.
         shinyalert::shinyalert(
           "Invalid gene IDs",
@@ -435,7 +429,17 @@ mod_import_data_server <- function(input, output, session, r) {
             "for example."
           ),
           type = ifelse(missing_genes > 50, yes = "error", "warning")
-        )
+        )} else {
+          shiny::showNotification(
+            ui = paste(
+              missing_genes,
+              "% of the gene IDs in your Gene column are not in the gene
+            annotation."
+            ),
+            duration = 5,
+            type = "warning"
+          )
+        }
         
       }
     }
