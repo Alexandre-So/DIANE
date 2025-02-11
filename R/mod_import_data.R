@@ -54,13 +54,18 @@ mod_import_data_ui <- function(id) {
           
         ),
         
+        
         # Organism selection
         shiny::uiOutput(ns("org_selection")),
             shiny::uiOutput(ns("dataset_selection_ui")),
         
+        # shiny::tabsetPanel(id="dataset-description-tabsetPanel"),
+        shiny::hr(style = "margin-top: 0px; margin-bottom: 10px;"),
+        
         # UI for integrated dataset
         shiny::tabsetPanel(id="dataset-description-tabsetPanel",
-          shiny::tabPanel(title = "Dataset description", 
+        # shinydashboard::tabBox(id="dataset-description-tabsetPanel",  width = 12, 
+          shiny::tabPanel(title = "Dataset description",  
                           shiny::htmlOutput(ns('dataset_description')),
                           shiny::htmlOutput(ns("no_dataset_warning"))
           ),
@@ -68,6 +73,7 @@ mod_import_data_ui <- function(id) {
                           shiny::htmlOutput(ns('organism_description'))
           )
          ),
+
         
         
         shiny::uiOutput(ns("count_import_ui")),
@@ -825,6 +831,7 @@ mod_import_data_server <- function(input, output, session, r) {
         status = "success"
       ),
       
+      shiny::h3("Import expression file."),
       shiny::fileInput(
         ns('raw_data'),
         label = shiny::HTML(paste0('Choose CSV/TXT expression file',
@@ -851,7 +858,6 @@ mod_import_data_server <- function(input, output, session, r) {
       ),
     )
   })
-  
   
   
   #   ____________________________________________________________________________
@@ -1010,7 +1016,7 @@ mod_import_data_server <- function(input, output, session, r) {
     golem::print_dev("Print heatmap")
     d <- r$raw_counts[rowSums(r$raw_counts) > 0,]
     # d <- r$raw_counts[sample(which(rowSums(r$raw_counts) > 0), 100),]
-    draw_heatmap(d, title = "Expression data preview")
+    draw_heatmap(d, title = NA)
   })
   
   

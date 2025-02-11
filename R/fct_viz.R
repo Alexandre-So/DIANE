@@ -60,7 +60,7 @@ draw_heatmap <-
       annotation_col = samples,
       show_rownames = show_rownames,
       main = title,
-      fontsize = 17
+      fontsize = 17, border_color = NA
     )
   }
 
