@@ -1133,7 +1133,7 @@ mod_differential_expression_analysis_server <-
       shiny::req(r_dea$top_tags)
       
       # If organism == other or if there is no GO information with integrated organism (even if it's mandatory)
-      if (r$organism == "Other" || is.null(DIANE::organisms[[r$organism]][["go_mapping"]])) {
+      if (r$organism == "Other" || is.null(DIANE::organisms[[r$organism]][["go"]])) {
         if (is.null(r$custom_go)) {
           if (!is.null(input$go_data)) {
             pathName = input$go_data$datapath
@@ -1228,7 +1228,7 @@ mod_differential_expression_analysis_server <-
         
         
         if (r$organism  %in% names(DIANE::organisms)){ ###Go enrichment for custom organism
-          GOs <- DIANE::organisms[[r$organism]][["go_mapping"]]
+          GOs <- DIANE::organisms[[r$organism]][["go"]]
           universe <- intersect(background, GOs[, 1])
           r_dea$go <- enrich_go_custom(genes, universe, GOs,
                                        GO_type = input$go_type)

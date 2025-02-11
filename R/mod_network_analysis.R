@@ -597,7 +597,7 @@ mod_network_analysis_server <- function(input, output, session, r) {
     shiny::req(input$cluster_to_explore != "All")
     
     
-    if (r$organism == "Other" || is.null(DIANE::organisms[[r$organism]][["go_mapping"]])) {
+    if (r$organism == "Other" || is.null(DIANE::organisms[[r$organism]][["go"]])) {
       if (is.null(r$custom_go)) {
         if (!is.null(input$go_data)) {
           pathName = input$go_data$datapath
@@ -697,7 +697,7 @@ mod_network_analysis_server <- function(input, output, session, r) {
       }
       
       if (r$organism  %in% names(DIANE::organisms)){ ###Go enrichment for custom organism
-        GOs <- DIANE::organisms[[r$organism]][["go_mapping"]]
+        GOs <- DIANE::organisms[[r$organism]][["go"]]
         universe <- intersect(background, GOs[, 1])
         r_mod$go <- enrich_go_custom(genes, universe, GOs,
                                      GO_type = input$go_type)
