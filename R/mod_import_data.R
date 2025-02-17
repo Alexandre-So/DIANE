@@ -653,6 +653,7 @@ mod_import_data_server <- function(input, output, session, r) {
     )
   })
   
+  # Force to import a dataset when "other" is selected.
   shiny::observeEvent({
     input$org_select
     input$use_demo
@@ -666,32 +667,33 @@ mod_import_data_server <- function(input, output, session, r) {
   })
   
   ## TODO : Not used anymore. Could be commented out.
-  output$org_install <- shiny::renderText({
-    print("output$org_install. This should not be.")
-    if (!golem::get_golem_options("server_version")) {
-      "<b>The organisms listed below are the one detected on the system.</b> <br>
-    To use new organisms, please close DIANE and install the corresponding
-    package from R or Rstudio consoles.<br>
-
-    <code> if (!requireNamespace(\"BiocManager\", quietly = TRUE))
-      install.packages(\"BiocManager\") </code> <br>
-
-    For Human : <code> BiocManager::install(\"org.Hs.eg.db\") </code> <br>
-    For Mouse : <code> BiocManager::install(\"org.Mm.eg.db\") </code> <br>
-    For Caenorhabditis elegans : <code> BiocManager::install(\"org.Ce.eg.db\") </code> <br>
-    For E coli : <code> BiocManager::install(\"org.EcK12.eg.db\") </code> <br>
-    For fruit fly : <code> BiocManager::install(\"org.Dm.eg.db\") </code> <br>
-
-    Then, when you launch DIANE again, your organism should appear
-    in the following selection menu.
-
-    For now, only Arabidopsis, Human and Mouse are working.
-    "
-    }
-    else{
-      "For now, you can choose between all the organisms above"
-    }
-  })
+  # This was the old style tooltip.
+  # output$org_install <- shiny::renderText({
+  #   print("output$org_install. This should not be.")
+  #   if (!golem::get_golem_options("server_version")) {
+  #     "<b>The organisms listed below are the one detected on the system.</b> <br>
+  #   To use new organisms, please close DIANE and install the corresponding
+  #   package from R or Rstudio consoles.<br>
+  # 
+  #   <code> if (!requireNamespace(\"BiocManager\", quietly = TRUE))
+  #     install.packages(\"BiocManager\") </code> <br>
+  # 
+  #   For Human : <code> BiocManager::install(\"org.Hs.eg.db\") </code> <br>
+  #   For Mouse : <code> BiocManager::install(\"org.Mm.eg.db\") </code> <br>
+  #   For Caenorhabditis elegans : <code> BiocManager::install(\"org.Ce.eg.db\") </code> <br>
+  #   For E coli : <code> BiocManager::install(\"org.EcK12.eg.db\") </code> <br>
+  #   For fruit fly : <code> BiocManager::install(\"org.Dm.eg.db\") </code> <br>
+  # 
+  #   Then, when you launch DIANE again, your organism should appear
+  #   in the following selection menu.
+  # 
+  #   For now, only Arabidopsis, Human and Mouse are working.
+  #   "
+  #   }
+  #   else{
+  #     "For now, you can choose between all the organisms above"
+  #   }
+  # })
   
   #   ____________________________________________________________________________
   #   Custom datasets loading                                                 ####
@@ -699,6 +701,7 @@ mod_import_data_server <- function(input, output, session, r) {
   # Store selected organism (witht a high priority.)
   shiny::observe(priority = 40,{
     r$organism <- input$org_select
+    golem::print_dev(paste("r$organism : ", r$organism))
   })
   
   # Contain a vector of possible datasets for any organism.
@@ -744,8 +747,10 @@ mod_import_data_server <- function(input, output, session, r) {
   shiny::observeEvent({
     input$dataset_selection
     input$use_demo
+    r$organism ## to fix loading problem. Dataset was not loaded when an organism without integrated dataset was selected.
   }, {
     if(input$use_demo){
+      req(input$dataset_selection) ## to fix loading problem
       req(r$organism)
       req(dataset_choices())
       # browser()
