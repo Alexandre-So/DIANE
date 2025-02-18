@@ -289,20 +289,22 @@ mod_normalisation_server <- function(input, output, session, r) {
   #   ____________________________________________________________________________
   #   buttn reactives                                                         ####
   
+  
+  ### Normalisation
   shiny::observeEvent(input$normalize_btn, {
     shiny::req(r$raw_counts)
     shiny::req(input$norm_method)
     
     r$norm_method <- input$norm_method
     if(input$norm_method != "none"){
-      r$tcc <-
+      r$tcc_raw <-
         normalize(
           r$raw_counts,
           r$conditions,
           norm_method = input$norm_method,
           iteration = input$prior_removal
         )
-      r$normalized_counts_pre_filter <- TCC::getNormalizedData(r$tcc)
+      r$normalized_counts_pre_filter <- TCC::getNormalizedData(r$tcc_raw)
       # the filtering needs to be done again if previously made, so :
       r$normalized_counts <- NULL
     }
@@ -312,16 +314,18 @@ mod_normalisation_server <- function(input, output, session, r) {
     }
   })
   
+  # Low count removal.
   shiny::observeEvent((input$use_SumFilter), {
     shiny::req(r$normalized_counts_pre_filter)
+    shiny::req(!is.na(input$low_counts_filter))
     if(input$norm_method != "none"){
       # Classic method, using sum of counts.
       if(input$norm_method_choice == "sum_sample"){
-        r$tcc <- filter_low_counts(r$tcc, thr = input$low_counts_filter)
+        r$tcc <- filter_low_counts(r$tcc_raw, thr = input$low_counts_filter)
         r$normalized_counts <- TCC::getNormalizedData(r$tcc)
       # New method, using median of conditions. 
       } else {
-        r$tcc <- filter_low_count_condition_wise(r$tcc, thr = input$low_counts_filter)
+        r$tcc <- filter_low_count_condition_wise(r$tcc_raw, thr = input$low_counts_filter)
         r$normalized_counts <- TCC::getNormalizedData(r$tcc)
       }
     }
