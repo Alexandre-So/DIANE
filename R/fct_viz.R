@@ -25,7 +25,7 @@ draw_heatmap <-
            profiles = FALSE,
            conditions = NULL) {
     if (is.null(subset)) {
-      sample_subset <- sample(rownames(data), size = 100)
+      sample_subset <- sample(rownames(data), size = min(length(rownames(data)), 100))
     }
     else
       sample_subset <- subset
