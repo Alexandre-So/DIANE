@@ -609,7 +609,7 @@ mod_import_data_server <- function(input, output, session, r) {
     names(choices) <- c("Other", rep("Model", length(choices)-1))
     
     # import custom data
-    custom_orgs <- names(DIANE::organisms)
+    custom_orgs <- names(DIANE:::organisms)
     genus_custom_orgs <- c()
     # Give a name to custom orgs. Either genus, or just the name of the organism.
     for(i in custom_orgs){
