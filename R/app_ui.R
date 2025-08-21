@@ -30,10 +30,13 @@ logo_diane <- dashboardthemes::shinyDashboardLogoDIY(
 
 dbHeader <- shinydashboard::dashboardHeader(title = logo_diane, titleWidth = "300px",
                                             shiny::tags$li(class = "dropdown",
-                                                           shiny::tags$li(shiny::actionButton("plot_params", label = NULL, icon = shiny::icon("image", class = "duotone"), class = "btn-success"), style = "padding-top: 8px; display: inline-block;  color:#0098f8;")
+                                                           shiny::tags$li(shiny::actionButton("global_options", label = NULL, icon = shiny::icon("gear", class = "duotone"), class = "btn-success"), style = "padding-top: 8px; display: inline-block;  color:#0098f8;")
                                             ),
                                             shiny::tags$li(class = "dropdown",
-                                                           shiny::tags$li(shiny::actionButton("version_info", label = "Version 1.1", class = "btn-success"), style = "padding-top: 8px; padding-left: 10px; display: inline-block;")
+                                                           shiny::tags$li(shiny::actionButton("plot_params", label = NULL, icon = shiny::icon("image", class = "duotone"), class = "btn-success"), style = "padding-top: 8px; padding-left: 10px; display: inline-block;  color:#0098f8;")
+                                            ),
+                                            shiny::tags$li(class = "dropdown",
+                                                           shiny::tags$li(shiny::actionButton("version_info", label = "Version 1.2.1", class = "btn-success"), style = "padding-top: 8px; padding-left: 10px; display: inline-block;")
                                             ),
                                             shinydashboard::dropdownMenu(type = "messages", badgeStatus = "success",
                                                          icon = shiny::icon("info"), headerText = "Information",

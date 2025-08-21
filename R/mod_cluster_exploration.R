@@ -294,7 +294,7 @@ mod_cluster_exploration_server <-
         paste(paste0("genes_cluster_", input$cluster_to_explore, ".csv"))
       },
       content = function(file) {
-        write.csv(table(), file = file, quote = FALSE)
+        write.table(table(), file = file, quote = FALSE, sep = r[["output_field_separator"]])
       }
     )
     
@@ -311,7 +311,7 @@ mod_cluster_exploration_server <-
         ))
       },
       content = function(file) {
-        write.csv(r_clust$go, file = file, quote = FALSE)
+        write.table(r_clust$go, file = file, quote = FALSE, sep = r[["output_field_separator"]])
       }
     )
     
@@ -404,7 +404,16 @@ mod_cluster_exploration_server <-
       shiny::req(r$normalized_counts)
       shiny::req(membership())
       
-      if (r$organism == "Other" || is.null(DIANE::organisms[[r$organism]][["go"]])) {
+      if (r$organism == "Other" ||
+          (is.null(DIANE::organisms[[r$organism]][["go"]]) &&
+              ! r$organism %in% c(
+                "Arabidopsis thaliana",
+                "Homo sapiens",
+                "Mus musculus",
+                "Drosophilia melanogaster",
+                "Caenorhabditis elegans",
+                "Escherichia coli"
+              ))) {
         if (is.null(r$custom_go)) {
           if (!is.null(input$go_data)) {
             pathName = input$go_data$datapath
@@ -588,27 +597,25 @@ mod_cluster_exploration_server <-
         )
       }
       shiny::req(nrow(r_clust$go) > 0)
-      
-      if (input$draw_go == "Data table") {
-        tagList(
-          DT::dataTableOutput(ns("go_table")),
-          shinyWidgets::downloadBttn(
-            outputId = ns("download_go_table"),
-            label = "Download enriched GO term as a csv table",
-            style = "material-flat",
-            color = "success"
-          )
-        )
-        
-      }
-      
-      else{
-        if (input$draw_go == "Enrichment map") {
-          shiny::plotOutput(ns("go_map_plot"), height = "800px")
+      shiny::tagList(
+        if (input$draw_go == "Data table") {
+          DT::dataTableOutput(ns("go_table"))
         }
-        else
-          plotly::plotlyOutput(ns("go_plot"), height = "800px")
-      }
+        else{
+          if (input$draw_go == "Enrichment map") {
+            shiny::plotOutput(ns("go_map_plot"), height = "800px")
+          }
+          else
+            plotly::plotlyOutput(ns("go_plot"), height = "800px")
+        },
+        shiny::br(),
+        shinyWidgets::downloadBttn(
+          outputId = ns("download_go_table"),
+          label = "Download enriched GO term as a csv table",
+          style = "material-flat",
+          color = "success"
+        )
+      )
     })
   }
 

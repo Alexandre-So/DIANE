@@ -597,7 +597,16 @@ mod_network_analysis_server <- function(input, output, session, r) {
     shiny::req(input$cluster_to_explore != "All")
     
     
-    if (r$organism == "Other" || is.null(DIANE::organisms[[r$organism]][["go"]])) {
+    if (r$organism == "Other" ||
+        (is.null(DIANE::organisms[[r$organism]][["go"]]) &&
+            ! r$organism %in% c(
+              "Arabidopsis thaliana",
+              "Homo sapiens",
+              "Mus musculus",
+              "Drosophilia melanogaster",
+              "Caenorhabditis elegans",
+              "Escherichia coli"
+            ))) {
       if (is.null(r$custom_go)) {
         if (!is.null(input$go_data)) {
           pathName = input$go_data$datapath
@@ -775,7 +784,7 @@ mod_network_analysis_server <- function(input, output, session, r) {
       ))
     },
     content = function(file) {
-      write.csv(r_mod$go, file = file, quote = FALSE)
+      write.table(r_mod$go, file = file, quote = FALSE, sep = r[["output_field_separator"]])
     }
   )
   
@@ -788,7 +797,7 @@ mod_network_analysis_server <- function(input, output, session, r) {
       paste("network_nodes.csv")
     },
     content = function(file) {
-      write.csv(r$networks[[r$current_network]]$nodes, file = file, quote = FALSE)
+      write.table(r$networks[[r$current_network]]$nodes, file = file, quote = FALSE, sep = r[["output_field_separator"]])
     }
   )
   
@@ -801,7 +810,7 @@ mod_network_analysis_server <- function(input, output, session, r) {
       paste("network_edges.csv")
     },
     content = function(file) {
-      write.csv(r$networks[[r$current_network]]$edges, file = file, quote = FALSE)
+      write.table(r$networks[[r$current_network]]$edges, file = file, quote = FALSE, sep = r[["output_field_separator"]])
     }
   )
   
@@ -849,17 +858,9 @@ mod_network_analysis_server <- function(input, output, session, r) {
     
     shiny::req(nrow(r_mod$go) > 0)
     
-    
+    tagList(
     if (input$draw_go == "Data table") {
-      tagList(
-        DT::dataTableOutput(ns("go_table")),
-        shinyWidgets::downloadBttn(
-          outputId = ns("download_go_table"),
-          label = "Download enriched GO term as a csv table",
-          style = "material-flat",
-          color = "success"
-        )
-      )
+      DT::dataTableOutput(ns("go_table"))
     }
     else{
       if (input$draw_go == "Enrichment map") {
@@ -867,7 +868,15 @@ mod_network_analysis_server <- function(input, output, session, r) {
       }
       else
         plotly::plotlyOutput(ns("go_plot"), height = "800px")
-    }
+    },
+      shiny::br(),
+      shinyWidgets::downloadBttn(
+        outputId = ns("download_go_table"),
+        label = "Download enriched GO term as a csv table",
+        style = "material-flat",
+        color = "success"
+      )
+  )
   })
   
 }

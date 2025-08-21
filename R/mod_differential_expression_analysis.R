@@ -663,7 +663,7 @@ mod_differential_expression_analysis_server <-
           df,
           file = file,
           row.names = FALSE,
-          sep = '\t',
+          sep = r[["output_field_separator"]],
           quote = FALSE
         )
       }
@@ -724,12 +724,14 @@ mod_differential_expression_analysis_server <-
             input$perturbation,
             '_',
             input$go_type,
+            '_',
+            input$up_down_go_radio,
             ".csv"
           )
         )
       },
       content = function(file) {
-        write.csv(r_dea$go, file = file, quote = FALSE)
+        write.table(r_dea$go, file = file, quote = FALSE, sep = r[["output_field_separator"]])
       }
     )
     
@@ -1133,7 +1135,17 @@ mod_differential_expression_analysis_server <-
       shiny::req(r_dea$top_tags)
       
       # If organism == other or if there is no GO information with integrated organism (even if it's mandatory)
-      if (r$organism == "Other" || is.null(DIANE::organisms[[r$organism]][["go"]])) {
+      # We also still check the manually integrated organisms.
+      if (r$organism == "Other" ||
+          (is.null(DIANE::organisms[[r$organism]][["go"]]) &&
+          ! r$organism %in% c(
+            "Arabidopsis thaliana",
+            "Homo sapiens",
+            "Mus musculus",
+            "Drosophilia melanogaster",
+            "Caenorhabditis elegans",
+            "Escherichia coli"
+          ))) {
         if (is.null(r$custom_go)) {
           if (!is.null(input$go_data)) {
             pathName = input$go_data$datapath
@@ -1196,7 +1208,7 @@ mod_differential_expression_analysis_server <-
         
         ################# known organisms
         
-      } else{
+      } else {
         
         if(input$up_down_go_radio == "All")
           genes <- r_dea$top_tags$genes
@@ -1335,18 +1347,9 @@ mod_differential_expression_analysis_server <-
       
       shiny::req(nrow(r_dea$go) > 0)
       
+      shiny::tagList(
       if (input$draw_go == "Data table") {
-        tagList(
-          DT::dataTableOutput(ns("go_table")),
-          
-          shinyWidgets::downloadBttn(
-            outputId = ns("download_go_table"),
-            label = "Download enriched GO term as a csv table",
-            style = "material-flat",
-            color = "success"
-          )
-          
-        )
+          DT::dataTableOutput(ns("go_table"))
       }
       else{
         if (input$draw_go == "Enrichment map") {
@@ -1354,7 +1357,16 @@ mod_differential_expression_analysis_server <-
         }
         else
           plotly::plotlyOutput(ns("go_plot"), height = "800px")
-      }
+      },
+      
+      
+      shiny::br(),
+      shinyWidgets::downloadBttn(
+        outputId = ns("download_go_table"),
+        label = "Download enriched GO term as a csv table",
+        style = "material-flat",
+        color = "success"
+      ))
     })
     
   }

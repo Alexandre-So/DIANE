@@ -496,7 +496,7 @@ mod_normalisation_server <- function(input, output, session, r) {
       paste("normalized_counts.csv")
     },
     content = function(file) {
-      write.csv(round(r$normalized_counts, 2), file = file, quote = FALSE)
+      write.table(round(r$normalized_counts, 2), file = file, quote = FALSE, sep = r[["output_field_separator"]])
     }
   )
   
