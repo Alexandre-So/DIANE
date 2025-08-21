@@ -87,7 +87,7 @@ app_server <- function(input, output, session) {
 #   ____________________________________________________________________________
 #   Server modules                                                          ####
 
-  shiny::callModule(mod_context_server, "context_ui_1", r)
+  shiny::callModule(mod_context_server, "context_ui_1")
   shiny::callModule(mod_import_data_server, "import_data_ui_1", r)
   shiny::callModule(mod_normalisation_server, "normalisation_ui_1", r)
   
