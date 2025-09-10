@@ -73,7 +73,7 @@ draw_heatmap <-
 #' @export
 #' @examples
 #' data("abiotic_stresses")
-#' DIANE::draw_distributions(abiotic_stresses$normalized_counts, type = boxplot)
+#' DIANE::draw_distributions(abiotic_stresses$normalized_counts, type = "boxplot")
 #' DIANE::draw_distributions(abiotic_stresses$raw_counts)
 draw_distributions <- function(data, type = "boxplot") {
   
