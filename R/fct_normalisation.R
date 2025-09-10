@@ -76,7 +76,9 @@ filter_low_counts <- function(tcc, thr){
 #' function from the TCC package.
 #'
 #' @param tcc data to be filtered to remove low count genes
-#' @param thr the sum of counts across all samples to be exceeded for a gene
+#' @param threshold the sum of counts across all samples to be exceeded for a gene
+#' @param conditions condition of each column of the data argument. Default is
+#' all the conditions in the experiment. (as defined by the underscore prefixes).
 #' @export
 #' @return a TCC-Class object
 #' @examples
