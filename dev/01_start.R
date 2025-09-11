@@ -58,14 +58,20 @@ golem::use_utils_server()
 # Change Author
 p <- c(person(given = "Océane",
               family = "Cassan",
-              role = c("cre", "aut"),
+              role = c("aut"),
               email = "oceane.cassan@lirm.fr",
-              comment = c(ORCID = "0000-0002-4595-2457")),
+              comment = c(
+                ORCID = "0000-0002-4595-2457",
+                Role = "Initial developer of the package"
+                )),
        person(given = "Alexandre",
               family = "Soriano",
-              role = c("aut"),
+              role = c("aut", "cre"),
               email = "alexandre.soriano@cirad.fr",
-              comment = c(ORCID = "0000-0003-1406-46067")))
+              comment = c(
+                ORCID = "0000-0003-1406-46067",
+                Role = "Took over development and maintenance"
+                )))
 
 desc::desc_set_authors(p)
 
