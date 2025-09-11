@@ -158,6 +158,7 @@ estimateDEGs <- function(fit, reference, perturbation, p.value = 1, lfc = 0) {
 #' @import ggplot2
 #' 
 #' @return ggplot object corresponding to raw pvalue histogram.
+#' @export
 #' @examples
 #' data("abiotic_stresses")
 #' tcc_object <- DIANE::normalize(abiotic_stresses$raw_counts, abiotic_stresses$conditions, 
