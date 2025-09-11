@@ -122,10 +122,10 @@ knitr::kable(get_gene_information(c("WBGene00000013", "WBGene00000035"), organis
 ## Visualization of raw counts
 
 For each condition, we can visualize the distributions of gene counts with boxplots or distributions.
-To display the distributions, you can use the argument `boxplot = FALSE`.
+To display the distributions, you can use the argument `type = "density_ridges"`.
 
 ```{r vis_raw, fig.width=8, fig.height=5}
-DIANE::draw_distributions(abiotic_stresses$raw_counts, boxplot = TRUE)
+DIANE::draw_distributions(abiotic_stresses$raw_counts, type = "boxplot")
 ```
 
 ## Normalization
@@ -175,8 +175,8 @@ normalized_counts <- TCC::getNormalizedData(tcc_object)
 We can see the difference with the violin plot view of the effect of low count genes removal :
 
 ```{r viz_filter, fig.width=10, fig.height=15}
-pre_process <- DIANE::draw_distributions(abiotic_stresses$raw_counts, boxplot = FALSE) + ggtitle("Before")
-post_process <- DIANE::draw_distributions(normalized_counts, boxplot = FALSE)+ ggtitle("After")
+pre_process <- DIANE::draw_distributions(abiotic_stresses$raw_counts, type = "density_ridges") + ggtitle("Before")
+post_process <- DIANE::draw_distributions(normalized_counts, type = "density_ridges")+ ggtitle("After")
 
 gridExtra::grid.arrange(pre_process, post_process, ncol = 2)
 
@@ -199,7 +199,7 @@ We can plot the correlations of the initial variables to the principal component
 
 Each principal component explains a certain amount of the total variability, and those relative percentages are shown in what is called the screeplot.
 
-```{r pca, fig.width=10, fig.height=8}
+```{r pca, fig.width=12, fig.height=12}
 DIANE::quick_pca(data = normalized_counts)
 ```
 
@@ -217,7 +217,7 @@ DIANE::draw_specific_pca(pca = pca_res, component_1 = 1, component_2 = 2, legend
 
 As a complement, correlations between the different components and an experimental design can also be visualized (based on the nice [CorLevelPlot](https://github.com/kevinblighe/CorLevelPlot) package).
 
-```{r pca_correlation_plot, fig.width=10, fig.height=8}
+```{r pca_correlation_plot, fig.width=13, fig.height=8}
 DIANE::pca_plot_correlation(pca = pca_res, design = abiotic_stresses$design)
 ```
 
