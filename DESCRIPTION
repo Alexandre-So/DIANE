@@ -2,10 +2,10 @@ Package: DIANE
 Title: DIANE
 Version: 1.2.1
 Authors@R: c(
-    person("Océane", "Cassan", , "oceane.cassan@lirm.fr", role = c("cre", "aut"),
-           comment = c(ORCID = "0000-0002-4595-2457")),
-    person("Alexandre", "Soriano", , "alexandre.soriano@cirad.fr", role = "aut",
-           comment = c(ORCID = "0000-0003-1406-46067"))
+    person("Océane", "Cassan", , "oceane.cassan@lirm.fr", role = "aut",
+           comment = c(ORCID = "0000-0002-4595-2457", Role = "Initial developer of the package")),
+    person("Alexandre", "Soriano", , "alexandre.soriano@cirad.fr", role = c("aut", "cre"),
+           comment = c(ORCID = "0000-0003-1406-46067", Role = "Took over development and maintenance"))
   )
 Description: Dashboard for the Inference and Analysis of Network from
     Expression data. This package is particularly well suited for

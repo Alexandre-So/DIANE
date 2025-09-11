@@ -69,7 +69,7 @@ p <- c(person(given = "Océane",
               role = c("aut", "cre"),
               email = "alexandre.soriano@cirad.fr",
               comment = c(
-                ORCID = "0000-0003-1406-46067",
+                ORCID = "0000-0003-1406-4606",
                 Role = "Took over development and maintenance"
                 )))
 
