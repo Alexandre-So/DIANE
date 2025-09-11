@@ -44,20 +44,38 @@ mod_normalisation_ui <- function(id) {
         closable = FALSE,
         width = 3,
         
-        col_8(shiny::h2("Normalization")),
-        
-        
-        col_4(shinyWidgets::dropdownButton(
+        # Normalisation title, with tooltip. in HTML.
+        shiny::HTML(paste0(
+          
+          "<div style='display: flex; align-items: center;'><h2 style='margin-top: 0px; margin-right: 10px'>Normalization</h2>  ",
+          shinyWidgets::dropdownButton(
           size = 'xs',
-          shiny::includeMarkdown(
-            system.file("extdata", "normalisation.md", package = "DIANE")
-          ),
+          label = "Design file requirements",
+          shiny::includeMarkdown(system.file("extdata", "normalisation.md",
+                                             package = "DIANE")),
           circle = TRUE,
           status = "success",
+          inline = TRUE,
           icon = shiny::icon("question"),
-          width = "600px",
+          width = "550px",
           tooltip = shinyWidgets::tooltipOptions(title = "More details")
+        ),
+        "</div>"
         )),
+        # col_8(shiny::h2("Normalization")),
+        
+        # 
+        # col_4(shinyWidgets::dropdownButton(
+        #   size = 'xs',
+        #   shiny::includeMarkdown(
+        #     system.file("extdata", "normalisation.md", package = "DIANE")
+        #   ),
+        #   circle = TRUE,
+        #   status = "success",
+        #   icon = shiny::icon("question"),
+        #   width = "600px",
+        #   tooltip = shinyWidgets::tooltipOptions(title = "More details")
+        # )),
         
         
         shiny::fluidRow(col_12(
@@ -97,20 +115,32 @@ mod_normalisation_ui <- function(id) {
         #   filtering settings                                                      ####
         
         
-        shiny::h2("Low counts filtering"),
-        
-        shinyWidgets::dropdownButton(
-          size = 'xs',
-          shiny::includeMarkdown(system.file("extdata", "filtering.md", package = "DIANE")),
-          circle = TRUE,
-          status = "success",
-          icon = shiny::icon("question"),
-          width = "600px",
-          tooltip = shinyWidgets::tooltipOptions(title = "More details")
+        shiny::HTML(paste0(
+          
+          "<div style='display: flex; align-items: center;'><h2 style='margin-top: 0px; margin-right: 10px'>Low counts filtering</h2>  ",
+          shinyWidgets::dropdownButton(
+            size = 'xs',
+            label = "Low count filtering informations",
+            shiny::includeMarkdown(system.file("extdata", "filtering.md", package = "DIANE")),
+            circle = TRUE,
+            status = "success",
+            inline = TRUE,
+            icon = shiny::icon("question"),
+            width = "550px",
+            tooltip = shinyWidgets::tooltipOptions(title = "More details")
+          ),
+          "</div>"
+        )),
+
+        # shinyWidgets::radioGroupButtons(
+          shinyWidgets::awesomeRadio(
+          inputId = ns("norm_method_choice"),
+          label = "Low count removal method", 
+          choices = c("Sum of all samples" = "sum_sample" ,"Median per conditions" = "median_conditions"), width = "100%", inline  = TRUE, status = "success"
         ),
         
-        
-        shiny::h5("Minimal gene count sum accross conditions : "),
+        shiny::h5(shiny::textOutput(outputId = ns("low_count_filtering_text"))),
+        # shiny::fluidRow(
         col_8(shiny::uiOutput(ns(
           "filter_proposition"
         ))),
@@ -120,8 +150,8 @@ mod_normalisation_ui <- function(id) {
             label = "Filter", 
             style = "material-flat",
             color = "success"
-          )
-        ),
+          # )
+        )),
         
         
         shiny::hr(),
@@ -142,8 +172,8 @@ mod_normalisation_ui <- function(id) {
     
       shinydashboard::tabBox(
         title = "Data exploration",
-        width = 9,
-        height = "1030px",
+        width = 9, 
+        height = 1030,
         
         shiny::tabPanel(
           title = "Samples distributions",
@@ -158,15 +188,20 @@ mod_normalisation_ui <- function(id) {
             )
           ),
           col_4(
-            shinyWidgets::switchInput(
-              inputId = ns("violin_preview"),
-              value = TRUE,
-              onLabel = "Boxplots",
-              offLabel = "Distributions",
-              onStatus = "success"
+              shinyWidgets::radioGroupButtons(
+                inputId = ns("count_distribution_type"),
+                label = NULL,
+                choices = c("Boxplot" = "boxplot", "Density" = "density", "Density waves" = "density_ridges"),
+                # checkIcon = list(
+                #   yes = tags$i(class = "fa fa-circle", 
+                #                style = "color: #28a745"),
+                #   no = tags$i(class = "fa fa-circle-o", 
+                #               style = "color: #28a745"))
+                status = "success"
+
             )
           ),
-          shiny::plotOutput(ns('heatmap_preview_norm'), height = "900px")
+          shiny::plotOutput(ns('heatmap_preview_norm'), height = 900)
         ),
          
         shiny::tabPanel(title = "Summary",
@@ -191,7 +226,8 @@ mod_normalisation_server <- function(input, output, session, r) {
   
   output$norm_choice <-  shiny::renderUI({
     shiny::req(!is.null(r$use_demo))
-    if(!r$use_demo) sel <- 'tmm'
+    # Demo dataset has normalized counts. 
+    if(is.null(r$integrated_dataset) || r$integrated_dataset != "Abiotic Stresses") sel <- 'tmm'
     else sel <- 'none'
     
     col_12(
@@ -204,6 +240,23 @@ mod_normalisation_server <- function(input, output, session, r) {
         status = "success"
       )
     )
+  })
+  
+  # Update low_counts_filter value depending of removal method.
+  shiny::observeEvent(input$norm_method_choice, {
+    if(input$norm_method_choice == "sum_sample"){
+      shiny::updateNumericInput(inputId = "low_counts_filter", value =  10 * length(r$conditions))
+    } else {
+      shiny::updateNumericInput(inputId = "low_counts_filter", value =  10)
+    }
+  })
+  
+  output$low_count_filtering_text <- shiny::renderText({
+    if(input$norm_method_choice == "sum_sample"){
+      "Minimal gene count sum accross conditions :"
+    } else {
+      "Minimal median for at least one condition :"
+    }
   })
   
   
@@ -236,20 +289,22 @@ mod_normalisation_server <- function(input, output, session, r) {
   #   ____________________________________________________________________________
   #   buttn reactives                                                         ####
   
+  
+  ### Normalisation
   shiny::observeEvent(input$normalize_btn, {
     shiny::req(r$raw_counts)
     shiny::req(input$norm_method)
     
     r$norm_method <- input$norm_method
     if(input$norm_method != "none"){
-      r$tcc <-
+      r$tcc_raw <-
         normalize(
           r$raw_counts,
           r$conditions,
           norm_method = input$norm_method,
           iteration = input$prior_removal
         )
-      r$normalized_counts_pre_filter <- TCC::getNormalizedData(r$tcc)
+      r$normalized_counts_pre_filter <- TCC::getNormalizedData(r$tcc_raw)
       # the filtering needs to be done again if previously made, so :
       r$normalized_counts <- NULL
     }
@@ -259,16 +314,31 @@ mod_normalisation_server <- function(input, output, session, r) {
     }
   })
   
+  # Low count removal.
   shiny::observeEvent((input$use_SumFilter), {
     shiny::req(r$normalized_counts_pre_filter)
+    shiny::req(!is.na(input$low_counts_filter))
     if(input$norm_method != "none"){
-      r$tcc <- filter_low_counts(r$tcc, thr = input$low_counts_filter)
-      r$normalized_counts <- TCC::getNormalizedData(r$tcc)
+      # Classic method, using sum of counts.
+      if(input$norm_method_choice == "sum_sample"){
+        r$tcc <- filter_low_counts(r$tcc_raw, thr = input$low_counts_filter)
+        r$normalized_counts <- TCC::getNormalizedData(r$tcc)
+      # New method, using median of conditions. 
+      } else {
+        r$tcc <- filter_low_count_condition_wise(r$tcc_raw, thr = input$low_counts_filter)
+        r$normalized_counts <- TCC::getNormalizedData(r$tcc)
+      }
     }
     else{
-      r$normalized_counts <- r$normalized_counts_pre_filter[
-        rowSums(r$normalized_counts_pre_filter) > input$low_counts_filter,]
-      r$tcc <- list(counts = r$normalized_counts)
+      if(input$norm_method_choice == "sum_sample"){
+        r$normalized_counts <- r$normalized_counts_pre_filter[
+          rowSums(r$normalized_counts_pre_filter) > input$low_counts_filter,]
+        r$tcc <- list(counts = r$normalized_counts)
+      } else {
+        r$normalized_counts = r$normalized_counts_pre_filter[(do.call(pmax, summarize_per_conditions(count_data = r$normalized_counts_pre_filter)) > input$low_counts_filter),]
+        r$tcc <- list(counts = r$normalized_counts)
+        
+      }
     }
     
     if(nrow(r$normalized_counts)==0){
@@ -375,7 +445,7 @@ mod_normalisation_server <- function(input, output, session, r) {
         d <- r$normalized_counts
       }
     }
-    draw_distributions(d, boxplot = input$violin_preview)+ 
+    draw_distributions(data = d, type = input$count_distribution_type) + 
       ggplot2::ggtitle("Per-condition expression ditributions")
   })
   
@@ -426,7 +496,7 @@ mod_normalisation_server <- function(input, output, session, r) {
       paste("normalized_counts.csv")
     },
     content = function(file) {
-      write.csv(round(r$normalized_counts, 2), file = file, quote = FALSE)
+      write.table(round(r$normalized_counts, 2), file = file, quote = FALSE, sep = r[["output_field_separator"]])
     }
   )
   

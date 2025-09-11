@@ -88,8 +88,8 @@ input$low_counts_filter
 For each condition, we can visualize the distributions of gene counts before normalization and low can removal, and after.
 
 ```{r viz_filter, fig.width=10, fig.height=12}
-pre_process <- DIANE::draw_distributions(r$raw_counts, boxplot = FALSE) + ggplot2::ggtitle("Before")
-post_process <- DIANE::draw_distributions(r$normalized_counts, boxplot = FALSE)+ ggplot2::ggtitle("After")
+pre_process <- DIANE::draw_distributions(r$raw_counts, type = "boxplot") + ggplot2::ggtitle("Before")
+post_process <- DIANE::draw_distributions(r$normalized_counts, type = "boxplot")+ ggplot2::ggtitle("After")
 
 gridExtra::grid.arrange(pre_process, post_process, ncol = 2)
 

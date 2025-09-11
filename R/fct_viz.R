@@ -25,7 +25,7 @@ draw_heatmap <-
            profiles = FALSE,
            conditions = NULL) {
     if (is.null(subset)) {
-      sample_subset <- sample(rownames(data), size = 100)
+      sample_subset <- sample(rownames(data), size = min(length(rownames(data)), 100))
     }
     else
       sample_subset <- subset
@@ -60,7 +60,7 @@ draw_heatmap <-
       annotation_col = samples,
       show_rownames = show_rownames,
       main = title,
-      fontsize = 17
+      fontsize = 17, border_color = NA
     )
   }
 
@@ -69,13 +69,20 @@ draw_heatmap <-
 #' Draw distributions of expression data
 #'
 #' @param data expression dataframe, with samples as columns and genes as rows
-#' @param boxplot if TRUE, plot each sample as a boxplot, else, it is shown as distributions
+#' @param type one of the following : boxplot, density, density_ridges
 #' @export
 #' @examples
 #' data("abiotic_stresses")
-#' DIANE::draw_distributions(abiotic_stresses$normalized_counts, boxplot = FALSE)
+#' DIANE::draw_distributions(abiotic_stresses$normalized_counts, type = "boxplot")
 #' DIANE::draw_distributions(abiotic_stresses$raw_counts)
-draw_distributions <- function(data, boxplot = TRUE) {
+draw_distributions <- function(data, type = "boxplot") {
+  
+  # Check input
+  if(! type %in% c("boxplot", "density", "density_ridges")){
+    stop("type must be one of the following : boxplot, density, density_ridges")
+  }
+  
+  
   d <-
     suppressMessages(reshape2::melt(log(data[sample(rownames(data),
                                                     replace = FALSE,
@@ -86,11 +93,9 @@ draw_distributions <- function(data, boxplot = TRUE) {
   
   d$condition <- stringr::str_split_fixed(d$sample, "_", 2)[, 1]
   
-  
-  
-  if (boxplot) {
+  if (type == "boxplot") {
     g <-
-      ggplot2::ggplot(data = d, ggplot2::aes(x = sample, y = logCount))
+      ggplot2::ggplot(data = d, ggplot2::aes_string(x = "sample", y = "logCount"))
     g <- g + ggplot2::geom_boxplot(
       alpha = 0.5,
       lwd = 1,
@@ -98,12 +103,17 @@ draw_distributions <- function(data, boxplot = TRUE) {
       outlier.color = "black",
       outlier.alpha = 0.1
     )
-  } else{
+  } else if(type == "density_ridges"){
     g <-
       ggplot2::ggplot(data = d,
-                      ggplot2::aes(y = sample, x = logCount, color = condition)) +
-      ggridges::geom_density_ridges(size = 2, fill = "#d6dbdf")
-  }
+                      ggplot2::aes_string(y = "sample", x = "logCount", color = "condition")) +
+      ggridges::geom_density_ridges(fill = "#EAEFF3")
+  } else {
+    g <-
+      ggplot2::ggplot(data = d,
+                      ggplot2::aes(x = logCount)) + ggplot2::theme_bw() +
+      ggplot2::geom_line(ggplot2::aes(color=sample), stat="density", linewidth=0.5, alpha=0.5)
+  } 
   
   g <-
     g + ggplot2::theme_bw() + ggplot2::theme(
@@ -606,6 +616,9 @@ quick_pca <- function(data) {
 #' principal components. This is done using the great CorLevelPlot package, by
 #' Kevin Blighe (https://github.com/kevinblighe/CorLevelPlot).
 #' @export
+#' params pca result from the "compute_pca" function. 
+#' params design design matrix
+#' params plotRsquared plot R-squared values
 #' @import ggplot2
 #' @import CorLevelPlot
 #'
@@ -691,6 +704,8 @@ pca_plot_correlation <- function(pca, design = NULL, plotRsquared = FALSE){
 #' @param res plot resolution. Only used for png and tiff
 #' @param width plot width
 #' @param height plot height
+#' @param plot_error display a plot showing an error message instead of plotting
+#' anything.
 #'
 #' @export
 #' @importFrom ggplot2 ggsave
@@ -738,4 +753,71 @@ download_plot_hd <- function(plot = NULL, file = NULL, type = "ggplot", format =
     dev.off()
   }
   # } 
+}
+
+#' draw_correlation_heatmap
+#' 
+#' @description draw a heatmap of pearson correlation between conditions.
+#' Display only two digits.
+#' 
+#' @param data a matrix of count. This will be converted to log2+1
+#' @param conds if NULL, shows all the conditions, else if character vector, shows only the required ones
+#' @param correlation_method correlation method for the cor function. Can be pearson,
+#' kendall or spearman.
+#' @param low_color color for low correlation. Default : #db4760
+#' @param high_color color for high correlation. Default : #4169e1
+#' @param mid_color color for values in between high and low. Default : white
+#' @param font_size font size for the text in cells.
+#' @param limits vector with 3 elements, the lower limit, the middle, and the high.
+#'
+#' @export
+#' @import ggplot2 reshape2 stats
+#' @examples
+#' data("abiotic_stresses")
+#' draw_correlation_heatmap(abiotic_stresses$normalized_counts)
+draw_correlation_heatmap <-
+  function(data = NULL,
+           conds = unique(stringr::str_split_fixed(colnames(data), '_', 2)[, 1]),
+           correlation_method = "pearson",
+           low_color = "#db4760",
+           high_color = "#4169e1",
+           mid_color = "white",
+           font_size = 3,
+           limits = NULL) {
+  require(ggplot2)
+    
+    conditions <-
+      colnames(data)[stringr::str_split_fixed(colnames(data), '_', 2)[, 1] %in% conds]
+    if (length(conditions) == 0) {
+      stop("The required conditions were not found in the expression data")
+    }
+    
+  data <- data[,colnames(data) %in% conditions]
+    
+  data <- log2(data+1)
+  
+  correlation = round(cor(data, method = correlation_method), 2)
+  data_melt <- reshape2::melt(correlation)
+  if(is.null(limits)){
+    limits = c(
+      min(data_melt[["value"]]),
+      ((min(data_melt[["value"]]) + 1) / 2),
+      1
+    )
+  }
+  ggheatmap <- ggplot2::ggplot(data_melt, ggplot2::aes(Var2, Var1, fill = value))+
+    ggplot2::geom_tile(color = "white", linewidth = 0.1) +
+    # scale_fill_gradient2(low = "#9b1c31", high = "#92D9A2", mid = "white",
+    ggplot2::scale_fill_gradient2(low = low_color, high = high_color, mid = mid_color,
+                                  limit = c(limits[1],limits[3]), midpoint = limits[2], space = "Lab",
+                                  name=paste0(correlation_method,"\nCorrelation")) +
+    ggplot2::theme_bw() +
+    ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 45, vjust = 1,
+                                                       size = 8, hjust = 1)) +
+    ggplot2::labs(y= "Samples", x = "Samples") +
+    ggplot2::geom_text(ggplot2::aes(Var2, Var1, label = value), color = "black", size = font_size) +
+    ggplot2::scale_y_discrete(limits=rev) +
+    ggtitle(paste0(correlation_method," Correlation between samples"))
+  
+  return(ggheatmap)
 }

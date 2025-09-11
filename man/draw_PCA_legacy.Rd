@@ -19,5 +19,5 @@ reproductibility purpose.
 }
 \examples{
 data("abiotic_stresses")
-draw_PCA(abiotic_stresses$normalized_counts)
+draw_PCA_legacy(abiotic_stresses$normalized_counts)
 }

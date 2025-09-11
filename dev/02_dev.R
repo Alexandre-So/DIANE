@@ -12,7 +12,7 @@
 ###################################
 
 # Engineering
-set_golem_version("1.1.0")
+golem::set_golem_version("1.2.1")
 
 ## Dependencies ----
 ## Add one line by package you want to add as dependency
@@ -62,6 +62,9 @@ usethis::use_package( "rmarkdown" )
 usethis::use_package( "ggVennDiagram" ) 
 usethis::use_package( "loggit" )
 usethis::use_package( "ggrepel" )
+usethis::use_package( "jsonlite" )
+usethis::use_package( "pkgload" )
+usethis::use_package( "baySeq" )
 usethis::use_dev_package( "CorLevelPlot", remote = "https://github.com/Alexandre-So/CorLevelPlot")
 
 
@@ -134,6 +137,7 @@ golem::add_fct( "geneIDs")
 #golem::add_js_file( "script" )
 #golem::add_js_handler( "handlers" )
 golem::add_css_file( "advanced_pca_selection" )
+golem::add_css_file( "import_data" )
 
 ## Add internal datasets ----
 ## If you have data in your package
@@ -142,6 +146,9 @@ usethis::use_data(gene_annotations , version = 3, overwrite = T)
 usethis::use_data(regulators_per_organism , version = 3, overwrite = T)
 usethis::use_data(lupine, version = 3, overwrite = T, internal = TRUE)
 usethis::use_data(go_matchings, version = 3, overwrite = T)
+usethis::use_data(organisms, version = 3, overwrite = T)
+usethis::use_data(integrated_datasets, version = 3, overwrite = T)
+
 
 #usethis::use_data_raw( name = "raw_data_demo", open = FALSE ) 
 
@@ -163,7 +170,8 @@ devtools::build_vignettes()
 
 usethis::use_pkgdown()
 
-pkgdown::build_site()
+pkgdown::build_site(lazy = TRUE)
+# pkgdown::build_site()
 
 
 usethis::use_github_action("pkgdown")

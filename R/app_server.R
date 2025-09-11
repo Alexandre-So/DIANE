@@ -5,9 +5,8 @@
 #' @import shiny
 #' @noRd
 #' 
-options(shiny.maxRequestSize=30*1024^2)
+options(shiny.maxRequestSize=70*1024^2)
 app_server <- function(input, output, session) {
- 
   
 #   ____________________________________________________________________________
 #   reactive values                                                         ####
@@ -31,16 +30,29 @@ app_server <- function(input, output, session) {
     splicing_aware = NULL,
     gene_info = NULL,
     organism = NULL,
+    integrated_dataset =  NULL,
     custom_go = NULL,
     session_id = as.character(floor(runif(1)*1e20)),
     seed = golem::get_golem_options("seed"),
+    output_field_separator = ",",
     plots_params = list(
       format = "pdf",
       res = 300,
       width = 20,
       height = 14
-    )
+    ),
+    included_genus = NULL, ### Allow to filter genus
+    preselected_organism = NULL, ### Allow to pre-select a specific organism
+    preselected_dataset = NULL ### Allow to pre-select a specific dataset.
   )
+  
+  shiny::observe({
+    query <- shiny::parseQueryString(session$clientData$url_search)
+    r$included_genus <- query$organism
+    r$preselected_organism <- query$organism_selected
+    r$preselected_dataset <- query$data_selected
+    print(query)
+  })
   
   
   
@@ -98,7 +110,10 @@ app_server <- function(input, output, session) {
   
   output$general_debug_button <- shiny::renderUI({
     if(golem::app_dev()){
-      actionButton("debug", "debug")
+      shiny::column(12,
+      shiny::actionButton("debug", "debug"),
+      shiny::actionButton("addSep", "addSep")
+      )
     } else {
       NULL
     }
@@ -151,8 +166,49 @@ app_server <- function(input, output, session) {
     r[["plots_params"]][["res"]] <- input$plot_res
   })
   
+  
+  # Global options 
+  shiny::observeEvent(input$global_options, {
+    golem::print_dev("Global options clic")
+    showModal(
+      shiny::fluidRow(
+        modalDialog(
+          tags$h1("Global apps parameters"),
+          shiny::helpText("This will set some parameters that will be used in some places in the app."),
+          # shiny::HTML(
+          #   paste0("<span style='color: #737373'>",shiny::icon("circle-info"), "</span> <span style='color: #737373'>Note that the res argument only affect png and tiff format.</span>")
+          # ),
+          shiny::hr(),
+          shiny::column(6,
+            shinyWidgets::awesomeRadio(
+              inputId ='output_file_field_separator',
+              label = 'Output file field separator : ',
+              c(
+                Comma = ',',
+                Semicolon = ';',
+                Tab = '\t'
+              ),
+              selected = r[["output_field_separator"]],
+              inline = TRUE,
+              status = "success"
+            ),
+          ),
+        ))
+    )
+  })
+  
+  shiny::observeEvent(input$output_file_field_separator, {
+    golem::print_dev('output_field_separator update')
+    r[["output_field_separator"]] <- input$output_file_field_separator
+    golem::print_dev(paste0("OFS set to \'", r[["output_field_separator"]], "\'"))
+  })
+  
   observeEvent(input$debug, {
     browser()
+  })
+  
+  observeEvent(input$addSep, {
+    print("---------------------------------------------")
   })
   
 }

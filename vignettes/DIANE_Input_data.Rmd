@@ -82,3 +82,9 @@ A number of model organisms are already stored in the application, so that, if y
 Else, you can upload those information for your organism.
 
 You can find a number of pre-formatted datasets in the last tab of the online application at <https://diane.bpmp.inrae.fr>, that meet the expected format and type of gene IDs.
+
+# Add data to server mode
+
+You can add permanent data to DIANE in server mode. To do so, you can check this specific repository, that which contains scripts to help you do so.
+
+<https://github.com/Alexandre-So/DIANE_helper_scripts>

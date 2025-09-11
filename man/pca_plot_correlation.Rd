@@ -6,15 +6,10 @@
 \usage{
 pca_plot_correlation(pca, design = NULL, plotRsquared = FALSE)
 }
-\arguments{
-\item{pca}{PCA data obtained from the compute_pca function.}
-
-\item{design}{experimental design as a dataframe. Please refer to the
-experimental-design part of DIANE vignette for format.}
-}
 \description{
 Draw correlation of each conditions groups to the 
-principal components.
+principal components. This is done using the great CorLevelPlot package, by
+Kevin Blighe (https://github.com/kevinblighe/CorLevelPlot).
 }
 \examples{
 data("abiotic_stresses")

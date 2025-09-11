@@ -17,8 +17,9 @@
 run_app <-
   function(server_version = FALSE,
            seed = round(runif(n = 1, min = 0, max = 2 ^ 7)),
-           host = "127.0.0.1",
+           host = "127.0.0.1", prod = TRUE,
            ...) {
+    options(golem.app.prod = prod)
     golem::with_golem_options(
       app = shinyApp(ui = app_ui,
                      server = app_server, 

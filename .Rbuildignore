@@ -1,3 +1,5 @@
+^renv$
+^renv\.lock$
 ^.*\.Rproj$
 ^\.Rproj\.user$
 ^data-raw$
@@ -17,3 +19,6 @@ inst/extdata/datasets/*.csv
 ^\.dockerignore$
 ^doc$
 ^Meta$
+^\.dockerignore$
+R/app_ui.R
+^RtmpPobm6r$

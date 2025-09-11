@@ -1,62 +1,102 @@
-authors:
-  Océane Cassan:
-    href: https://oceanecsn.github.io/
+# authors:
+#   Océane Cassan:
+#     href: https://oceanecsn.github.io/
+#     roles: ["cre", "aut"]
+#     comment: "Initial developer of the package"
+#   Alexandre Soriano:
+#     roles: ["cre"]
+#     email: alexandre.soriano@cirad.fr
+#     comment: "Took over development and maintenance"
 
 development:
   mode: unreleased
+  
+# figures:
+#   fig.width: 16
+#   fig.asp: 2
+#   # fig.height: 12   # 4.5 * 1.43
+#   dpi:  300
+  
+# figures:
+#   dev: svglite::svglite
+#   fig.ext: svg
+#   dev.args: []
+#   bg: NA
+#   other.parameters: []
+  
+# figures:
+#   dev: ragg::agg_png
+#   dpi: 72
+#   dev.args: []
+#   fig.width: 20.8
+#   fig.height: 13
+#   fig.retina: 2
+#   bg: NA
+#   other.parameters: []
+# figures:
+#   dev: svglite::svglite
+#   dev.args: []
+#   fig.ext: "svg"
+
+
 
 template:
-  params:
-    bootswatch: flatly
+  bootstrap: 3
+  bootswatch: flatly
 
+  
 reference:
+  - title: DIANE User Interface
+  - contents:
+    - run_app
+  
+  - title: Pre-processing
+  - contents:
+    - normalize
+    - filter_low_counts
+    - filter_low_count_condition_wise
+    - aggregate_splice_variants
+    - get_locus
+  
+  - title: Differential expression analysis
+  - contents:
+    - starts_with("estimateD")
+  
+  - title: Expression based clustering
+  - contents:
+    - run_coseq
+    - get_genes_in_cluster
+    - fit_glm
+  
+  - title: Gene ontologies and annotations
+  - contents:
+    - starts_with("enrich_go")
+    - starts_with("convert_from")
+    - get_gene_information
+  
+  
+  - title: Gene regulatory network inference
+  - contents:
+    - starts_with("network_")
+    - test_edges
+    - estimate_test_edges_time
+    - group_regressors
+    - describe_node
+  
+  
+  - title: Visualization functions
+  - contents:
+    - starts_with("draw_")
+    - compute_pca
+    - pca_plot_correlation
+    - quick_pca
+    - draw_correlation_heatmap
+  
+  - title: Data
+  - contents:
+    - regulators_per_organism
+    - abiotic_stresses
+    - gene_annotations
+    - organisms
+    - integrated_datasets
 
-- title: DIANE User Interface
-- contents:
-  - run_app
-
-- title: Pre-processing
-- contents:
-  - normalize
-  - filter_low_counts
-  - aggregate_splice_variants
-  - get_locus
-
-- title: Differential expression analysis
-- contents:
-  - starts_with("estimateD")
-
-- title: Expression based clustering
-- contents:
-  - run_coseq
-  - get_genes_in_cluster
-  - fit_glm
-
-- title: Gene ontologies and annotations
-- contents:
-  - starts_with("enrich_go")
-  - starts_with("convert_from")
-  - get_gene_information
-
-
-- title: Gene regulatory network inference
-- contents:
-  - starts_with("network_")
-  - test_edges
-  - estimate_test_edges_time
-  - group_regressors
-  - describe_node
-
-
-- title: Visualization functions
-- contents:
-  - starts_with("draw_")
-  - compute_pca
-  - pca_plot_correlation
-  - quick_pca
-
-- title: Data
-- contents:
-  - regulators_per_organism
-  - abiotic_stresses
-  - gene_annotations

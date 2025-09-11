@@ -329,9 +329,23 @@ mod_network_inference_server <- function(input, output, session, r){
   regulators <- shiny::reactive({
     shiny::req(r$raw_counts, r$organism)
     d <- NULL
-    if (r$organism != "Other") {
+    
+    if (r$organism %in%  c(
+      "Arabidopsis thaliana",
+      "Homo sapiens",
+      "Mus musculus",
+      "Drosophilia melanogaster",
+      "Caenorhabditis elegans",
+      "Escherichia coli"
+    )) {
       data("regulators_per_organism", package = "DIANE")
       d <- regulators_per_organism[[r$organism]]
+    }
+    
+    if(r$organism %in% names(DIANE::organisms)){ ##Custom organism
+      if(!is.null(DIANE::organisms[[r$organism]][["regulators"]])){
+        d <- DIANE::organisms[[r$organism]][["regulators"]]
+      }
     }
     
     if(!is.null(input$TFs_list_input)){
@@ -346,28 +360,28 @@ mod_network_inference_server <- function(input, output, session, r){
         )
       d <- as.vector(d[,1])
     }
-
+    
     if(r$splicing_aware){
       r$aggregated_normalized_counts <- 
         aggregate_splice_variants(data.frame(r$normalized_counts, 
                                              check.names = FALSE))
     }
-      else {
-        if(!is.null(d)){
-          
-        if (sum(d %in% row.names(r$raw_counts)) == 0){
+    else {
+      if(!is.null(d)){
         
-        shinyalert::shinyalert(
-          "Something is wrong with the chosen regulators",
-          "No regulators were found in the rownames of the expression data",
-          type = "error"
-        )
-        d = NULL
-      }
+        if (sum(d %in% row.names(r$raw_counts)) == 0){
+          
+          shinyalert::shinyalert(
+            "Something is wrong with the chosen regulators",
+            "No regulators were found in the rownames of the expression data",
+            type = "error"
+          )
+          d = NULL
+        }
       }
     }
     as.character(d)
-    })
+  })
   
   #   ____________________________________________________________________________
   #   summaries                                                               ####

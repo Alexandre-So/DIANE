@@ -1,0 +1,209 @@
+---
+title: "Add new data"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Add new data}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+# Add new data
+
+Since version 1.2, DIANE can now customized more easily with custom organisms and datasets. A script that aims to make this more easy is also included.
+
+The scripts are for now stored in another repository : https://github.com/Alexandre-So/DIANE_helper_scripts
+
+They will be later integrated into DIANE. For now, download them inside of DIANE directory if you want to use them. They take a yaml file, with path to the different files needed to store organisms and datasets informations as well as some descriptive informations. 
+
+## Organism
+
+### Annotation (Mandatory)
+
+Gene annotation. The first column must contain gene ID, and the others can contain any kind of information.
+
+| Gene_id | Product             | Type |
+|---------|---------------------|------|
+| Gene A  | This gene does this | A    |
+| Gene B  | This gene does that | A    |
+| Gene C  | This gene is nice   | A    |
+| Gene D  | PIN2                | B    |
+| Gene E  | RBSA                | B    |
+| Gene F  | TP53                | B    |
+
+### GO terms
+
+File to map gene name to their GO term. Must contain one line for each GO term. If a gene is associated with multiple GO terms, you must put his name on multiple lines.
+
+| gene_id |    go_id     |
+|:-------:|:------------:|
+| Gene A  | <GO:0005097> |
+| Gene A  | <GO:0005622> |
+| Gene A  | <GO:0032313> |
+| Gene B  | <GO:0005506> |
+| Gene B  | <GO:0009055> |
+| Gene B  | <GO:0016705> |
+| Gene B  | <GO:0020037> |
+| Gene B  | <GO:0055114> |
+| Gene F  | <GO:0005507> |
+
+### Regulators
+
+Text file containing one gene ID per line, which will be used as regulator list.
+
+```{txt}
+gene_A
+gene_B
+gene_C
+```
+
+### Description
+
+A list, key being the titles, and values being their description. For example
+
+```{yaml}
+Description: this is a desription
+Source: https://somewhere.com/
+a title: a description
+```
+
+### Name
+
+A name to use for the organism. This will be displayed in the organism list choice.
+
+## Dataset
+
+### Raw counts (Mandatory)
+
+A path to raw sequencing count must be provided. The first row must contain sample ID, and the first column must contain gene ID
+
+Here is the head of our companion expression file, containing 24 Arabidopsis thaliana's samples :
+
+| Gene | C_1 | C_2 | C_3 | S_1 | S_2 | S_3 | M_1 | M_2 | M_3 | H_1 | H_2 | H_3 | SM_1 | SM_2 | SM_3 | SH_1 | SH_2 | SH_3 | MH_1 | MH_2 | MH_3 | SMH_1 | SMH_2 | SMH_3 |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| AT1G01010.1 | 127.0 | 67.9 | 65.5 | 94.0 | 88.1 | 95.9 | 65.1 | 100.3 | 126.8 | 95.4 | 135.0 | 117.2 | 96.7 | 104.4 | 98.1 | 94.7 | 96.1 | 101.3 | 82.8 | 107.4 | 97.1 | 100.1 | 96.7 | 121.8 |
+| AT1G01020.1 | 207.9 | 220.8 | 186.8 | 192.5 | 225.1 | 197.8 | 234.2 | 196.9 | 179.4 | 312.9 | 366.0 | 318.0 | 169.0 | 179.6 | 186.5 | 340.8 | 352.6 | 345.0 | 331.2 | 315.8 | 327.5 | 267.7 | 313.7 | 319.3 |
+| AT1G01030.1 | 32.7 | 34.4 | 55.8 | 33.6 | 15.9 | 31.3 | 21.4 | 29.8 | 33.5 | 47.7 | 39.0 | 51.1 | 25.2 | 31.2 | 34.4 | 61.0 | 65.5 | 61.2 | 45.0 | 36.2 | 55.9 | 46.0 | 42.7 | 56.8 |
+
+Expression values should be zeros or positive integers.
+
+Ideally, the expression file should not have been normalized in any way. However, it is possible in DIANE to skip normalization if you have no choice but to upload normalized counts.
+
+### Design
+
+If desired, you can specify the experimental design of your data. This will be used only for Generalized Poisson regression in cluster characterization, so this is optional.
+
+To do so, you must provide, for each condition name, the level of the factors corresponding to that condition in your study.
+
+Let's take our companion data as an example. Here, the experiment we chose for our demo includes 3 factors, heat stress, mannitol stress, as well as salinity stress.
+
+You should first identify which level of each factor can be considered as the **control** level, and which is a **perturbation**. In our demo, the control condition is referred to as C. Then, the perturbation are specified by their corresponding letter, from simple to triple stress combination. For example, SH corresponds to salt and heat stresses in the control level of mannitol. As a consequence, its levels would be 1,0,1.
+
+The design file is thus a matrix with condition names as rows, and factor names as columns. It should contain a column named "Condition", as you can see in our example below :
+
+```{csv}
+Condition	Salt_stress	Mannitol_stress	Heat_stress
+C	0	0	0
+H	0	0	1
+S	1	0	0
+M	0	1	0
+SM	1	1	0
+SH	1	0	1
+MH	0	1	1
+SMH	1	1	1
+```
+
+Many RNASeq anlysis only study one factor, which would not be a problem to use DIANE. If you have two conditions named control and trt, the design would contain only one factor column:
+
+```{csv}
+Condition treatment
+contr 0
+trt 1
+```
+
+### Description
+
+A list, key being the titles, and values being their description. This will be displayed when an user choose the corresponding dataset.
+
+```{yaml}
+Description: this is a desription
+Source: https://somewhere.com/
+DOI: https://doi.org/10.1186/s12864-021-07659-2
+a title: a description
+```
+
+# Exemples
+
+Here is an exemple yaml file, with different organisms
+
+``` yaml
+organism: # Main organism name, will be used for filtering. An organism can contains multiple annotations. 
+    genome_1: 
+        name: The name that will be displayed in the organism selection
+        annotation: path to annotation file (mandatory)
+        go: path to go file
+        regulators: path to regulators
+        informations: Generic informations about the organism/annotation. There is no specific rules for this, you can add anything you want. Exemples below are just exemples.
+            data: xxxx
+            publication:
+            source:
+            note: 
+        datasets: This par will contain datasets associated with "genome_1"
+            dataset_1:
+                count: path to count matrix (mandatory)
+                design: path to design file
+                information: Generic informations. Add as many items as you want. 
+                    source:
+                    publication:
+    genome_2: Another genome
+        ...
+
+organism2: Another organism
+    ...
+
+organismXXX: Another organism...
+    ...
+```
+
+``` yaml
+oryza:
+  oryza_sative_MSU7:
+    name: "O.Sativa Japonica nipponabre MSU7"
+    annotation: "path/to/annotation_file.csv"
+    go: "path/to/go_file.csv"
+    regulators: ""
+    informations: 
+      source: "https://rice.uga.edu/download_osa1r7.shtml"
+      time:  "Download 11 April 2024 "
+    datasets:    
+      responce_to_stress:
+        count: "path/to/count.csv"
+        design: "path/to/design.csv"
+        information:  
+      response_tp_heat:
+        count: "path/to/count.csv"
+        design: "path/to/design.csv"
+        information:
+            source:
+            publication: 
+  oryza_sativeRapDB:
+    name: "O.Sativa Japonica nipponabre RapDB"
+    annotation: "path/to/annotation_file.csv"
+    go: "path/to/go_file.csv"
+    regulators: "path/to/regulators.txt"
+Lupinus:
+  Lupinus_albus:
+    name: "Lupinus albus Var Amiga" 
+    annotation: "./organisms_data/Lupinus_albus/lupinus_albus_var_amiga_products.csv"  
+    go: "./organisms_data/Lupinus_albus/lupinus_albus_var_amiga_go.txt"  
+    informations:
+      source: "https://www.whitelupin.fr reannoted with Funcannotate (https://gitlab.cirad.fr/agap/workflows/funcannotate)"
+      GO source: "Funcannotate"
+      Contact : "Benjamin Péret (benjamin.peret@cnrs.fr)" 
+```

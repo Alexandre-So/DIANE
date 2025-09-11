@@ -36,3 +36,35 @@ golem::add_dockerfile_shinyproxy()
 
 ## If you want to deploy to Heroku
 golem::add_dockerfile_heroku()
+
+
+golem::add_dockerfile_with_renv_shinyproxy(from = "rocker/shiny:4.4.1",
+  source_folder = ".",
+  output_dir = paste(
+    "Docker_deployment_shinyproxy",
+    paste0(golem::pkg_name(), "_",
+           stringr::str_replace_all(
+             format(Sys.time(), "%Y.%d.%m_%X"),
+             pattern = ":",
+             replacement = "."
+           )), sep = "/"
+  )
+)
+
+golem::add_dockerfile_with_renv(
+  from = "rocker/shiny",
+  source_folder = ".",
+  output_dir = paste(
+    "Docker_deployment_renv",
+    paste0(
+      golem::pkg_name(),
+      "_",
+      stringr::str_replace_all(
+        format(Sys.time(), "%Y.%d.%m_%X"),
+        pattern = ":",
+        replacement = "."
+      )
+    ),
+    sep = "/"
+  ), lockfile = "./renv.lock", dockerfile_cmd = "/usr/bin/shiny-server", sysreqs = TRUE, port = 8086, expand = TRUE
+)

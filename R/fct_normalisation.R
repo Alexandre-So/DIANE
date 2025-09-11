@@ -66,3 +66,70 @@ filter_low_counts <- function(tcc, thr){
   return(tcc)
 }
 
+#' Remove low count genes condition wise.
+#' 
+#' @description Removes genes having a maximum median of counts accross all 
+#' conditions lesser than the specified threshold. It returns un aupdated TCC 
+#' object, which count element contains the filtered expression matrix. Compare
+#' to the filter_low_counts function, it aims to preserve genes having medium
+#' counts in a few batch of conditions. Code based on the filterLowCountGenes
+#' function from the TCC package.
+#'
+#' @param tcc data to be filtered to remove low count genes
+#' @param threshold the sum of counts across all samples to be exceeded for a gene
+#' @param conditions condition of each column of the data argument. Default is
+#' all the conditions in the experiment. (as defined by the underscore prefixes).
+#' @export
+#' @return a TCC-Class object
+#' @examples
+#' data("abiotic_stresses")
+#' tcc_object <- DIANE::normalize(abiotic_stresses$raw_counts, 
+#' abiotic_stresses$conditions, iteration = FALSE)
+#' threshold = 10*length(abiotic_stresses$conditions)
+#' tcc_object <- DIANE::filter_low_count_condition_wise(tcc_object, threshold)
+#' normalized_counts <- TCC::getNormalizedData(tcc_object)
+filter_low_count_condition_wise <- function(tcc, threshold = 10, conditions = NULL)
+{
+  obj <- tcc$copy()
+  conditions_median <- summarize_per_conditions(count_data = tcc$count, design = conditions)
+  gene.keep = (do.call(pmax, conditions_median) > threshold)
+  # return(gene.keep)
+  obj$count <- obj$count[gene.keep, ]
+  if (!is.null(obj$simulation$trueDEG) && length(obj$simulation$trueDEG) !=
+      0)
+    obj$simulation$trueDEG <- obj$simulation$trueDEG[gene.keep]
+  if (!is.null(obj$estimatedDEG) && length(obj$estimatedDEG) !=
+      0)
+    obj$estimatedDEG <- obj$estimatedDEG[gene.keep]
+  if (!is.null(obj$stat) && length(obj$stat) != 0) {
+    for (i in 1:length(obj$stat)) {
+      if (length(obj$stat[[i]]) == length(gene.keep))
+        obj$stat[[i]] <- obj$stat[[i]][gene.keep]
+    }
+  }
+  return(obj)
+}
+
+
+#' Summarize per conditions
+#'
+#' @param count_data count matrix, with genes as rows and conditions as columns.
+#' @param design vector with the different condition names from the count matrix.
+#'
+#' @returns new matrix with median of counts per condition.
+#' @export
+#'
+#' @noRd
+summarize_per_conditions <- function(count_data, design = NULL) {
+  if (is.null(design)) {
+    design <- unique(stringr::str_remove(colnames(count_data), "_\\d+$"))
+  }
+  
+  processed_counts <- lapply(design, function(cond) {
+    selected_cols <- count_data[, stringr::str_detect(colnames(count_data), cond), drop = FALSE]
+    row_medians <- matrixStats::rowMedians(as.matrix(selected_cols))
+    setNames(as.data.frame(row_medians), cond)
+  })
+  
+  return(do.call(cbind, processed_counts))
+}

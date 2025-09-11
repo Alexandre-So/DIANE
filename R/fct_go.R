@@ -401,18 +401,15 @@ draw_enrich_go <- function(go_data, max_go = dim(go_data)[1]){
 #' organism = "Caenorhabditis elegans")
 get_gene_information <- function(ids, organism){
   if(organism == "Arabidopsis thaliana"){
-    DIANE::gene_annotations[["Arabidopsis thaliana"]]
     d <- DIANE::gene_annotations[["Arabidopsis thaliana"]][
       match(ids, rownames(DIANE::gene_annotations[["Arabidopsis thaliana"]])),]
-  }
-  else if (stringr::str_detect(organism, "Oryza")){
-    d <- DIANE::gene_annotations[[organism]][
-      match(ids, rownames(DIANE::gene_annotations[[organism]])),]
-    if(ncol(DIANE::gene_annotations[[organism]]) == 1)
+  } else if (organism %in%  names(DIANE::organisms)){ ###If the user choose a custom organism
+    d <- DIANE::organisms[[organism]][["annotation"]][
+      match(ids, rownames(DIANE::organisms[[organism]][["annotation"]])),]
+    if(ncol(DIANE::organisms[[organism]][["annotation"]]) == 1)
       d <- data.frame(description = d)
-      rownames(d) <- ids
-  }
-  else{
+    rownames(d) <- ids
+  } else{
     annotate_org <- function(organism){
       
       mapping <- setNames(c(convert_from_ensembl, convert_from_ensembl_mus,
@@ -445,6 +442,7 @@ get_gene_information <- function(ids, organism){
     return(d[,c("label", "description")])
   return(d)
 }
+
 
 
 #' Number of shared genes between Two GO terms
