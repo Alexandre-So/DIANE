@@ -39,7 +39,7 @@ A named list with the following elements:
 abiotic_stresses
 }
 \description{
-This dataset contians the transcriptome of Arabidopsis thaliana plants exposed to global warming 
+This dataset contains the transcriptome of Arabidopsis thaliana plants exposed to global warming 
 induced conditions. It was generated in the article "Molecular plant responses to combined abiotic 
 stresses put a spotlight on unknown and abundant genes", by Sewelam et Al. in Journal of experimental
 Botany, 2020.

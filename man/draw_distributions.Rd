@@ -4,18 +4,18 @@
 \alias{draw_distributions}
 \title{Draw distributions of expression data}
 \usage{
-draw_distributions(data, boxplot = TRUE)
+draw_distributions(data, type = "boxplot")
 }
 \arguments{
 \item{data}{expression dataframe, with samples as columns and genes as rows}
 
-\item{boxplot}{if TRUE, plot each sample as a boxplot, else, it is shown as distributions}
+\item{type}{one of the following : boxplot, density, density_ridges}
 }
 \description{
 Draw distributions of expression data
 }
 \examples{
 data("abiotic_stresses")
-DIANE::draw_distributions(abiotic_stresses$normalized_counts, boxplot = FALSE)
+DIANE::draw_distributions(abiotic_stresses$normalized_counts, type = "boxplot")
 DIANE::draw_distributions(abiotic_stresses$raw_counts)
 }
