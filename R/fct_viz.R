@@ -616,6 +616,9 @@ quick_pca <- function(data) {
 #' principal components. This is done using the great CorLevelPlot package, by
 #' Kevin Blighe (https://github.com/kevinblighe/CorLevelPlot).
 #' @export
+#' params pca result from the "compute_pca" function. 
+#' params design design matrix
+#' params plotRsquared plot R-squared values
 #' @import ggplot2
 #' @import CorLevelPlot
 #'
