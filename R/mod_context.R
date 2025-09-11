@@ -22,8 +22,21 @@ mod_context_ui <- function(id){
 #' context Server Function
 #'
 #' @noRd
-mod_context_server <- function(input, output, session){
+mod_context_server <- function(input, output, session, r){
   ns <- session$ns
+  
+  # browser()
+  
+  # observe({
+  #   browser()
+  #   query <- parseQueryString(session$clientData$url_search)
+  #   r$included_genus <- query$organism
+  #    print(query)
+  # })
+  
+  # Get query parameters for further use.
+  # query <-session$clientData$url_search
+  
   
 }
     

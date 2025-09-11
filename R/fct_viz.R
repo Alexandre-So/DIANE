@@ -701,9 +701,12 @@ pca_plot_correlation <- function(pca, design = NULL, plotRsquared = FALSE){
 #' @param res plot resolution. Only used for png and tiff
 #' @param width plot width
 #' @param height plot height
+#' @param plot_error display a plot showing an error message instead of plotting
+#' anything.
 #'
 #' @export
 #' @importFrom ggplot2 ggsave
+#' @noRd
 download_plot_hd <- function(plot = NULL, file = NULL, type = "ggplot", format = "png", res=300, width = 16, height = 10, plot_error = FALSE){
   
   ###An easy way to plot an error message. Used to simplify error handling in shiny.

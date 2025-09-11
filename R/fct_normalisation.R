@@ -114,7 +114,7 @@ filter_low_count_condition_wise <- function(tcc, threshold = 10, conditions = NU
 #' Summarize per conditions
 #'
 #' @param count_data count matrix, with genes as rows and conditions as columns.
-#' @param design 
+#' @param design vector with the different condition names from the count matrix.
 #'
 #' @returns new matrix with median of counts per condition.
 #' @export

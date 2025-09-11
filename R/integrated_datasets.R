@@ -21,6 +21,6 @@
 #' @examples
 #' {
 #'  print(names(integrated_datasets))
-#'  print(head(integrated_datasets[["Lupinus albus"]][["Dataset name]][["counts"]]))
+#'  print(head(integrated_datasets[["Lupinus albus"]][["Dataset name"]][["counts"]]))
 #' }
 "integrated_datasets"
