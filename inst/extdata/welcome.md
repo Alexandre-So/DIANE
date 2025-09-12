@@ -127,3 +127,5 @@ You can check that the container is running with `docker ps`.
 Authors : Océane Cassan, Antoine Martin, Sophie Lèbre
 
 Dev : Océane Cassan, PhD Student at IPSIM (Institute for Plant Sciences in Montpellier) research unit, SUPAGRO Montpellier, with contributions from Alexandre Soriano.
+
+The application is now maintained by Alexandre Soriano (CIRAD)

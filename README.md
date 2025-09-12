@@ -133,4 +133,4 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 Authors : Océane Cassan, Antoine Martin, Sophie Lèbre.
 
-Code contributions from Alexandre Soriano.
+The application is now maintained by Alexandre Soriano (CIRAD)
