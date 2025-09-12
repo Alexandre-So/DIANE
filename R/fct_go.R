@@ -436,10 +436,11 @@ get_gene_information <- function(ids, organism){
       return(d)
     }
     
+    d$label <- NULL
     d <- annotate_org(organism)
   }
-  if ("label" %in% colnames(d))
-    return(d[,c("label", "description")])
+  # if ("label" %in% colnames(d) && ) 
+  #   return(d[,c("label", "description")])
   return(d)
 }
 
