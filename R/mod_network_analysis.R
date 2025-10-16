@@ -123,6 +123,7 @@ mod_network_analysis_ui <- function(id) {
                                                      lib = "glyphicon"))
                        ))
           ),
+          shiny::div(
           col_4(
             shinyWidgets::actionBttn(
               ns("go_enrich_btn"),
@@ -159,6 +160,8 @@ mod_network_analysis_ui <- function(id) {
                                           lib = "glyphicon"))
             ),
             shiny::uiOutput(ns("max_go_choice"))
+          ),
+            shiny::uiOutput(ns("custom_data_go"))
           ),
           
           shiny::hr(),
@@ -580,8 +583,64 @@ mod_network_analysis_server <- function(input, output, session, r) {
   })
   
   r_mod <- shiny::reactiveValues(go = NULL)
+  
   #   ____________________________________________________________________________
   #   GO enrich                                                               ####
+  
+  #   ____________________________________________________________________________
+  ##   custom go                                                              ####
+  
+  output$custom_data_go <- shiny::renderUI({
+    shiny::req(r$organism == "Other")
+    shiny::req(is.null(r$custom_go))
+    
+    tagList(
+      col_2(
+        shinyWidgets::dropdownButton(
+          size = 'xs',
+          shiny::includeMarkdown(system.file("extdata", "custom_go.md", package = "DIANE")),
+          circle = TRUE,
+          status = "success",
+          icon = shiny::icon("question"),
+          width = "600px",
+          tooltip = shinyWidgets::tooltipOptions(title = "More details")
+        )
+      ),
+      col_10(
+        shiny::h4(
+          "Your organism is not known to DIANE, but you can provide a matching between
+         gene IDs and GO IDs."
+        )
+      ),
+      
+      
+      col_6(shiny::radioButtons(
+        ns('sep'),
+        
+        'Separator : ',
+        c(
+          Comma = ',',
+          Semicolon = ';',
+          Tab = '\t'
+        ),
+        inline = TRUE
+      )),
+      
+      col_6(
+        shiny::fileInput(
+          ns('go_data'),
+          'Choose CSV/TXT GO terms file',
+          accept = c(
+            'text/csv',
+            'text/comma-separated-values,text/plain',
+            '.csv',
+            '.txt'
+          )
+        )
+      )
+    )
+    
+  })
   
   
   shiny::observeEvent((input$go_enrich_btn), {
