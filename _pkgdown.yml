@@ -1,50 +1,12 @@
-# authors:
-#   Océane Cassan:
-#     href: https://oceanecsn.github.io/
-#     roles: ["cre", "aut"]
-#     comment: "Initial developer of the package"
-#   Alexandre Soriano:
-#     roles: ["cre"]
-#     email: alexandre.soriano@cirad.fr
-#     comment: "Took over development and maintenance"
-
 development:
   mode: unreleased
   
-# figures:
-#   fig.width: 16
-#   fig.asp: 2
-#   # fig.height: 12   # 4.5 * 1.43
-#   dpi:  300
-  
-# figures:
-#   dev: svglite::svglite
-#   fig.ext: svg
-#   dev.args: []
-#   bg: NA
-#   other.parameters: []
-  
-# figures:
-#   dev: ragg::agg_png
-#   dpi: 72
-#   dev.args: []
-#   fig.width: 20.8
-#   fig.height: 13
-#   fig.retina: 2
-#   bg: NA
-#   other.parameters: []
-# figures:
-#   dev: svglite::svglite
-#   dev.args: []
-#   fig.ext: "svg"
-
-
+url: https://alexandre-so.github.io/DIANE
 
 template:
   bootstrap: 3
   bootswatch: flatly
 
-  
 reference:
 
 - title: DIANE User Interface
