@@ -20,5 +20,7 @@ inst/extdata/datasets/*.csv
 ^doc$
 ^Meta$
 ^\.dockerignore$
-R/app_ui.R
 ^RtmpPobm6r$
+^Docker_deployment_renv($|/)
+^input_data_for_online_DIANE($|/)
+^data\..*($|/)
