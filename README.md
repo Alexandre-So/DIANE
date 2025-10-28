@@ -68,6 +68,17 @@ In case your expression input file exceeds 5MB, you may need to run the command 
 
 Once the application is launched, if the resolution poorly fits your screen, you can adjust it with the keyboard shortcuts `ctrl +` or `ctrl -` (use `cmd` on Mac).
 
+
+**Note for Debian users** : some packages are required by some DIANE dependencies :
+ * libssl-dev
+ * libcurl4-openssl-dev
+ * libudunits2-dev
+ * libabsl-dev
+ * cmake
+ * libfontconfig1-dev
+ * libgdal-dev
+
+
 ## Deploy DIANE on your server
 
 We provide a [solution based on Docker and Shiny server](https://hub.docker.com/r/rocker/shiny) to deploy DIANE on any linux server, just as it is at <https://diane.bpmp.inrae.fr>. To do so, see the following command line instructions.
