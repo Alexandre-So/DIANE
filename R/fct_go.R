@@ -400,10 +400,11 @@ draw_enrich_go <- function(go_data, max_go = dim(go_data)[1]){
 #' get_gene_information(c("WBGene00000013", "WBGene00000035"), 
 #' organism = "Caenorhabditis elegans")
 get_gene_information <- function(ids, organism){
+  browser()
   if(organism == "Arabidopsis thaliana"){
     d <- DIANE::gene_annotations[["Arabidopsis thaliana"]][
       match(ids, rownames(DIANE::gene_annotations[["Arabidopsis thaliana"]])),]
-  } else if (organism %in%  names(DIANE::organisms)){ ###If the user choose a custom organism
+  } else if (organism %in% names(DIANE::organisms)){ ###If the user choose a custom organism
     d <- DIANE::organisms[[organism]][["annotation"]][
       match(ids, rownames(DIANE::organisms[[organism]][["annotation"]])),]
     if(ncol(DIANE::organisms[[organism]][["annotation"]]) == 1)
@@ -436,7 +437,7 @@ get_gene_information <- function(ids, organism){
       return(d)
     }
     
-    d$label <- NULL
+    # d$label <- NULL
     d <- annotate_org(organism)
   }
   # if ("label" %in% colnames(d) && ) 
