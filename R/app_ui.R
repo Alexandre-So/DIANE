@@ -6,7 +6,7 @@
 #' @import shinydashboard
 #'
 #' @noRd
-#'
+# ----
 app_ui <- function(request) {
   
 logo_diane <- dashboardthemes::shinyDashboardLogoDIY(
@@ -192,35 +192,35 @@ dbHeader <- shinydashboard::dashboardHeader(title = logo_diane, titleWidth = "30
           ")),
 
 
-        #' tags$style(HTML("
-        #'     @import url('//fonts.googleapis.com/css?family=Prociono|Cabin:400,700');
-        #'
-        #'     h1 {
-        #'       font-family: 'Prociono', cursive;
-        #'       font-weight: 500;
-        #'       line-height: 1.1;
-        #'       color: #369358;
-        #'     }
-        #'
-        #'     h2 {
-        #'       font-family: 'Prociono', cursive;
-        #'       font-weight: 500;
-        #'       line-height: 1.1;
-        #'     }
-        #'
-        #'     li {
-        #'       font-family: 'Prociono', cursive;
-        #'       font-weight: 500;
-        #'       line-height: 1.1;
-        #'     }
-        #'
-        #'     .box-title {
-        #'       font-family: 'Prociono', cursive;
-        #'       font-weight: 500;
-        #'       line-height: 1.1;
-        #'     }
-        #'
-        #'   ")),
+        # tags$style(HTML("
+        #     @import url('//fonts.googleapis.com/css?family=Prociono|Cabin:400,700');
+        #
+        #     h1 {
+        #       font-family: 'Prociono', cursive;
+        #       font-weight: 500;
+        #       line-height: 1.1;
+        #       color: #369358;
+        #     }
+        #
+        #     h2 {
+        #       font-family: 'Prociono', cursive;
+        #       font-weight: 500;
+        #       line-height: 1.1;
+        #     }
+        #
+        #     li {
+        #       font-family: 'Prociono', cursive;
+        #       font-weight: 500;
+        #       line-height: 1.1;
+        #     }
+        #
+        #     .box-title {
+        #       font-family: 'Prociono', cursive;
+        #       font-weight: 500;
+        #       line-height: 1.1;
+        #     }
+        #
+        #   ")),
 
         shinydashboard::tabItems(
           shinydashboard::tabItem(tabName = "context_tab",
