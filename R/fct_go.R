@@ -400,7 +400,6 @@ draw_enrich_go <- function(go_data, max_go = dim(go_data)[1]){
 #' get_gene_information(c("WBGene00000013", "WBGene00000035"), 
 #' organism = "Caenorhabditis elegans")
 get_gene_information <- function(ids, organism){
-  browser()
   if(organism == "Arabidopsis thaliana"){
     d <- DIANE::gene_annotations[["Arabidopsis thaliana"]][
       match(ids, rownames(DIANE::gene_annotations[["Arabidopsis thaliana"]])),]
