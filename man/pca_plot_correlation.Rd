@@ -6,6 +6,13 @@
 \usage{
 pca_plot_correlation(pca, design = NULL, plotRsquared = FALSE)
 }
+\arguments{
+\item{pca}{result from the "compute_pca" function.}
+
+\item{design}{design matrix}
+
+\item{plotRsquared}{plot R-squared values}
+}
 \description{
 Draw correlation of each conditions groups to the 
 principal components. This is done using the great CorLevelPlot package, by
