@@ -12,3 +12,7 @@ inst/extdata/datasets/*.csv
 docs
 /doc/
 /Meta/
+.RData
+Docker_deployment_renv/
+Docker_deployment_shinyproxy/
+input_data_for_online_DIANE/

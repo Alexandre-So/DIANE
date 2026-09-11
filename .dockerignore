@@ -1,0 +1,10 @@
+.RData
+.Rhistory
+.git
+.gitignore
+manifest.json
+rsconnect/
+.Rproj.user
+Docker_deployment_renv/
+Docker_deployment_shinyproxy/
+input_data_for_online_DIANE/
