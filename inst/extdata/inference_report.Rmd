@@ -15,6 +15,8 @@ params:
 ```{r, include=FALSE}
 r <- params$r
 input <- params$input
+# joined name of the selected deg lists, same key as the app
+net_key <- paste(input$input_deg_genes_net, collapse = " + ")
 library(knitr)
 library(igraph)
 library(visNetwork)
@@ -41,15 +43,15 @@ print(r$norm_method)
 Input genes for network inference (DEGs from Differential expression tab) :
 
 ```{r}
-paste(input$input_deg_genes_net, ",", length(r$DEGs[[input$input_deg_genes_net]]) ,"genes")
+paste(net_key, ",", length(unique(unlist(r$DEGs[input$input_deg_genes_net]))) ,"genes")
 ```
 
 Those DEGs were studied via clustering :
 
 ```{r}
 if(!is.null(r$current_comparison)){
-  print(input$input_deg_genes_net == r$current_comparison)
-  if (input$input_deg_genes_net == r$current_comparison)
+  print(net_key == r$current_comparison)
+  if (net_key == r$current_comparison)
     print(paste(paste(input$input_cluster_genes_net, collapse = ', '), " were the clusters chosen for     inference"))
 } else print(FALSE)
 ```
@@ -72,9 +74,9 @@ How many regulators were found among the input genes :
 
 ```{r}
 if(r$splicing_aware) {
-  targets <- DIANE::get_locus(r$DEGs[[input$input_deg_genes_net]])
+  targets <- DIANE::get_locus(unique(unlist(r$DEGs[input$input_deg_genes_net])))
 }else {
-  targets <- r$DEGs[[input$input_deg_genes_net]]
+  targets <- unique(unlist(r$DEGs[input$input_deg_genes_net]))
 }
 regressors = intersect(targets, r$regulators)
 length(regressors)
@@ -107,7 +109,7 @@ if(!is.null(r$cor_network)){
 Number of genes and regulators after grouping and potential splice variants aggregation:
 
 ```{r}
-paste("total genes :", ncol(r$networks[[input$input_deg_genes_net]]$mat), "regulators :", nrow(r$networks[[input$input_deg_genes_net]]$mat))
+paste("total genes :", ncol(r$networks[[net_key]]$mat), "regulators :", nrow(r$networks[[net_key]]$mat))
 ```
 
 Number of trees used for the inference :
@@ -148,19 +150,19 @@ Network view :
 
 ```{r, fig.width=10, fig.height=10}
 if(!input$test_edges){
-  DIANE::draw_network(nodes = r$networks[[input$input_deg_genes_net]]$nodes,
-               edges = r$networks[[input$input_deg_genes_net]]$edges)
+  DIANE::draw_network(nodes = r$networks[[net_key]]$nodes,
+               edges = r$networks[[net_key]]$edges)
 }else{
   DIANE::draw_discarded_edges(r$edge_tests$links, 
-                       list(nodes = r$networks[[input$input_deg_genes_net]]$nodes,
-                            edges = r$networks[[input$input_deg_genes_net]]$edges))
+                       list(nodes = r$networks[[net_key]]$nodes,
+                            edges = r$networks[[net_key]]$edges))
 }
 ```
 
 Number of nodes and number of edges of the network :
 
 ```{r}
-graph <- r$networks[[input$input_deg_genes_net]]$graph
+graph <- r$networks[[net_key]]$graph
 paste(length(V(graph)), "nodes,", length(E(graph)), "edges")
 ```
 

@@ -235,10 +235,16 @@ shiny::hr(),
 #' @noRd
 mod_network_inference_server <- function(input, output, session, r){
   ns <- session$ns
-  
+
+  # joined name of the selected deg lists, same key as clustering
+  input_net_key <- shiny::reactive({
+    shiny::req(input$input_deg_genes_net)
+    paste(input$input_deg_genes_net, collapse = " + ")
+  })
+
   coseq_membership <- shiny::reactive({
     shiny::req(r$clusterings, r$current_comparison, input$input_deg_genes_net)
-    shiny::req(input$input_deg_genes_net == r$current_comparison)
+    shiny::req(input_net_key() == r$current_comparison)
     req(r$clusterings[[r$current_comparison]])
     r$clusterings[[r$current_comparison]]$membership
   })
@@ -257,6 +263,7 @@ mod_network_inference_server <- function(input, output, session, r){
             inputId = ns('input_deg_genes_net'),
             label = "Input genes for network inference:",
             choices = names(r$DEGs),
+            multiple = TRUE,
             choicesOpt = list(subtext = paste(lengths(r$DEGs), "genes"))
           ),
           col_6(shiny::uiOutput(ns("input_conditions_choice_net"))),
@@ -295,11 +302,12 @@ mod_network_inference_server <- function(input, output, session, r){
   
   input_net <- shiny::reactive({
     shiny::req(input$input_deg_genes_net)
+    # union of all the input comparisons
     if(is.null(r$current_comparison))
-      r$DEGs[[input$input_deg_genes_net]]
+      unique(unlist(r$DEGs[input$input_deg_genes_net]))
     else{
-      if(input$input_deg_genes_net != r$current_comparison)
-        r$DEGs[[input$input_deg_genes_net]]
+      if(input_net_key() != r$current_comparison)
+        unique(unlist(r$DEGs[input$input_deg_genes_net]))
       else
         names(coseq_membership()[coseq_membership() %in% input$input_cluster_genes_net])
     }
@@ -371,6 +379,7 @@ mod_network_inference_server <- function(input, output, session, r){
         
         if (sum(d %in% row.names(r$raw_counts)) == 0){
           
+          # FIXME : this message comes with custom organism with empty regulators.
           shinyalert::shinyalert(
             "Something is wrong with the chosen regulators",
             "No regulators were found in the rownames of the expression data",
@@ -450,7 +459,7 @@ mod_network_inference_server <- function(input, output, session, r){
     shiny::req(r$regulators)
     
     if(r$splicing_aware) 
-      genes <- get_locus(r$DEGs[[input$input_deg_genes_net]])
+      genes <- get_locus(unique(unlist(r$DEGs[input$input_deg_genes_net])))
     else
       genes <- input_net()
       
@@ -468,11 +477,11 @@ mod_network_inference_server <- function(input, output, session, r){
     shiny::req(r$normalized_counts)
     shiny::req(r$DEGs)
     shiny::req(input$input_deg_genes_net, input_net())
-    shiny::req(r$DEGs[[input$input_deg_genes_net]])
-    shiny::req(r$networks[[input$input_deg_genes_net]])
+    shiny::req(all(input$input_deg_genes_net %in% names(r$DEGs)))
+    shiny::req(r$networks[[input_net_key()]])
     shiny::req(input$input_deg_genes_net, r$regulators, r$DEGs)
 
-    if (is.null(r$networks[[input$input_deg_genes_net]]$mat)) {
+    if (is.null(r$networks[[input_net_key()]]$mat)) {
       numberColor = "orange"
       number = "Inference not performed yet"
       header = ""
@@ -496,11 +505,11 @@ mod_network_inference_server <- function(input, output, session, r){
     shiny::req(r$normalized_counts)
     shiny::req(r$DEGs)
     shiny::req(input$input_deg_genes_net, input_net())
-    shiny::req(r$DEGs[[input$input_deg_genes_net]])
-    shiny::req(r$networks[[input$input_deg_genes_net]])
-    shiny::req(r$networks[[input$input_deg_genes_net]]$graph)
-    shiny::req(r$networks[[input$input_deg_genes_net]]$nodes)
-    shiny::req(r$networks[[input$input_deg_genes_net]]$edges)
+    shiny::req(all(input$input_deg_genes_net %in% names(r$DEGs)))
+    shiny::req(r$networks[[input_net_key()]])
+    shiny::req(r$networks[[input_net_key()]]$graph)
+    shiny::req(r$networks[[input_net_key()]]$nodes)
+    shiny::req(r$networks[[input_net_key()]]$edges)
     
     numberColor = "olive"
     number = "Your network is ready"
@@ -562,9 +571,9 @@ mod_network_inference_server <- function(input, output, session, r){
     shiny::req(r$normalized_counts)
     shiny::req(r$DEGs)
     shiny::req(input$input_deg_genes_net)
-    shiny::req(r$DEGs[[input$input_deg_genes_net]])
-    shiny::req(r$networks[[input$input_deg_genes_net]])
-    shiny::req(r$networks[[input$input_deg_genes_net]]$mat)
+    shiny::req(all(input$input_deg_genes_net %in% names(r$DEGs)))
+    shiny::req(r$networks[[input_net_key()]])
+    shiny::req(r$networks[[input_net_key()]]$mat)
 
     if(input$test_edges){
       if(is.null(time_estimation$estimation))
@@ -592,9 +601,9 @@ mod_network_inference_server <- function(input, output, session, r){
     shiny::req(r$normalized_counts)
     shiny::req(r$DEGs)
     shiny::req(input$input_deg_genes_net, input_net())
-    shiny::req(r$DEGs[[input$input_deg_genes_net]])
-    shiny::req(r$networks[[input$input_deg_genes_net]])
-    shiny::req(r$networks[[input$input_deg_genes_net]]$mat)
+    shiny::req(all(input$input_deg_genes_net %in% names(r$DEGs)))
+    shiny::req(r$networks[[input_net_key()]])
+    shiny::req(r$networks[[input_net_key()]]$mat)
     shiny::req(time_estimation$estimation)
     
     shinydashboardPlus::descriptionBlock(
@@ -614,11 +623,11 @@ mod_network_inference_server <- function(input, output, session, r){
     shiny::req(r$normalized_counts)
     shiny::req(r$DEGs)
     shiny::req(input$input_deg_genes_net)
-    shiny::req(r$DEGs[[input$input_deg_genes_net]], input_net())
-    shiny::req(r$networks[[input$input_deg_genes_net]])
-    shiny::req(r$networks[[input$input_deg_genes_net]]$mat)
+    shiny::req(all(input$input_deg_genes_net %in% names(r$DEGs)), input_net())
+    shiny::req(r$networks[[input_net_key()]])
+    shiny::req(r$networks[[input_net_key()]]$mat)
     #proposition = 1.5*length(r$DEGs[[input$input_deg_genes_net]])
-    mat <- r$networks[[input$input_deg_genes_net]]$mat
+    mat <- r$networks[[input_net_key()]]$mat
     proposition = get_nEdges(density = input$density, 
                              nGenes = dim(mat)[2],
                              nRegulators = dim(mat)[1])
@@ -639,16 +648,43 @@ mod_network_inference_server <- function(input, output, session, r){
 
   
   shiny::observeEvent((input$launch_genie_btn), {
-    shiny::req(r$normalized_counts, input$input_deg_genes_net, 
+
+    if(is.null(input$input_deg_genes_net)){
+      shinyalert::shinyalert(
+        "Please select an input gene list in the menu above",
+        type = "error"
+      )
+    }
+
+    shiny::req(r$normalized_counts, input$input_deg_genes_net,
                r$regulators, r$DEGs, input_net(),input$input_conditions_net)
-    
+
+    # conditions used to compute the input deg lists, none for other lists
+    genes_conditions <-
+      unique(unname(unlist(lapply((r$DEGs_infos[input$input_deg_genes_net]), function(x) {
+        x["Conditions"]
+      }))))
+
+    if (sum(genes_conditions %in% input$input_conditions_net) < length(genes_conditions)) {
+      shinyalert::shinyalert(
+        paste0( "Please select at least the conditions ",
+          paste0(genes_conditions, collapse = ', ')
+        ),
+        "The conditions for network inference should contain the conditions
+          used to compute the input differentially expressed genes.",
+        type = "error"
+      )
+    }
+
+    shiny::req(sum(genes_conditions %in% input$input_conditions_net) == length(genes_conditions))
+
     if(r$splicing_aware) {
-      all_genes <- get_locus(r$DEGs[[input$input_deg_genes_net]])
+      all_genes <- get_locus(unique(unlist(r$DEGs[input$input_deg_genes_net])))
       targets <- get_locus(input_net())
       data <- r$aggregated_normalized_counts
     }
     else {
-      all_genes <- r$DEGs[[input$input_deg_genes_net]]
+      all_genes <- unique(unlist(r$DEGs[input$input_deg_genes_net]))
       targets <- input_net()
       data <- r$normalized_counts
     }
@@ -722,10 +758,10 @@ mod_network_inference_server <- function(input, output, session, r){
       )
     }
     
-    r$networks[[input$input_deg_genes_net]]$mat <- mat
+    r$networks[[input_net_key()]]$mat <- mat
     
     # resets old network if one was already created
-    r$networks[[input$input_deg_genes_net]]$graph <- NULL
+    r$networks[[input_net_key()]]$graph <- NULL
     if(golem::get_golem_options("server_version"))
       loggit::loggit(custom_log_lvl = TRUE,
                    log_lvl = r$session_id,
@@ -744,30 +780,30 @@ mod_network_inference_server <- function(input, output, session, r){
   shiny::observeEvent((input$thr_btn), {
     shiny::req(r$normalized_counts)
     shiny::req(r$DEGs, input$input_conditions_net)
-    shiny::req(r$DEGs[[input$input_deg_genes_net]])
-    shiny::req(r$networks[[input$input_deg_genes_net]])
-    shiny::req(r$networks[[input$input_deg_genes_net]]$mat)
+    shiny::req(all(input$input_deg_genes_net %in% names(r$DEGs)))
+    shiny::req(r$networks[[input_net_key()]])
+    shiny::req(r$networks[[input_net_key()]]$mat)
     
     
     if (!input$test_edges){
-      r$networks[[input$input_deg_genes_net]]$graph <- network_thresholding(
-        r$networks[[input$input_deg_genes_net]]$mat, n_edges = input$n_edges)
+      r$networks[[input_net_key()]]$graph <- network_thresholding(
+        r$networks[[input_net_key()]]$mat, n_edges = input$n_edges)
       
-      data <- network_data(r$networks[[input$input_deg_genes_net]]$graph, 
+      data <- network_data(r$networks[[input_net_key()]]$graph, 
                            r$regulators, r$gene_info)
       
       membership <- data$nodes$community
       names(membership) <- data$nodes$id
       
-      r$networks[[input$input_deg_genes_net]]$membership <- membership
+      r$networks[[input_net_key()]]$membership <- membership
       
-      r$networks[[input$input_deg_genes_net]]$nodes <- data$nodes
-      r$networks[[input$input_deg_genes_net]]$edges <- data$edges
+      r$networks[[input_net_key()]]$nodes <- data$nodes
+      r$networks[[input_net_key()]]$edges <- data$edges
       
-      r$networks[[input$input_deg_genes_net]]$conditions <- 
+      r$networks[[input_net_key()]]$conditions <- 
         input$input_conditions_net
       
-      r$current_network <- input$input_deg_genes_net
+      r$current_network <- input_net_key()
     }
     else{
       
@@ -786,7 +822,7 @@ mod_network_inference_server <- function(input, output, session, r){
         
         data <- data[,conditions]
 
-        mat <- r$networks[[input$input_deg_genes_net]]$mat
+        mat <- r$networks[[input_net_key()]]$mat
         
         time_estimation$estimation <- estimate_test_edges_time(mat,
                                    normalized_counts = data, density = input$density,
@@ -813,7 +849,7 @@ mod_network_inference_server <- function(input, output, session, r){
         
         data <- data[,conditions]
         
-        mat <- r$networks[[input$input_deg_genes_net]]$mat
+        mat <- r$networks[[input_net_key()]]$mat
         
         future::plan(future::multisession)
         
@@ -901,24 +937,24 @@ mod_network_inference_server <- function(input, output, session, r){
   shiny::observeEvent(input$fdr_chosen, {
     shiny::removeModal()
     
-    r$networks[[input$input_deg_genes_net]]$graph <- 
+    r$networks[[input_net_key()]]$graph <- 
       network_from_tests(r$edge_tests$links, fdr = input$fdr)
     
-    data <- network_data(r$networks[[input$input_deg_genes_net]]$graph, 
+    data <- network_data(r$networks[[input_net_key()]]$graph, 
                          r$regulators, r$gene_info)
     
     membership <- data$nodes$community
     names(membership) <- data$nodes$id
     
-    r$networks[[input$input_deg_genes_net]]$membership <- membership
+    r$networks[[input_net_key()]]$membership <- membership
     
-    r$networks[[input$input_deg_genes_net]]$nodes <- data$nodes
-    r$networks[[input$input_deg_genes_net]]$edges <- data$edges
+    r$networks[[input_net_key()]]$nodes <- data$nodes
+    r$networks[[input_net_key()]]$edges <- data$edges
     
-    r$networks[[input$input_deg_genes_net]]$conditions <- 
+    r$networks[[input_net_key()]]$conditions <- 
       input$input_conditions_net
     
-    r$current_network <- input$input_deg_genes_net
+    r$current_network <- input_net_key()
   })
   
 #   ____________________________________________________________________________
@@ -940,20 +976,20 @@ mod_network_inference_server <- function(input, output, session, r){
     shiny::req(r$normalized_counts)
     shiny::req(r$DEGs)
     shiny::req(input$input_deg_genes_net)
-    shiny::req(r$DEGs[[input$input_deg_genes_net]])
-    shiny::req(r$networks[[input$input_deg_genes_net]])
-    shiny::req(r$networks[[input$input_deg_genes_net]]$graph)
-    shiny::req(r$networks[[input$input_deg_genes_net]]$nodes)
-    shiny::req(r$networks[[input$input_deg_genes_net]]$edges)
+    shiny::req(all(input$input_deg_genes_net %in% names(r$DEGs)))
+    shiny::req(r$networks[[input_net_key()]])
+    shiny::req(r$networks[[input_net_key()]]$graph)
+    shiny::req(r$networks[[input_net_key()]]$nodes)
+    shiny::req(r$networks[[input_net_key()]]$edges)
     
     if(!input$test_edges)
-      draw_network(nodes = r$networks[[input$input_deg_genes_net]]$nodes,
-                   edges = r$networks[[input$input_deg_genes_net]]$edges)
+      draw_network(nodes = r$networks[[input_net_key()]]$nodes,
+                   edges = r$networks[[input_net_key()]]$edges)
     else{
       shiny::req(r$edge_tests$links)
       draw_discarded_edges(r$edge_tests$links, 
-                           list(nodes = r$networks[[input$input_deg_genes_net]]$nodes,
-                                edges = r$networks[[input$input_deg_genes_net]]$edges))
+                           list(nodes = r$networks[[input_net_key()]]$nodes,
+                                edges = r$networks[[input_net_key()]]$edges))
     }
   })
   
@@ -965,11 +1001,11 @@ mod_network_inference_server <- function(input, output, session, r){
     shiny::req(r$normalized_counts)
     shiny::req(r$DEGs)
     shiny::req(input$input_deg_genes_net)
-    shiny::req(r$DEGs[[input$input_deg_genes_net]])
-    shiny::req(r$networks[[input$input_deg_genes_net]])
-    shiny::req(r$networks[[input$input_deg_genes_net]]$graph)
-    shiny::req(r$networks[[input$input_deg_genes_net]]$nodes)
-    shiny::req(r$networks[[input$input_deg_genes_net]]$edges)
+    shiny::req(all(input$input_deg_genes_net %in% names(r$DEGs)))
+    shiny::req(r$networks[[input_net_key()]])
+    shiny::req(r$networks[[input_net_key()]]$graph)
+    shiny::req(r$networks[[input_net_key()]]$nodes)
+    shiny::req(r$networks[[input_net_key()]]$edges)
     tagList(
       shinyWidgets::downloadBttn(
         ns("report"), "Generate html report",
