@@ -350,9 +350,9 @@ mod_network_inference_server <- function(input, output, session, r){
       d <- regulators_per_organism[[r$organism]]
     }
     
-    if(r$organism %in% names(DIANE::organisms)){ ##Custom organism
-      if(!is.null(DIANE::organisms[[r$organism]][["regulators"]])){
-        d <- DIANE::organisms[[r$organism]][["regulators"]]
+    if(r$organism %in% names(DIANE::organisms_index)){ ##Custom organism
+      if(!is.null(DIANE::organisms_index[[r$organism]][["regulators"]])){
+        d <- DIANE::organisms_index[[r$organism]][["regulators"]]
       }
     }
     

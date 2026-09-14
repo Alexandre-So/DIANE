@@ -367,7 +367,7 @@ mod_import_data_server <- function(input, output, session, r) {
     if (r$organism != "Other") {
       golem::print_dev("Organism != other")
       # Check compatibility for legacy organisms, using regex
-      if ((! r$organism %in% names(DIANE::organisms)) && !check_IDs(rownames(d), r$organism)) {
+      if ((! r$organism %in% names(DIANE::organisms_index)) && !check_IDs(rownames(d), r$organism)) {
       # if (!check_IDs(rownames(d), r$organism)) {
         if (r$organism == "Arabidopsis thaliana")
           ex = "AT1G62510.1 or AT1G62510"
@@ -387,8 +387,8 @@ mod_import_data_server <- function(input, output, session, r) {
         if (r$organism == "Escherichia coli")
           ex = "acpS"
         
-        # if(r$organism %in% names(DIANE::organisms))
-        #   ex = sample(rownames(DIANE::organisms[[r$organism]][["annotation"]]), 1)
+        # if(r$organism %in% names(DIANE::organisms_index))
+        #   ex = sample(rownames(DIANE::organism(r$organism)[["annotation"]]), 1)
         
         
         shinyalert::shinyalert(
@@ -409,16 +409,19 @@ mod_import_data_server <- function(input, output, session, r) {
       shiny::req(check_IDs(rownames(d), r$organism))
         #stop()
         # Check ID for custom organisms, using rownames in count matrix and annotation.
-      } else if (r$organism %in% names(DIANE::organisms) &
-                 (!all(rownames(d) %in% rownames(DIANE::organisms[[r$organism]][["annotation"]])))) {
-        
+        # && so a model organism never loads a custom annotation just to be rejected.
+      } else if (r$organism %in% names(DIANE::organisms_index) &&
+                 (!all(rownames(d) %in% rownames(DIANE::organism(r$organism)[["annotation"]])))) {
+
+        annotated_genes <- rownames(DIANE::organism(r$organism)[["annotation"]])
+
         # Take gene_exemple if exist, otherwise take a random gene for exemple.
-        ex = ifelse(!is.null(DIANE::organisms[[r$organism]][["gene_exemple"]]),
-                    DIANE::organisms[[r$organism]][["gene_exemple"]],
-                    sample(rownames(DIANE::organisms[[r$organism]][["annotation"]]), size = 1))
-        
+        ex = ifelse(!is.null(DIANE::organisms_index[[r$organism]][["gene_exemple"]]),
+                    DIANE::organisms_index[[r$organism]][["gene_exemple"]],
+                    sample(annotated_genes, size = 1))
+
         # Percentage of missing genes.
-        missing_genes <-  (1- round(sum(rownames(d) %in% rownames(DIANE::organisms[[r$organism]][["annotation"]])) / length(rownames(d)), digits = 3)) * 100
+        missing_genes <-  (1- round(sum(rownames(d) %in% annotated_genes) / length(rownames(d)), digits = 3)) * 100
         
         # Popup if high number of missing genes.
         if(missing_genes > 10){
@@ -507,6 +510,7 @@ mod_import_data_server <- function(input, output, session, r) {
       shiny::fileInput(
         ns('design'),
         label = shiny::HTML(paste0(shinyWidgets::dropdownButton(
+          right = TRUE,
           size = 'xs',
           label = "Design file requirements",
           shiny::includeMarkdown(system.file("extdata", "designFile.md",
@@ -609,12 +613,12 @@ mod_import_data_server <- function(input, output, session, r) {
     names(choices) <- c("Other", rep("Model", length(choices)-1))
     
     # import custom data
-    custom_orgs <- names(DIANE::organisms)
+    custom_orgs <- names(DIANE::organisms_index)
     genus_custom_orgs <- c()
     # Give a name to custom orgs. Either genus, or just the name of the organism.
     for(i in custom_orgs){
-      if(!is.null(DIANE::organisms[[i]][["genus"]])){
-        genus_custom_orgs <- c(genus_custom_orgs, DIANE::organisms[[i]][["genus"]])
+      if(!is.null(DIANE::organisms_index[[i]][["genus"]])){
+        genus_custom_orgs <- c(genus_custom_orgs, DIANE::organisms_index[[i]][["genus"]])
       } else {
         genus_custom_orgs <- c(genus_custom_orgs, i)
       }
@@ -640,7 +644,7 @@ mod_import_data_server <- function(input, output, session, r) {
     # Check if URL organism is in the list.
     org_select <- "Arabidopsis thaliana"
     if(!is.null(r$preselected_organism)){
-      if(r$preselected_organism %in% names(DIANE::organisms)){
+      if(r$preselected_organism %in% names(DIANE::organisms_index)){
         org_select <- r$preselected_organism
       }
     }
@@ -792,7 +796,7 @@ mod_import_data_server <- function(input, output, session, r) {
       req(r$organism)
       # req(input$use_demo)
       
-      organism_informations <- DIANE::organisms[[r$organism]][["informations"]]
+      organism_informations <- DIANE::organisms_index[[r$organism]][["informations"]]
       organism_description = ""
       string = "<div class='descriptive-field'>"
       url_pattern <- "(http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\\(\\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+)" ###Use to detect URL. Need that the field contains ONLY an url.
@@ -824,6 +828,7 @@ mod_import_data_server <- function(input, output, session, r) {
     shiny::req(!input$use_demo)
     print("output$data_import_ui")
     shiny::tagList(
+      shiny::h3("Import expression file", style="text-decoration: underline"),
       shinyWidgets::awesomeRadio(
         ns('sep'),
         'Separator : ',
@@ -836,7 +841,6 @@ mod_import_data_server <- function(input, output, session, r) {
         status = "success"
       ),
       
-      shiny::h3("Import expression file."),
       shiny::fileInput(
         ns('raw_data'),
         label = shiny::HTML(paste0('Choose CSV/TXT expression file',
@@ -871,6 +875,7 @@ mod_import_data_server <- function(input, output, session, r) {
   output$custom_organism_ui <- shiny::renderUI({
     shiny::req(r$organism == "Other")
     shiny::tagList(
+      shiny::h3("Import gene information file", style="text-decoration: underline"),
       shinyWidgets::awesomeRadio(
         ns('sep_gene_info'),
         status = "success",
@@ -979,10 +984,10 @@ mod_import_data_server <- function(input, output, session, r) {
           stringsAsFactors = FALSE
         )
         
+        # FIXME : be less stringent here - column 1 => gene ID, the others => anything
         if (!'label' %in% colnames(d) &
             !'description' %in% colnames(d)) {
-          stop("There should be a label and/or description field in the
-               annotation file")
+          stop("There should be a label and/or description field in the annotation file")
         }
         # takes as rownames only the genes present in the expression file
         d <- d[d$Gene %in% rownames(r$raw_counts), ]
@@ -1019,7 +1024,7 @@ mod_import_data_server <- function(input, output, session, r) {
     shiny::req(r$raw_counts)
     
     golem::print_dev("Print heatmap")
-    d <- r$raw_counts[rowSums(r$raw_counts) > 0,]
+    d <- r$raw_counts[rowSums(r$raw_counts) > 25,]
     # d <- r$raw_counts[sample(which(rowSums(r$raw_counts) > 0), 100),]
     draw_heatmap(d, title = NA)
   })
@@ -1034,8 +1039,8 @@ mod_import_data_server <- function(input, output, session, r) {
     # browser()
     if (r$organism == "Other" || r$organism == "other")
       txt <- "No gene ID requirement"
-    else if (r$organism  %in% names(DIANE::organisms))
-      txt <- sample(rownames(DIANE::organisms[[r$organism]][["annotation"]]), 1)
+    else if (r$organism  %in% names(DIANE::organisms_index))
+      txt <- sample(rownames(DIANE::organism(r$organism)[["annotation"]]), 1)
     # else if (r$organism == "Oryza sativa (rapdb)")
     #   txt <- c("Os01g0100600")
     # else if (r$organism == "Oryza sativa (msu)")

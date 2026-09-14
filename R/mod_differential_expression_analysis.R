@@ -1137,7 +1137,7 @@ mod_differential_expression_analysis_server <-
       # If organism == other or if there is no GO information with integrated organism (even if it's mandatory)
       # We also still check the manually integrated organisms.
       if (r$organism == "Other" ||
-          (is.null(DIANE::organisms[[r$organism]][["go"]]) &&
+          (!isTRUE(DIANE::organisms_index[[r$organism]][["has_go"]]) &&
           ! r$organism %in% c(
             "Arabidopsis thaliana",
             "Homo sapiens",
@@ -1239,8 +1239,8 @@ mod_differential_expression_analysis_server <-
         #                                GO_type = input$go_type)
         
         
-        if (r$organism  %in% names(DIANE::organisms)){ ###Go enrichment for custom organism
-          GOs <- DIANE::organisms[[r$organism]][["go"]]
+        if (r$organism  %in% names(DIANE::organisms_index)){ ###Go enrichment for custom organism
+          GOs <- DIANE::organism(r$organism)[["go"]]
           universe <- intersect(background, GOs[, 1])
           r_dea$go <- enrich_go_custom(genes, universe, GOs,
                                        GO_type = input$go_type)

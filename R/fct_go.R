@@ -403,10 +403,10 @@ get_gene_information <- function(ids, organism){
   if(organism == "Arabidopsis thaliana"){
     d <- DIANE::gene_annotations[["Arabidopsis thaliana"]][
       match(ids, rownames(DIANE::gene_annotations[["Arabidopsis thaliana"]])),]
-  } else if (organism %in% names(DIANE::organisms)){ ###If the user choose a custom organism
-    d <- DIANE::organisms[[organism]][["annotation"]][
-      match(ids, rownames(DIANE::organisms[[organism]][["annotation"]])),]
-    if(ncol(DIANE::organisms[[organism]][["annotation"]]) == 1)
+  } else if (organism %in% names(DIANE::organisms_index)){ ###If the user choose a custom organism
+    annotation <- DIANE::organism(organism)[["annotation"]]
+    d <- annotation[match(ids, rownames(annotation)),]
+    if(ncol(annotation) == 1)
       d <- data.frame(description = d)
     rownames(d) <- ids
   } else{
