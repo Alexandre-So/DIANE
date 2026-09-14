@@ -17,7 +17,6 @@
 #' Else, the conditions are specified by the user, as a character vector. Its order should match the 
 #' columns names of the expression matrix used to build the tcc object.
 #' @importFrom stringr str_split_fixed
-#' @importFrom edgeR DGEList estimateDisp glmFit
 #' @importFrom stats model.matrix
 #' @return glmFit object from edgeR, which is the resulting model estimation
 #' @export

@@ -25,7 +25,6 @@
 #'  “clr”, “alr”, “ilr”, or “none”. For "Poisson",
 #' no transformation will be used, this argument will be ignored.
 #' @param seed seed for random state to ensure reproducible runs
-#' @importFrom coseq coseq clusters
 #'
 #' @return Named list containing the coseq run result as "model", and the cluster membership 
 #' for each gene as "membership".
@@ -88,7 +87,6 @@ run_coseq <- function(conds, genes, data, K = 6:12, transfo = "none",
 #' of the posterior probabilities for the clustering. Value must be "ICL" or "barplots".
 #' @return plot describing the quality of the clustering process
 #'
-#' @importFrom coseq plot
 #' @export
 #' @examples
 #' data("abiotic_stresses")

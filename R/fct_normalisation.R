@@ -23,7 +23,6 @@
 #' 
 #' You can get the normalized expression matrix with \code{TCC::getNormalizedData(tcc)},
 #' tcc being the result of \code{DIANE::normalize()} or \code{DIANE::filter_low_counts()}
-#' @importFrom TCC calcNormFactors TCC
 #' @return a TCC-Class object
 #' @export
 #' @examples
@@ -50,7 +49,6 @@ normalize <- function(data,
 #' which count element contains the filtered expression matrix.
 #'
 #' @param tcc data to be filtered to remove low count genes
-#' @importFrom TCC filterLowCountGenes
 #' @param thr the sum of counts across all samples to be exceeded for a gene
 #' @export
 #' @return a TCC-Class object
