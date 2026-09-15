@@ -199,7 +199,7 @@ mod_import_data_server <- function(input, output, session, r) {
     r$normalized_counts_pre_filter = NULL
     r$conditions = NULL
     r$design = NULL
-    r$DEGs = list()
+    r$gene_lists = list()
     r$tcc = NULL
     r$clusterings = list()
     r$current_comparison = NULL
@@ -265,7 +265,7 @@ mod_import_data_server <- function(input, output, session, r) {
     r$normalized_counts_pre_filter = NULL
     r$conditions = NULL
     r$design = NULL
-    r$DEGs = list()
+    r$gene_lists = list()
     r$tcc = NULL
     r$clusterings = list()
     r$current_comparison = NULL
@@ -304,7 +304,7 @@ mod_import_data_server <- function(input, output, session, r) {
       r$normalized_counts_pre_filter = NULL
       r$conditions = NULL
       r$design = NULL
-      r$DEGs = list()
+      r$gene_lists = list()
       r$tcc = NULL
       r$clusterings = list()
       r$current_comparison = NULL

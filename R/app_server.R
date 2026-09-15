@@ -18,8 +18,8 @@ app_server <- function(input, output, session) {
     tcc = NULL,
     conditions = NULL,
     design = NULL,
-    DEGs = list(),
-    DEGs_infos = list(), ###Used to store some informations about DEG list (conditions, cutoff, etc.)
+    gene_lists = list(), ###Named gene lists, whatever their origin (DEA or user import)
+    gene_lists_infos = list(), ###Per list : origin ("DEA" or "custom"), and conditions/lfc/fdr when origin is DEA
     top_tags = list(),
     clusterings = list(),
     current_comparison = NULL,

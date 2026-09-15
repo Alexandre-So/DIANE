@@ -499,9 +499,9 @@ mod_differential_expression_analysis_server <-
         r_dea$trt <- input$perturbation
       }
       
-      r$DEGs[[input$DEG_list_name]] <- r_dea$DEGs
+      r$gene_lists[[input$DEG_list_name]] <- r_dea$DEGs
       r$top_tags[[input$DEG_list_name]] <- r_dea$top_tags
-      # r$DEGs[[paste(r_dea$ref, r_dea$trt)]] <- r_dea$DEGs
+      # r$gene_lists[[paste(r_dea$ref, r_dea$trt)]] <- r_dea$DEGs
       # r$top_tags[[paste(r_dea$ref, r_dea$trt)]] <- r_dea$top_tags
       r_dea$go <- NULL
       
@@ -529,9 +529,9 @@ mod_differential_expression_analysis_server <-
       r_dea$current_comparison <- input$DEG_list_name
       
       ##Store informations about the comparison. Will be used to remember what has been done.
-      r$DEGs_infos[[input$DEG_list_name]][["Conditions"]] <- c(input$reference, input$perturbation)
-      r$DEGs_infos[[input$DEG_list_name]][["lfc"]] <- input$dea_lfc
-      r$DEGs_infos[[input$DEG_list_name]][["fdr"]] <- input$dea_fdr
+      r$gene_lists_infos[[input$DEG_list_name]][["Conditions"]] <- c(input$reference, input$perturbation)
+      r$gene_lists_infos[[input$DEG_list_name]][["lfc"]] <- input$dea_lfc
+      r$gene_lists_infos[[input$DEG_list_name]][["fdr"]] <- input$dea_fdr
       
     })
     
@@ -809,12 +809,12 @@ mod_differential_expression_analysis_server <-
     ###FIXME : Boutons du choix de la mÃ©thode de normalisation (awesomeRadio) qui foire sur la page normalisation... Si j'ajoute un bouton de mÃªme type quelque part ici Ã§a remarche. En regardant, il manque une propriÃ©tÃ© (un petit padding) si j'ai pas un awesomeRadio (mÃªme inutile) dans cette partie du programme. Je ne comprends pas.
     
     output$venn_lists_choice <- shiny::renderUI({
-      shiny::req(length(r$DEGs) > 1)
+      shiny::req(length(r$gene_lists) > 1)
       
       shinyWidgets::checkboxGroupButtons(
         inputId = ns("venn_genes"),
         label = "Please select between 2 and 4 lists of genes to show in the Venn diagram :",
-        choices = names(r$DEGs),
+        choices = names(r$gene_lists),
         justified = TRUE,
         checkIcon = list(yes = shiny::icon("ok",
                                            lib = "glyphicon"))
@@ -823,32 +823,32 @@ mod_differential_expression_analysis_server <-
     
     
     output$venn_lists_choice_2 <- shiny::renderUI({
-      shiny::req(length(r$DEGs) > 1)
+      shiny::req(length(r$gene_lists) > 1)
       shiny::fluidRow(
         ###All the buttons containing the list of genes.
         shiny::column(3,
                       shinyWidgets::pickerInput(
                         inputId = ns("venn_list_1"),
                         label = "Gene list 1",
-                        choices = c("None" = FALSE, names(r$DEGs))
+                        choices = c("None" = FALSE, names(r$gene_lists))
                       )),
         shiny::column(3,
                       shinyWidgets::pickerInput(
                         inputId = ns("venn_list_2"),
                         label = "Gene list 2",
-                        choices = c("None" = FALSE, names(r$DEGs))
+                        choices = c("None" = FALSE, names(r$gene_lists))
                       )),
         shiny::column(3,
                       shinyWidgets::pickerInput(
                         inputId = ns("venn_list_3"),
                         label = "Gene list 3",
-                        choices = c("None" = FALSE, names(r$DEGs))
+                        choices = c("None" = FALSE, names(r$gene_lists))
                       )),
         shiny::column(3,
                       shinyWidgets::pickerInput(
                         inputId = ns("venn_list_4"),
                         label = "Gene list 4",
-                        choices = c("None" = FALSE, names(r$DEGs))
+                        choices = c("None" = FALSE, names(r$gene_lists))
                       )), 
         ###All the buttons containg the "up / down" chocices.
         shiny::column(3,

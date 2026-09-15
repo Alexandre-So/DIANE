@@ -14,18 +14,22 @@ r
 | regulators
 | gene_info dataframe 
 | splicing_aware (boolean)
-| DEGs
-|   | ref trt (vector of genes)
+| gene_lists
+|   | list name (vector of genes)
+| gene_lists_infos
+|   | list name
+|   |    | origin ("DEA" or "custom")
+|   |    | Conditions, lfc, fdr (only when origin is "DEA")
 | top_tags
-|   | ref trt (dataframe : (genes * (logFC, logCPM, FDR))
+|   | list name (dataframe : (genes * (logFC, logCPM, FDR))
 | fit (dispersion and glmFit for dea)
 | clusterings
-|   | ref trt 
+|   | joined list names
 |   |    | model (coseqResult)
 |   |    | membership (named vector)
 |   |    | conditions (vector)
 | networks
-|   | ref trt 
+|   | joined list names
 |   |    | nodes
 |   |    | edges
 |   |    | membership clustering louvain(named vector)

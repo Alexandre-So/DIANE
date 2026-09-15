@@ -157,27 +157,27 @@ mod_clustering_server <- function(input, output, session, r) {
   
   
   # output$input_genes <- shiny::renderUI({
-  #   shiny::req(r$DEGs)
+  #   shiny::req(r$gene_lists)
   #   shinyWidgets::pickerInput(
   #     inputId = ns('input_deg_genes'),
   #     label = "Differentially expressed genes :",
-  #     choices = names(r$DEGs),
-  #     choicesOpt = list(subtext = paste(lengths(r$DEGs), "genes"))
+  #     choices = names(r$gene_lists),
+  #     choicesOpt = list(subtext = paste(lengths(r$gene_lists), "genes"))
   #   )
   # })
   
   output$input_genes <- shiny::renderUI({
-    shiny::req(r$DEGs)
-    if(length(r$DEGs) > 0){
+    shiny::req(r$gene_lists)
+    if(length(r$gene_lists) > 0){
       shinyWidgets::checkboxGroupButtons(
         inputId = ns('input_deg_genes'),
         label = "Input genes for clustering :",
-        choiceValues = names(r$DEGs),
+        choiceValues = names(r$gene_lists),
         justified = TRUE,
         checkIcon = list(yes = shiny::icon("ok",
                                            lib = "glyphicon")),
         direction = "vertical",
-        choiceNames = paste(names(r$DEGs), paste(lengths(r$DEGs), "genes"))
+        choiceNames = paste(names(r$gene_lists), paste(lengths(r$gene_lists), "genes"))
       )
     }
     else{
@@ -200,7 +200,7 @@ mod_clustering_server <- function(input, output, session, r) {
   
   
   output$input_conditions_choice <- shiny::renderUI({
-    shiny::req(r$DEGs, r$conditions)
+    shiny::req(r$gene_lists, r$conditions)
     
     shinyWidgets::checkboxGroupButtons(
       inputId = ns('input_conditions'),
@@ -312,7 +312,7 @@ mod_clustering_server <- function(input, output, session, r) {
 
     ###Extract all conditions names from input comparison. Has been build to handle multiple comparison.
     genes_conditions <-
-      unique(unname(unlist(lapply((r$DEGs_infos[input$input_deg_genes]), function(x) {
+      unique(unname(unlist(lapply((r$gene_lists_infos[input$input_deg_genes]), function(x) {
         x["Conditions"]
       })))) ###Just extract the list of conditions used for all comparisons.
     
@@ -337,7 +337,7 @@ mod_clustering_server <- function(input, output, session, r) {
 
     shiny::req(sum(genes_conditions %in% input$input_conditions) == length(genes_conditions))
     # union of all the input comparisons
-    genes <- unique(unlist(r$DEGs[input$input_deg_genes]))
+    genes <- unique(unlist(r$gene_lists[input$input_deg_genes]))
     
     if(input$coseq_model){
       mod <- "Poisson"
@@ -381,7 +381,7 @@ mod_clustering_server <- function(input, output, session, r) {
 
   
   output$dl_bttns <- shiny::renderUI({
-    shiny::req(r$DEGs)
+    shiny::req(r$gene_lists)
     shiny::req(r$clusterings)
     shiny::req(r$clusterings[[input_genes_conditions()]]$model)
     tagList(
@@ -430,30 +430,30 @@ mod_clustering_server <- function(input, output, session, r) {
   #   ____________________________________________________________________________
   #   results                                                                 ####
   output$coseq_run_summary <- shiny::renderPrint({
-    shiny::req(r$DEGs)
+    shiny::req(r$gene_lists)
     shiny::req(r$clusterings)
     shiny::req(r$clusterings[[input_genes_conditions()]]$model)
     print(r$clusterings[[input_genes_conditions()]]$model)
   })
   
   output$plot_coseq_icl <- shiny::renderPlot({
-    shiny::req(r$DEGs)
+    shiny::req(r$gene_lists)
     shiny::req(r$clusterings)
     shiny::req(r$clusterings[[input_genes_conditions()]]$model)
     draw_coseq_run(r$clusterings[[input_genes_conditions()]]$model, plot = "ICL")
   })
   
   output$plot_coseq_barplots <- shiny::renderPlot({
-    shiny::req(r$DEGs)
+    shiny::req(r$gene_lists)
     shiny::req(r$clusterings, input$input_deg_genes)
     shiny::req(r$clusterings[[input_genes_conditions()]]$model)
     draw_coseq_run(r$clusterings[[input_genes_conditions()]]$model, plot = "barplots")
   })
   
   output$clusters_profiles <- shiny::renderPlot({
-    shiny::req(r$DEGs)
+    shiny::req(r$gene_lists)
     shiny::req(r$clusterings, input$input_deg_genes)
-    shiny::req(r$clusterings[[input_genes_conditions()]]$membership, r$DEGs)
+    shiny::req(r$clusterings[[input_genes_conditions()]]$membership, r$gene_lists)
     shiny::req(input$clusters)
     draw_profiles(
       data = r$normalized_counts,

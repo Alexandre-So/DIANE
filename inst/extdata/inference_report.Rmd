@@ -43,7 +43,7 @@ print(r$norm_method)
 Input genes for network inference (DEGs from Differential expression tab) :
 
 ```{r}
-paste(net_key, ",", length(unique(unlist(r$DEGs[input$input_deg_genes_net]))) ,"genes")
+paste(net_key, ",", length(unique(unlist(r$gene_lists[input$input_deg_genes_net]))) ,"genes")
 ```
 
 Those DEGs were studied via clustering :
@@ -74,9 +74,9 @@ How many regulators were found among the input genes :
 
 ```{r}
 if(r$splicing_aware) {
-  targets <- DIANE::get_locus(unique(unlist(r$DEGs[input$input_deg_genes_net])))
+  targets <- DIANE::get_locus(unique(unlist(r$gene_lists[input$input_deg_genes_net])))
 }else {
-  targets <- unique(unlist(r$DEGs[input$input_deg_genes_net]))
+  targets <- unique(unlist(r$gene_lists[input$input_deg_genes_net]))
 }
 regressors = intersect(targets, r$regulators)
 length(regressors)
