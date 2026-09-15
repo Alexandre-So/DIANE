@@ -112,6 +112,7 @@ golem::add_module( name = "module_levels" )
 golem::add_module( name = "datasets" )
 golem::add_module( name = "legal_mentions" )
 golem::add_module( name = "versions" )
+golem::add_module( name = "import_gene_list" ) # Arbitrary gene lists provided by the user
 
 
 ## Add helper functions ----
@@ -128,6 +129,7 @@ golem::add_fct( "regressors_grouping")
 golem::add_fct( "GENIE3_oob")
 golem::add_fct( "edge_testing")
 golem::add_fct( "geneIDs")
+golem::add_fct( "gene_lists")
 
 
 #golem::add_utils( "helpers" )

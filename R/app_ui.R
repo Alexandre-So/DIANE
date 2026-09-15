@@ -103,6 +103,11 @@ dbHeader <- shinydashboard::dashboardHeader(title = logo_diane, titleWidth = "30
             icon = shiny::icon("greater-than-equal")
           ),
           shinydashboard::menuItem(
+            "Custom gene lists",
+            tabName = "gene_list_tab",
+            icon = shiny::icon("list-ul")
+          ),
+          shinydashboard::menuItem(
             "Expression based clustering",
             startExpanded = TRUE,
             icon = shiny::icon("circle-notch"),
@@ -236,6 +241,10 @@ dbHeader <- shinydashboard::dashboardHeader(title = logo_diane, titleWidth = "30
           shinydashboard::tabItem(
             tabName = "dea_tab",
             mod_differential_expression_analysis_ui("differential_expression_analysis_ui_1")
+          ),
+          shinydashboard::tabItem(
+            tabName = "gene_list_tab",
+            mod_import_gene_list_ui("import_gene_list_ui_1")
           ),
 
 

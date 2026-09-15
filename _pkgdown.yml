@@ -21,6 +21,11 @@ reference:
   - aggregate_splice_variants
   - get_locus
 
+- title: Gene lists
+- contents:
+  - parse_gene_list
+  - check_gene_list_name
+
 - title: Differential expression analysis
 - contents:
   - starts_with("estimateD")

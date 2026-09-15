@@ -182,7 +182,7 @@ mod_clustering_server <- function(input, output, session, r) {
     }
     else{
       shinydashboardPlus::descriptionBlock(
-        number = "Please perform one or more differential expression analysis before clustering",
+        number = "Please perform a differential expression analysis, or import a gene list, before clustering",
         numberColor = "orange",
         rightBorder = FALSE
       )

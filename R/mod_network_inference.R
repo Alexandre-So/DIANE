@@ -274,8 +274,8 @@ mod_network_inference_server <- function(input, output, session, r){
     }
     else{
       shinydashboardPlus::descriptionBlock(
-        number = "Please perform one or more differential 
-        expression analysis before network inference",
+        number = "Please perform a differential expression analysis, or import
+        a gene list, before network inference",
         numberColor = "orange",
         rightBorder = FALSE
       )

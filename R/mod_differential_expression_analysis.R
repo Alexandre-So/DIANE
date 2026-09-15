@@ -473,8 +473,25 @@ mod_differential_expression_analysis_server <-
                                type = "error")
       }
       shiny::req(!any(input$reference %in% input$perturbation) | !any(input$perturbation %in% input$reference))
-      
-      
+
+      ###Checked before estimateDEGs() so that an invalid name costs no compute.
+      ###Only imported names are forbidden : re running an analysis under the same
+      ###name after changing the FDR is the normal flow. " + " is allowed, as the
+      ###automatic names built above contain it by construction.
+      name <- trimws(input$DEG_list_name)
+      custom_names <- names(r$gene_lists_infos)[
+        vapply(r$gene_lists_infos,
+               function(infos) identical(infos$origin, "custom"),
+               logical(1))]
+      msg <- check_gene_list_name(name,
+                                  existing_names = custom_names,
+                                  allow_key_separator = TRUE)
+
+      if (!isTRUE(msg))
+        shinyalert::shinyalert(msg, type = "error")
+      shiny::req(isTRUE(msg))
+
+
       r_dea$tags <-
         estimateDEGs(r$fit,
                      reference = input$reference,
@@ -499,8 +516,8 @@ mod_differential_expression_analysis_server <-
         r_dea$trt <- input$perturbation
       }
       
-      r$gene_lists[[input$DEG_list_name]] <- r_dea$DEGs
-      r$top_tags[[input$DEG_list_name]] <- r_dea$top_tags
+      r$gene_lists[[name]] <- r_dea$DEGs
+      r$top_tags[[name]] <- r_dea$top_tags
       # r$gene_lists[[paste(r_dea$ref, r_dea$trt)]] <- r_dea$DEGs
       # r$top_tags[[paste(r_dea$ref, r_dea$trt)]] <- r_dea$top_tags
       r_dea$go <- NULL
@@ -526,12 +543,16 @@ mod_differential_expression_analysis_server <-
       }
       
       r_dea$gene_table <- top[, columns]
-      r_dea$current_comparison <- input$DEG_list_name
+      r_dea$current_comparison <- name
       
-      ##Store informations about the comparison. Will be used to remember what has been done.
-      r$gene_lists_infos[[input$DEG_list_name]][["Conditions"]] <- c(input$reference, input$perturbation)
-      r$gene_lists_infos[[input$DEG_list_name]][["lfc"]] <- input$dea_lfc
-      r$gene_lists_infos[[input$DEG_list_name]][["fdr"]] <- input$dea_fdr
+      ###Written as a whole, never field by field, so that reusing a name cannot
+      ###inherit metadata from a previous list.
+      r$gene_lists_infos[[name]] <- list(
+        origin = "DEA",
+        Conditions = c(input$reference, input$perturbation),
+        lfc = input$dea_lfc,
+        fdr = input$dea_fdr
+      )
       
     })
     
@@ -808,20 +829,6 @@ mod_differential_expression_analysis_server <-
     ###TODO : echelle de l'image ! (trouvÃ©! changer simplement le "res"...)
     ###FIXME : Boutons du choix de la mÃ©thode de normalisation (awesomeRadio) qui foire sur la page normalisation... Si j'ajoute un bouton de mÃªme type quelque part ici Ã§a remarche. En regardant, il manque une propriÃ©tÃ© (un petit padding) si j'ai pas un awesomeRadio (mÃªme inutile) dans cette partie du programme. Je ne comprends pas.
     
-    output$venn_lists_choice <- shiny::renderUI({
-      shiny::req(length(r$gene_lists) > 1)
-      
-      shinyWidgets::checkboxGroupButtons(
-        inputId = ns("venn_genes"),
-        label = "Please select between 2 and 4 lists of genes to show in the Venn diagram :",
-        choices = names(r$gene_lists),
-        justified = TRUE,
-        checkIcon = list(yes = shiny::icon("ok",
-                                           lib = "glyphicon"))
-      )
-    })
-    
-    
     output$venn_lists_choice_2 <- shiny::renderUI({
       shiny::req(length(r$gene_lists) > 1)
       shiny::fluidRow(
@@ -830,140 +837,113 @@ mod_differential_expression_analysis_server <-
                       shinyWidgets::pickerInput(
                         inputId = ns("venn_list_1"),
                         label = "Gene list 1",
-                        choices = c("None" = FALSE, names(r$gene_lists))
+                        choices = c("None" = "", names(r$gene_lists))
                       )),
         shiny::column(3,
                       shinyWidgets::pickerInput(
                         inputId = ns("venn_list_2"),
                         label = "Gene list 2",
-                        choices = c("None" = FALSE, names(r$gene_lists))
+                        choices = c("None" = "", names(r$gene_lists))
                       )),
         shiny::column(3,
                       shinyWidgets::pickerInput(
                         inputId = ns("venn_list_3"),
                         label = "Gene list 3",
-                        choices = c("None" = FALSE, names(r$gene_lists))
+                        choices = c("None" = "", names(r$gene_lists))
                       )),
         shiny::column(3,
                       shinyWidgets::pickerInput(
                         inputId = ns("venn_list_4"),
                         label = "Gene list 4",
-                        choices = c("None" = FALSE, names(r$gene_lists))
+                        choices = c("None" = "", names(r$gene_lists))
                       )), 
         ###All the buttons containg the "up / down" chocices.
-        shiny::column(3,
-                      shinyWidgets::checkboxGroupButtons(
-                        inputId = ns("up_down_button_venn_1"),
-                        label = "Gene subset",
-                        choices = c("Up", "Down"),
-                        selected = c("Up", "Down"),
-                        justified = TRUE,
-                        size = "sm",
-                        checkIcon = list(yes = icon("ok",
-                                                    lib = "glyphicon"))
-                      )
-        ),
-        shiny::column(3,
-                      shinyWidgets::checkboxGroupButtons(
-                        inputId = ns("up_down_button_venn_2"),
-                        label = "Gene subset",
-                        choices = c("Up", "Down"),
-                        selected = c("Up", "Down"),
-                        justified = TRUE,
-                        size = "sm",
-                        checkIcon = list(yes = icon("ok",
-                                                    lib = "glyphicon"))
-                      )
-        ),
-        shiny::column(3,
-                      shinyWidgets::checkboxGroupButtons(
-                        inputId = ns("up_down_button_venn_3"),
-                        label = "Gene subset",
-                        choices = c("Up", "Down"),
-                        selected = c("Up", "Down"),
-                        justified = TRUE,
-                        size = "sm",
-                        checkIcon = list(yes = icon("ok",
-                                                    lib = "glyphicon"))
-                      )
-        ),
-        shiny::column(3,
-                      shinyWidgets::checkboxGroupButtons(
-                        inputId = ns("up_down_button_venn_4"),
-                        label = "Gene subset",
-                        choices = c("Up", "Down"),
-                        selected = c("Up", "Down"),
-                        justified = TRUE,
-                        size = "sm",
-                        checkIcon = list(yes = icon("ok",
-                                                    lib = "glyphicon"))
-                      )
-        ),
+        shiny::column(3, shiny::uiOutput(ns("up_down_ui_1"))),
+        shiny::column(3, shiny::uiOutput(ns("up_down_ui_2"))),
+        shiny::column(3, shiny::uiOutput(ns("up_down_ui_3"))),
+        shiny::column(3, shiny::uiOutput(ns("up_down_ui_4"))),
       )
     })
     
     
+    ###Up/Down subsetting needs differential statistics, which imported gene
+    ###lists do not have. Written out four times rather than looped, to avoid
+    ###the variable capture pitfall of building renderUI in a loop.
+    up_down_buttons <- function(comp) {
+      selected <- input[[paste0("venn_list_", comp)]]
+      if (!isTRUE(nzchar(selected)) || is.null(r$top_tags[[selected]]))
+        return(shiny::helpText("No differential statistics for this list."))
+
+      shinyWidgets::checkboxGroupButtons(
+        inputId = ns(paste0("up_down_button_venn_", comp)),
+        label = "Gene subset",
+        choices = c("Up", "Down"),
+        selected = c("Up", "Down"),
+        justified = TRUE,
+        size = "sm",
+        checkIcon = list(yes = icon("ok",
+                                    lib = "glyphicon"))
+      )
+    }
+
+    output$up_down_ui_1 <- shiny::renderUI({ up_down_buttons(1) })
+    output$up_down_ui_2 <- shiny::renderUI({ up_down_buttons(2) })
+    output$up_down_ui_3 <- shiny::renderUI({ up_down_buttons(3) })
+    output$up_down_ui_4 <- shiny::renderUI({ up_down_buttons(4) })
+
+
     ###List of input gene list for venn diagram. Based on what user input.
     venn_list <- shiny::reactive({
-      shiny::req(sum( ###Check that at least two list have a value != FALSE
-        c(
-          input$venn_list_1,
-          input$venn_list_2,
-          input$venn_list_3,
-          input$venn_list_4
-        ) != FALSE
-      ) >= 2)
+      selection <- c(
+        input$venn_list_1,
+        input$venn_list_2,
+        input$venn_list_3,
+        input$venn_list_4
+      )
+      shiny::req(sum(nzchar(selection)) >= 2) ###At least two slots are set
+
       venn_list <- list()
-      
+
       for (comp in 1:4) {
-        ###We test the 4 input DE list fields.
-        if (!isFALSE(input[[paste0("venn_list_", comp)]])) {
-          ###If the gene list is set to false, we just go to the next
-          selected_comparison <-
-            input[[paste0("venn_list_", comp)]] ###Extraction of the value.
-          if(all(input[[paste0("up_down_button_venn_", comp)]] == "")){
-            venn_list[[selected_comparison]] <-
-              r$top_tags[[selected_comparison]]$genes
-          } else if (all(input[[paste0("up_down_button_venn_", comp)]] == "Up")) {
-            #Only up is selected
-            venn_list[[paste0(selected_comparison, " up")]] <-
-              r$top_tags[[selected_comparison]][r$top_tags[[selected_comparison]]$logFC > 0 , "genes"]
-          } else if (all(input[[paste0("up_down_button_venn_", comp)]] == "Down")) {
-            #only down is selected
-            venn_list[[paste0(selected_comparison, " down")]] <-
-              r$top_tags[[selected_comparison]][r$top_tags[[selected_comparison]]$logFC < 0 , "genes"]
-          } else {
-            #Up and down are selected.
-            venn_list[[selected_comparison]] <-
-              r$top_tags[[selected_comparison]]$genes
-          }
+        selected_comparison <- input[[paste0("venn_list_", comp)]]
+
+        ###isTRUE() is needed : nzchar(NULL) is logical(0), and if() on it errors
+        if (!isTRUE(nzchar(selected_comparison)))
+          next
+
+        top_tags <- r$top_tags[[selected_comparison]]
+        up_down <- input[[paste0("up_down_button_venn_", comp)]]
+
+        ###Genes come from r$gene_lists, the only thing an imported list has.
+        ###top_tags is checked first : the Up/Down input keeps its last value
+        ###even once its widget has been replaced for a list without statistics.
+        if (is.null(top_tags) || is.null(up_down) ||
+            all(c("Up", "Down") %in% up_down)) {
+          venn_list[[selected_comparison]] <- r$gene_lists[[selected_comparison]]
+        } else if (identical(up_down, "Up")) {
+          venn_list[[paste(selected_comparison, "up")]] <-
+            top_tags$genes[top_tags$logFC > 0]
+        } else if (identical(up_down, "Down")) {
+          venn_list[[paste(selected_comparison, "down")]] <-
+            top_tags$genes[top_tags$logFC < 0]
+        } else {
+          venn_list[[selected_comparison]] <- r$gene_lists[[selected_comparison]]
         }
       }
-      # print(head(venn_list))
+
       venn_list
     })
     
     
     ###Venn diagram plot. The res parameter as a direct impact on text size.
     output$venn <- shiny::renderPlot({
-      shiny::req(venn_list)
+      shiny::req(venn_list())
       validate(
         need(length(names(venn_list())) > 1, "Please specify between two and four genes list.")
       )
       draw_venn(venn_list())
     }, res = 100)
     
-    
-    output$venn_spec_comp_choice <- shiny::renderUI({
-      shiny::req(venn_list())
-      tagList(
-        shiny::selectInput(
-          ns("venn_spec_comp"),
-          label = "Genes specific to a comparison :",
-          choices = names(venn_list())[!FALSE],
-        )
-      )
-    })
     
     ###Part with download intersection.
     output$venn_spec_comp_choice_2 <- shiny::renderUI({
@@ -978,7 +958,7 @@ mod_differential_expression_analysis_server <-
                        shiny::selectInput(
                          ns("venn_genes_intersection"),
                          label = "Genes present in the intersection of :",
-                         choices = names(venn_list())[!FALSE],
+                         choices = names(venn_list()),
                          multiple = TRUE
                        )
                      ),
@@ -991,7 +971,7 @@ mod_differential_expression_analysis_server <-
                        shiny::selectInput(
                          ns("venn_genes_union_absent"),
                          label = "Genes absent in lists :",
-                         choices = names(venn_list())[!FALSE],
+                         choices = names(venn_list()),
                          multiple = TRUE
                        )
                      ),

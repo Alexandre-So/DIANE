@@ -82,6 +82,12 @@ Finally, it is possible to compare lists of differentially expressed genes via V
 
 <img src="venn.PNG" align="center" width="800"/>
 
+# Custom gene lists
+
+Gene lists do not have to come from a differential expression analysis. In this tab you can paste gene identifiers, or upload a file containing them, to build your own list : a gene family, a QTL interval, or a list taken from a publication.
+
+Only the genes found in your normalized expression matrix are kept, and counters show how many were submitted, found, and missing. Once imported, a custom list is usable for clustering, network inference and Venn comparisons, exactly like a differentially expressed gene list.
+
 # Gene ontology analysis
 
 Among a list of genes, the user can compute significantly enriched ontologies, and visualize the result as GO term dotplots or enrichment maps :

@@ -94,6 +94,7 @@ app_server <- function(input, output, session) {
   shiny::callModule(mod_module_levels_server, "module_levels_ui_1", r)
   shiny::callModule(mod_differential_expression_analysis_server, 
                     "differential_expression_analysis_ui_1", r)
+  mod_import_gene_list_server("import_gene_list_ui_1", r)
   
   # clustering modules
   shiny::callModule(mod_clustering_server, "clustering_ui_1", r)

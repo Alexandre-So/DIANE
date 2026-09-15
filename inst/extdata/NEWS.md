@@ -98,3 +98,13 @@ Bug fixes :
 -   Add a new representation of count distribution, with all counts on the same plots.
 
 -   A new low count removal method has been added.
+
+### 1.3 Custom gene lists
+
+-   Gene lists can now be imported, by pasting identifiers or uploading a file, and used like any other list.
+
+-   Gene list names are checked : empty or already taken names are refused.
+
+Bug fixes :
+
+-   The Venn diagram no longer silently drops a gene list without differential statistics.
