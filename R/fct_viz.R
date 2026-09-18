@@ -755,11 +755,249 @@ download_plot_hd <- function(plot = NULL, file = NULL, type = "ggplot", format =
   # } 
 }
 
+#' Counts ready for a correlation, with the input contract enforced
+#'
+#' @param data a matrix or data.frame of counts, samples as columns
+#' @param conds conditions to keep
+#' @return the selected counts
+#' @noRd
+usable_counts <- function(data, conds) {
+  if (is.data.frame(data)) data <- as.matrix(data)
+  if (!is.matrix(data) || !is.numeric(data))
+    stop("`data` must be a numeric matrix of counts, samples as columns")
+  if (is.null(colnames(data)))
+    stop("`data` needs sample names as column names")
+
+  prefix <- stringr::str_split_fixed(colnames(data), '_', 2)[, 1]
+  absent <- setdiff(conds, prefix)
+  if (length(absent))
+    warning("condition(s) not found in the expression data, ignored : ",
+            paste(absent, collapse = ", "))
+  keep <- prefix %in% conds
+  if (!any(keep))
+    stop("The required conditions were not found in the expression data")
+
+  data <- data[, keep, drop = FALSE]
+  if (ncol(data) < 2L) stop("at least two samples are needed, got ", ncol(data))
+  if (nrow(data) < 3L) stop("at least three genes are needed, got ", nrow(data))
+  if (any(data < 0, na.rm = TRUE))
+    stop("negative values in `data` : raw or normalised counts are expected")
+  # petites valeurs non entieres : presque surement du log deja pris
+  if (max(data, na.rm = TRUE) < 50 && any(data %% 1 != 0, na.rm = TRUE))
+    warning("`data` looks already log transformed ; counts are expected, ",
+            "log2(x + 1) is applied by the function itself")
+  data
+}
+
+
+#' sample_correlation
+#'
+#' @description Correlation matrix between samples, computed on log2(counts + 1).
+#' Shared by the static and interactive correlation heatmaps.
+#'
+#' Expects counts, raw or normalised, never already transformed : the log is
+#' applied here. Note that it only affects \code{pearson} : \code{spearman} and
+#' \code{kendall} work on ranks, which a monotonic transform leaves untouched.
+#'
+#' @param data a matrix of counts, samples as columns. At least two samples and
+#' three genes, no negative value.
+#' @param conds conditions to keep. Default : all of them. Conditions that are
+#' not in the data are ignored, with a warning.
+#' @param correlation_method correlation method for the cor function. Can be pearson,
+#' kendall or spearman.
+#'
+#' @return a square, unrounded correlation matrix
+#' @export
+#' @importFrom stats cor
+#' @examples
+#' data("abiotic_stresses")
+#' sample_correlation(abiotic_stresses$raw_counts)
+sample_correlation <-
+  function(data,
+           conds = unique(stringr::str_split_fixed(colnames(data), '_', 2)[, 1]),
+           correlation_method = "pearson") {
+    stats::cor(log2(usable_counts(data, conds) + 1), method = correlation_method)
+  }
+
+
+#' detect_sample_outliers
+#'
+#' @description Flags suspicious samples from the sample to sample correlation
+#' matrix. Companion to the correlation heatmaps : same matrix, named samples
+#' instead of a pattern to spot by eye.
+#'
+#' Three separate triggers, any one of which flags a sample. They are not
+#' statistically independent : all three derive from the same correlation
+#' matrix, and \code{gap} and \code{overall} are both built from a sample's
+#' correlation to its replicates and to the other conditions.
+#' \itemize{
+#'   \item \code{deviation} too low : the sample agrees with its replicates less
+#'   than they agree with each other. The reference is the median correlation
+#'   \emph{between} the other replicates, so the sample never contributes to its
+#'   own reference. Needs at least three replicates, \code{NA} below that ;
+#'   \item \code{gap} too low : the sample is barely closer to its own replicates
+#'   than to the other conditions, or actually closer to another condition ;
+#'   \item \code{overall} too low, \emph{and} low within its own group : the
+#'   sample correlates poorly with everything. The second half matters, without
+#'   it a whole condition that is biologically distant flags every one of its
+#'   members.
+#' }
+#' The three are needed : a degraded sample correlates badly with everything, so
+#' its within and between correlations drop together and \code{gap} barely moves ;
+#' and where whole conditions are distant, the spread of \code{overall} is
+#' dominated by that distance, so only \code{deviation} sees a sample that is
+#' merely worse than its own replicates.
+#'
+#' Centres are medians, not means, so one bad replicate does not drag its whole
+#' group below the threshold. A sample is flagged when it is both \code{k} MADs
+#' under the median and at least \code{delta} below it : the relative part
+#' adapts to datasets whose correlations span different ranges, the absolute
+#' part keeps a near zero spread from turning rounding noise into a warning.
+#'
+#' Limits worth keeping in mind : a flag is a reason to look, not proof of a
+#' mislabelled sample or a technical failure. With two replicates
+#' \code{deviation} cannot be computed at all, and with three replicates of
+#' which two are degraded, the healthy one can be the flagged one. The verdict
+#' also depends on \code{conds} : the thresholds are computed on the samples
+#' that are kept, so a different selection can give a different answer for the
+#' same sample.
+#'
+#' @param data a matrix of counts, samples as columns. This will be converted to
+#' log2+1. Samples with constant or non finite counts carry no signal : they are
+#' reported as unusable rather than scored.
+#' @param conds conditions to keep. Default : all of them
+#' @param correlation_method correlation method for the cor function. Can be pearson,
+#' kendall or spearman.
+#' @param k number of MADs below the median under which a sample is flagged, on
+#' each trigger. Default : 5. Lower it to widen the net, raise it to quieten the
+#' warning. \code{stats::mad} scales by 1.4826, so a MAD matches a standard
+#' deviation on normal data ; correlation scores are not normal, so do not read
+#' \code{k} as a false positive rate.
+#' @param delta minimum departure from the median, in correlation units, below
+#' which a sample is not flagged whatever the MAD says. Default : 0.05.
+#'
+#' @return a data.frame, one row per sample, most suspicious first : sample,
+#' condition, within (median correlation to its own replicates), between (median
+#' correlation to the other conditions), gap, overall (median correlation to
+#' every other sample), deviation, flagged, reason. Unusable samples come first,
+#' with NA scores. A condition with a single replicate gives NA on within, gap
+#' and deviation, and is only checked on overall.
+#' @export
+#' @importFrom stats median mad sd ave
+#' @examples
+#' data("abiotic_stresses")
+#' head(detect_sample_outliers(abiotic_stresses$raw_counts))
+detect_sample_outliers <-
+  function(data,
+           conds = unique(stringr::str_split_fixed(colnames(data), '_', 2)[, 1]),
+           correlation_method = "pearson",
+           k = 5,
+           delta = 0.05) {
+
+    positive_scalar <- function(v)
+      is.numeric(v) && length(v) == 1L && is.finite(v) && v > 0
+    if (!positive_scalar(k))     stop("`k` must be a single finite positive number")
+    if (!positive_scalar(delta)) stop("`delta` must be a single finite positive number")
+
+    X <- log2(usable_counts(data, conds) + 1)
+
+    # un echantillon entierement non fini emporterait tous les genes : on l'ecarte
+    # d'abord, puis les genes non finis restants, puis les colonnes sans variance.
+    void <- apply(X, 2, function(v) !any(is.finite(v)))
+    X <- X[, !void, drop = FALSE]
+    if (ncol(X)) X <- X[apply(X, 1, function(v) all(is.finite(v))), , drop = FALSE]
+    flat <- if (nrow(X) < 2L) rep(TRUE, ncol(X)) else apply(X, 2, stats::sd) == 0
+    unusable <- c(names(void)[void], colnames(X)[flat])
+    X <- X[, !flat, drop = FALSE]
+    if (ncol(X) < 2L) stop("fewer than two usable samples left after quality checks")
+
+    cm <- stats::cor(X, method = correlation_method)
+    samples <- colnames(cm)
+    condition <- stringr::str_split_fixed(samples, '_', 2)[, 1]
+    n <- length(samples)
+
+    within <- between <- overall <- deviation <- rep(NA_real_, n)
+    for (i in seq_len(n)) {
+      same  <- setdiff(which(condition == condition[i]), i)
+      other <- which(condition != condition[i])
+      if (length(same))  within[i]  <- stats::median(cm[i, same])
+      if (length(other)) between[i] <- stats::median(cm[i, other])
+      overall[i] <- stats::median(cm[i, -i])
+      if (length(same) >= 2L) {
+        pairs <- cm[same, same, drop = FALSE]
+        deviation[i] <- within[i] - stats::median(pairs[upper.tri(pairs)])
+      }
+    }
+    gap <- within - between
+    # un groupe entier bas est une distance biologique, pas un defaut technique
+    group_overall <- stats::ave(overall, condition,
+                                FUN = function(v) stats::median(v, na.rm = TRUE))
+
+    low <- function(x) {
+      if (all(is.na(x))) return(rep(NA, length(x)))
+      centre <- stats::median(x, na.rm = TRUE)
+      spread <- stats::mad(x, na.rm = TRUE)
+      relative <- if (is.finite(spread) && spread > 0)
+        x < centre - k * spread else rep(TRUE, length(x))
+      out <- relative & (x < centre - delta)
+      out[is.na(x)] <- NA
+      out
+    }
+    fired <- function(v) v %in% TRUE
+    bad_dev <- low(deviation)
+    bad_gap <- low(gap)
+    bad_all <- fired(low(overall)) & fired(low(overall - group_overall))
+
+    # les libelles decrivent le calcul : la formulation forte n'est utilisee que
+    # lorsque le signe de gap la justifie
+    label <- cbind(
+      ifelse(fired(bad_dev),
+             "agrees with its replicates less than they agree with each other", NA),
+      ifelse(fired(bad_gap) & !is.na(gap) & gap < 0,
+             "closer to another condition than to its own replicates",
+             ifelse(fired(bad_gap),
+                    "barely closer to its replicates than to other conditions", NA)),
+      ifelse(bad_all,
+             "low correlation to every sample, including its own replicates", NA))
+    reason <- apply(label, 1, function(v) {
+      v <- v[!is.na(v)]; if (length(v)) paste(v, collapse = ", ") else NA_character_
+    })
+
+    # meme regle que low() : un critere dont la MAD est nulle ne classe pas non plus
+    mads <- function(x) {
+      spread <- stats::mad(x, na.rm = TRUE)
+      if (all(is.na(x)) || !is.finite(spread) || spread == 0)
+        return(rep(NA_real_, length(x)))
+      (x - stats::median(x, na.rm = TRUE)) / spread
+    }
+    severity <- pmin(mads(gap), mads(overall), mads(deviation), na.rm = TRUE)
+
+    res <- data.frame(
+      sample = samples, condition = condition,
+      within = within, between = between, gap = gap,
+      overall = overall, deviation = deviation,
+      flagged = fired(bad_dev) | fired(bad_gap) | bad_all, reason = reason,
+      stringsAsFactors = FALSE
+    )
+    res <- res[order(severity, na.last = TRUE), ]
+    if (length(unusable))
+      res <- rbind(data.frame(
+        sample = unusable,
+        condition = stringr::str_split_fixed(unusable, '_', 2)[, 1],
+        within = NA_real_, between = NA_real_, gap = NA_real_,
+        overall = NA_real_, deviation = NA_real_, flagged = TRUE,
+        reason = "no usable signal : constant or non finite counts",
+        stringsAsFactors = FALSE), res)
+    rownames(res) <- NULL
+    res
+  }
+
+
 #' draw_correlation_heatmap
-#' 
+#'
 #' @description draw a heatmap of pearson correlation between conditions.
 #' Display only two digits.
-#' 
+#'
 #' @param data a matrix of count. This will be converted to log2+1
 #' @param conds if NULL, shows all the conditions, else if character vector, shows only the required ones
 #' @param correlation_method correlation method for the cor function. Can be pearson,
@@ -784,26 +1022,13 @@ draw_correlation_heatmap <-
            mid_color = "white",
            font_size = 3,
            limits = NULL) {
-  require(ggplot2)
-    
-    conditions <-
-      colnames(data)[stringr::str_split_fixed(colnames(data), '_', 2)[, 1] %in% conds]
-    if (length(conditions) == 0) {
-      stop("The required conditions were not found in the expression data")
-    }
-    
-  data <- data[,colnames(data) %in% conditions]
-    
-  data <- log2(data+1)
-  
-  correlation = round(cor(data, method = correlation_method), 2)
+
+  # rounded to 2 digits : that is what the cell labels show
+  correlation = round(sample_correlation(data, conds, correlation_method), 2)
   data_melt <- reshape2::melt(correlation)
   if(is.null(limits)){
-    limits = c(
-      min(data_melt[["value"]]),
-      ((min(data_melt[["value"]]) + 1) / 2),
-      1
-    )
+    lowest = min(data_melt[["value"]], na.rm = TRUE)
+    limits = c(lowest, (lowest + 1) / 2, 1)
   }
   ggheatmap <- ggplot2::ggplot(data_melt, ggplot2::aes(Var2, Var1, fill = value))+
     ggplot2::geom_tile(color = "white", linewidth = 0.1) +
@@ -818,6 +1043,65 @@ draw_correlation_heatmap <-
     ggplot2::geom_text(ggplot2::aes(Var2, Var1, label = value), color = "black", size = font_size) +
     ggplot2::scale_y_discrete(limits=rev) +
     ggtitle(paste0(correlation_method," Correlation between samples"))
-  
+
   return(ggheatmap)
 }
+
+
+#' draw_correlation_heatmap_interactive
+#'
+#' @description Interactive version of \code{draw_correlation_heatmap}, for narrow
+#' boxes and high sample counts : hovering gives both sample names and the
+#' correlation, so axis labels and cell values are not needed.
+#' Returns a plotly object, which \code{download_plot_hd} cannot export : use
+#' \code{draw_correlation_heatmap} for downloads.
+#'
+#' @param data a matrix of counts. This will be converted to log2+1
+#' @param conds if NULL, shows all the conditions, else if character vector, shows only the required ones
+#' @param correlation_method correlation method for the cor function. Can be pearson,
+#' kendall or spearman.
+#' @param low_color color for low correlation. Default : #F7FCF5
+#' @param mid_color color for values in between high and low. Default : #74C476
+#' @param high_color color for high correlation. Default : #00441B
+#' @param limits vector with 2 elements, the lower and the higher limit of the
+#' color scale. Default : the range of the observed correlations.
+#' @param title plot title, or NULL for none.
+#'
+#' @export
+#' @importFrom stats cor
+#' @examples
+#' data("abiotic_stresses")
+#' draw_correlation_heatmap_interactive(abiotic_stresses$normalized_counts)
+draw_correlation_heatmap_interactive <-
+  function(data = NULL,
+           conds = unique(stringr::str_split_fixed(colnames(data), '_', 2)[, 1]),
+           correlation_method = "pearson",
+           low_color = "#F7FCF5",
+           mid_color = "#74C476",
+           high_color = "#00441B",
+           limits = NULL,
+           title = NULL) {
+
+    correlation <- sample_correlation(data, conds, correlation_method)
+    samples <- colnames(correlation)
+    if (is.null(limits)) limits <- range(correlation, na.rm = TRUE)
+
+    # samples top to bottom, to match the static version
+    axis_x <- list(title = "", categoryorder = "array", categoryarray = samples,
+                   tickfont = list(size = 9))
+    axis_y <- list(title = "", categoryorder = "array", categoryarray = rev(samples),
+                   tickfont = list(size = 9))
+
+    plotly::plot_ly(
+      x = samples, y = samples, z = correlation, type = "heatmap",
+      colors = grDevices::colorRampPalette(c(low_color, mid_color, high_color))(64),
+      zmin = limits[1], zmax = limits[2],
+      hovertemplate = paste0("%{y}<br>%{x}<br>", correlation_method,
+                             " r = %{z:.3f}<extra></extra>"),
+      colorbar = list(title = list(text = paste0(correlation_method, "\ncorrelation"),
+                                   font = list(size = 10)),
+                      tickfont = list(size = 9), thickness = 12)
+    ) |>
+      plotly::layout(title = title, xaxis = axis_x, yaxis = axis_y,
+                     margin = list(l = 60, b = 60, t = if (is.null(title)) 10 else 40))
+  }
