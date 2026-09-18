@@ -174,7 +174,7 @@ DIANE::draw_network_degrees(nodes = r$networks[[r$current_network]]$nodes,
 ```
 
 
-To reproduce this result on identical data, specify this seed in DIANE's interface (data import tab), or just before network inference and edge testing in command line.
+To reproduce this result on identical data, specify this seed in DIANE's interface (global options, the gear icon in the header), or just before network inference and edge testing in command line.
 
 ```{r}
 r$seed

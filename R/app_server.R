@@ -172,14 +172,14 @@ app_server <- function(input, output, session) {
   shiny::observeEvent(input$global_options, {
     golem::print_dev("Global options clic")
     showModal(
-      shiny::fluidRow(
-        modalDialog(
-          tags$h1("Global apps parameters"),
-          shiny::helpText("This will set some parameters that will be used in some places in the app."),
-          # shiny::HTML(
-          #   paste0("<span style='color: #737373'>",shiny::icon("circle-info"), "</span> <span style='color: #737373'>Note that the res argument only affect png and tiff format.</span>")
-          # ),
-          shiny::hr(),
+      modalDialog(
+        tags$h1("Global apps parameters"),
+        shiny::helpText("This will set some parameters that will be used in some places in the app."),
+        # shiny::HTML(
+        #   paste0("<span style='color: #737373'>",shiny::icon("circle-info"), "</span> <span style='color: #737373'>Note that the res argument only affect png and tiff format.</span>")
+        # ),
+        shiny::hr(),
+        shiny::fluidRow(
           shiny::column(6,
             shinyWidgets::awesomeRadio(
               inputId ='output_file_field_separator',
@@ -192,16 +192,50 @@ app_server <- function(input, output, session) {
               selected = r[["output_field_separator"]],
               inline = TRUE,
               status = "success"
-            ),
+            )
           ),
-        ))
+          ### Rebuilt at every click, so it always opens on the current seed.
+          shiny::column(6,
+            shiny::numericInput(
+              "seed",
+              label = shiny::HTML(paste0(
+                'Random seed : ',
+                shinyWidgets::dropdownButton(
+                  right = TRUE,
+                  size = 'xs',
+                  label = "Random seed",
+                  shiny::includeMarkdown(system.file("extdata", "seed.md", package = "DIANE")),
+                  circle = TRUE,
+                  status = "success",
+                  inline = TRUE,
+                  icon = shiny::icon("question"),
+                  width = "550px",
+                  tooltip = shinyWidgets::tooltipOptions(title = "More details")
+                )
+              )),
+              value = r$seed,
+              min = 0,
+              max = 2 ^ 8,
+              step = 1,
+              width = "100%"
+            )
+          )
+        )
+      )
     )
   })
-  
+
   shiny::observeEvent(input$output_file_field_separator, {
     golem::print_dev('output_field_separator update')
     r[["output_field_separator"]] <- input$output_file_field_separator
     golem::print_dev(paste0("OFS set to \'", r[["output_field_separator"]], "\'"))
+  })
+
+  shiny::observeEvent(input$seed, {
+    ### NULL once the modal closes, NA when the field is emptied.
+    if (!shiny::isTruthy(input$seed)) return()
+    r$seed <- as.integer(max(0, min(2 ^ 8, input$seed)))
+    golem::print_dev(paste("global seed set to", r$seed))
   })
   
   observeEvent(input$debug, {

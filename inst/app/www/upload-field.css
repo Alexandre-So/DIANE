@@ -1,0 +1,195 @@
+/* Upload field : file input and its separator choice, grouped in one block.
+   Bundled automatically by golem::bundle_resources() in app_ui.R.
+   Everything is scoped under .upload-field so the rest of the app is untouched. */
+
+.upload-field {
+  --uf-ink: #253d33;
+  --uf-muted: #64736c;
+  --uf-border: #dce5df;
+  --uf-field: #fafcfb;
+  --uf-tint: #eef7ef;
+  --uf-accent: #2f6f46;
+  --uf-accent-bright: #5fbf64;
+
+  box-sizing: border-box;
+  background: #fff;
+  border: 1px solid var(--uf-border);
+  border-radius: 7px;
+  padding: 12px;
+  color: var(--uf-ink);
+  font-size: 14px;
+}
+
+/* Title line : the help button sits at the far right of the heading. */
+.upload-field .uf-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 5px;
+}
+
+.upload-field .uf-heading h4 {
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.4;
+  margin: 0;
+}
+
+.upload-field .uf-help {
+  font-size: 12px;
+  color: var(--uf-muted);
+  margin: 0 0 8px;
+}
+
+.upload-field .uf-hint {
+  font-size: 12px;
+  color: var(--uf-muted);
+  margin: 6px 0 8px;
+}
+
+.upload-field .uf-hint code {
+  display: inline-block;
+  background: var(--uf-tint);
+  color: var(--uf-accent);
+  border-radius: 4px;
+  padding: 2px 5px;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+/* File input : the browse button and the file name read as a single control. */
+.upload-field .form-group {
+  margin-bottom: 0;
+  max-width: 100%;
+}
+
+.upload-field .control-label {
+  font-size: 12px;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+/* Keep an associated file label for screen readers without a redundant row. */
+.upload-field .uf-file .control-label {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.upload-field .input-group {
+  width: 100%;
+}
+
+.upload-field .form-control {
+  height: 38px;
+  font-size: 12px;
+  color: var(--uf-muted);
+  background: var(--uf-field);
+  border-color: var(--uf-border);
+  border-radius: 0 5px 5px 0;
+  box-shadow: none;
+}
+
+.upload-field .btn-file {
+  height: 38px;
+  padding: 9px 12px;
+  font-size: 12px;
+  color: var(--uf-ink);
+  background: #fff;
+  border-color: var(--uf-border);
+  border-radius: 5px 0 0 5px;
+}
+
+.upload-field .btn-file:hover {
+  background: var(--uf-tint);
+}
+
+/* The file input is nested in the button, so focus lands on a descendant. */
+.upload-field .btn-file:focus-within {
+  outline: 2px solid var(--uf-accent);
+  outline-offset: 2px;
+}
+
+.upload-field .shiny-file-input-progress {
+  height: 5px;
+  margin: 8px 0 0;
+}
+
+.upload-field .shiny-file-input-progress .progress-bar {
+  background: var(--uf-accent-bright);
+}
+
+/* Separator : radio buttons shown as pills, the checked one carries the accent. */
+.upload-field .uf-separator {
+  margin-top: 8px;
+}
+
+.upload-field .uf-separator > .form-group {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px 8px;
+}
+
+.upload-field .uf-separator .control-label {
+  margin: 0;
+  flex-shrink: 0;
+}
+
+.upload-field .shiny-options-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.upload-field .radio-inline {
+  display: flex;
+  align-items: center;
+  position: relative;
+  min-height: 30px;
+  margin: 0;
+  padding: 4px 8px 4px 26px;
+  font-size: 12px;
+  background: var(--uf-field);
+  border: 1px solid var(--uf-border);
+  border-radius: 5px;
+}
+
+/* Placed explicitly : Bootstrap positions it from its static position, which a
+   flex parent moves to the top of the pill. */
+.upload-field .radio-inline input[type="radio"] {
+  position: absolute;
+  left: 9px;
+  top: 50%;
+  transform: translateY(-50%);
+  margin: 0;
+  accent-color: var(--uf-accent-bright);
+}
+
+/* Without :has(), the native radio still shows which pill is checked. */
+.upload-field .radio-inline:has(input:checked) {
+  color: var(--uf-accent);
+  background: var(--uf-tint);
+  border-color: var(--uf-accent-bright);
+}
+
+.upload-field .uf-extra {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  margin-top: 12px;
+  font-size: 12px;
+  color: var(--uf-muted);
+}
+
+.upload-field .uf-extra a {
+  color: var(--uf-accent);
+  text-decoration: underline;
+}

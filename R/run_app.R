@@ -16,7 +16,7 @@
 #' @importFrom golem with_golem_options
 run_app <-
   function(server_version = FALSE,
-           seed = round(runif(n = 1, min = 0, max = 2 ^ 7)),
+           seed = 42,
            host = "127.0.0.1", prod = TRUE,
            ...) {
     options(golem.app.prod = prod)

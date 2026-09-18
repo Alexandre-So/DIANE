@@ -8,7 +8,10 @@
 #' @noRd
 # ----
 app_ui <- function(request) {
-  
+
+### Read here to serve the organism select already filtered.
+query <- shiny::parseQueryString(request$QUERY_STRING)
+
 logo_diane <- dashboardthemes::shinyDashboardLogoDIY(
   boldText = ""
   ,
@@ -66,6 +69,16 @@ dbHeader <- shinydashboard::dashboardHeader(title = logo_diane, titleWidth = "30
       .shinybusy {
         left: 50vw !important;
         top: 10vh !important;
+      }
+
+      /* Reserve the scrollbar space, so its arrival does not shift the layout. */
+      html {
+        scrollbar-gutter: stable;
+      }
+
+      /* Bootstrap pads for a scrollbar the gutter above already reserves. */
+      body.modal-open {
+        padding-right: 0 !important;
       }'
     ))),
     # List the first level UI elements here
@@ -231,7 +244,9 @@ dbHeader <- shinydashboard::dashboardHeader(title = logo_diane, titleWidth = "30
           shinydashboard::tabItem(tabName = "context_tab",
                                   mod_context_ui("context_ui_1")),
           shinydashboard::tabItem(tabName = "data_import_tab",
-                                  mod_import_data_ui("import_data_ui_1")),
+                                  mod_import_data_ui("import_data_ui_1",
+                                                     included_genus = query$organism,
+                                                     preselected_organism = query$organism_selected)),
           shinydashboard::tabItem(tabName = "normalisation_tab",
                                   mod_normalisation_ui("normalisation_ui_1")),
           shinydashboard::tabItem(

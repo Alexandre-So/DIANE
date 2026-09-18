@@ -1,16 +1,77 @@
 
 
 
+#' Organisms offered in the import module
+#'
+#' Called from the UI, so the list is already in the served HTML.
+#'
+#' @param included_genus Genus to restrict the list to, from the URL query.
+#' @noRd
+organism_choices <- function(included_genus = NULL) {
+  ## TODO : check if these packages are always loaded. Could reduce RAM usage.
+  ## TODO : check for arabidopsis.
+  choices <- c("Arabidopsis thaliana")
+  if (requireNamespace("org.Mm.eg.db", quietly = TRUE))
+    choices <- c(choices, "Mus musculus")
+
+  if (requireNamespace("org.Hs.eg.db", quietly = TRUE))
+    choices <- c(choices, "Homo sapiens")
+
+  if (requireNamespace("org.Ce.eg.db", quietly = TRUE))
+    choices <- c(choices, "Caenorhabditis elegans")
+
+  if (requireNamespace("org.Dm.eg.db", quietly = TRUE))
+    choices <- c(choices, "Drosophilia melanogaster")
+
+  if (requireNamespace("org.EcK12.eg.db", quietly = TRUE))
+    choices <- c(choices, "Escherichia coli")
+
+
+  choices <- c("Other", choices)
+
+  # Give name (genus) to pre-integrated data. We call them 'model".
+  names(choices) <- c("Other", rep("Model", length(choices)-1))
+
+  # import custom data
+  custom_orgs <- names(DIANE::organisms_index)
+  genus_custom_orgs <- c()
+  # Give a name to custom orgs. Either genus, or just the name of the organism.
+  for(i in custom_orgs){
+    if(!is.null(DIANE::organisms_index[[i]][["genus"]])){
+      genus_custom_orgs <- c(genus_custom_orgs, DIANE::organisms_index[[i]][["genus"]])
+    } else {
+      genus_custom_orgs <- c(genus_custom_orgs, i)
+    }
+  }
+  names(custom_orgs) <- genus_custom_orgs
+
+  choices <- c(choices, custom_orgs)
+
+  # Chose organism based on url query and integrated data
+  if(!is.null(included_genus)){
+    if(all(included_genus %in% names(choices))){
+      choices <- choices[names(choices) %in% included_genus]
+    }
+  }
+
+  unname(choices)
+}
+
+
 #' import_data UI Function
 #'
 #' @description A shiny Module to import expression data.
 #'
 #' @param id,input,output,session Internal parameters for {shiny}.
+#' @param included_genus Genus to restrict the organism list to, from the URL.
+#' @param preselected_organism Organism selected on startup, from the URL.
 #' @importFrom shinydashboard valueBoxOutput
 #' @noRd
 #'
 #' @importFrom shiny NS tagList
-mod_import_data_ui <- function(id) {
+mod_import_data_ui <- function(id,
+                               included_genus = NULL,
+                               preselected_organism = NULL) {
   ns <- NS(id)
   tagList(
     shinybusy::add_busy_spinner(
@@ -37,45 +98,100 @@ mod_import_data_ui <- function(id) {
         collapsible = TRUE,
         closable = FALSE,
         
-        shiny::fluidRow(
-            shiny::column(4,
-            shinyWidgets::switchInput(
-              ns("use_demo"),
-              "Toggle to import your data",
-              value = TRUE,
-              onLabel = "Embedded data",
-              offLabel = "Your dataset",
-              onStatus = "success"
-              
+        # Organism first : it constrains which data sources are available.
+        # Static, so input$org_select reaches the server on connection.
+        shiny::selectInput(
+          ns("org_select"),
+          label = shiny::HTML(paste0(
+            'Your organism ',
+            shinyWidgets::dropdownButton(
+              right = FALSE,
+              size = 'xs',
+              label = "Organism description",
+              shiny::htmlOutput(ns('organism_description')),
+              circle = TRUE,
+              status = "success",
+              inline = TRUE,
+              icon = shiny::icon("question"),
+              width = "550px",
+              tooltip = shinyWidgets::tooltipOptions(title = "Informations about selected organism")
             )
-          )
-          ,
-          col_8(shiny::uiOutput(ns("gene_ids")))
-          
+          )),
+          choices = organism_choices(included_genus),
+          selected = if (!is.null(preselected_organism) &&
+                         preselected_organism %in% names(DIANE::organisms_index))
+            preselected_organism else "Arabidopsis thaliana"
         ),
-        
-        
-        # Organism selection
-        shiny::uiOutput(ns("org_selection")),
-            shiny::uiOutput(ns("dataset_selection_ui")),
-        
+
+        # BS3 has no btn-outline-* : the selected option is filled green, the
+        # others stay white, so a single green carries the current choice.
+        shiny::tags$style(shiny::HTML(sprintf("
+          #%1$s .btn.radiobtn {
+            background-color: #ffffff;
+            background-image: none;
+            color: #2f6f46;
+            border: 1px solid #5FBF64;
+            box-shadow: none;
+            text-shadow: none;
+          }
+          #%1$s .btn.radiobtn:hover {
+            background-color: #eef7ef;
+          }
+          #%1$s .btn.radiobtn.active,
+          #%1$s .btn.radiobtn.active:hover {
+            background-color: #5FBF64;
+            color: #ffffff;
+            border-color: #5FBF64;
+          }
+          #%1$s .btn.radiobtn.disabled,
+          #%1$s .btn.radiobtn.disabled:hover {
+            background-color: #f5f5f5;
+            background-image: none;
+            color: #adadad;
+            border-color: #dddddd;
+            opacity: 1;
+          }
+        ", ns("data_source")))),
+
+        # Data source, as an exclusive choice rather than a toggle
+        shinyWidgets::radioGroupButtons(
+          ns("data_source"),
+          label = "Where does the expression data come from ?",
+          choiceNames  = list(htmltools::tagAppendChild(
+            shiny::textOutput(ns("integrated_label"), inline = TRUE),
+            "Integrated dataset"),
+            "My own files"),
+          choiceValues = c("integrated", "upload"),
+          selected = "integrated",
+          justified = TRUE,
+          status = "success"
+        ),
+        # shiny::uiOutput(ns("data_source_hint")),
+
+        shiny::uiOutput(ns("dataset_selection_ui")),
+
         # shiny::tabsetPanel(id="dataset-description-tabsetPanel"),
         shiny::hr(style = "margin-top: 0px; margin-bottom: 10px;"),
-        
+
         # UI for integrated dataset
-        shiny::tabsetPanel(id="dataset-description-tabsetPanel",
-        # shinydashboard::tabBox(id="dataset-description-tabsetPanel",  width = 12, 
-          shiny::tabPanel(title = "Dataset description",  
-                          shiny::htmlOutput(ns('dataset_description')),
-                          shiny::htmlOutput(ns("no_dataset_warning"))
-          ),
-          shiny::tabPanel("Organism description",
-                          shiny::htmlOutput(ns('organism_description'))
-          )
-         ),
+        # shiny::tabsetPanel(id="dataset-description-tabsetPanel",
+        # shinydashboard::tabBox(id="dataset-description-tabsetPanel",  width = 12,
+          # shiny::tabPanel(title = "Dataset description",
+        shiny::htmlOutput(ns('dataset_description')),
+        # ),
+          # shiny::tabPanel("Organism description",
+                      # "iris"
+                          # shiny::htmlOutput(ns('organism_description'))
+          # )
+         # ),
 
         
         
+        # Expected ID format : only actionable once the organism is known,
+        # and only in upload mode
+        ### Now rendered inside the expression upload_field(), where it is used.
+        # shiny::uiOutput(ns("gene_ids")),
+
         shiny::uiOutput(ns("count_import_ui")),
         shiny::uiOutput(ns("custom_organism_ui")),
         
@@ -84,50 +200,61 @@ mod_import_data_ui <- function(id) {
         shiny::fluidRow(
           shinydashboard::valueBoxOutput(ns("data_dim")),
           shinydashboard::valueBoxOutput(ns("conditions")),
-          shinydashboard::valueBoxOutput(ns("samples")),
-          
+          shinydashboard::valueBoxOutput(ns("samples"))
+        ),
+        shiny::fluidRow(
           col_4(shiny::uiOutput(ns("variants_summary"))),
           col_4(shiny::uiOutput(ns("organism_summary"))),
           col_4(shiny::uiOutput(ns(
             "gene_info_summary"
           )))
-        ),
-        
-        
-        #   ____________________________________________________________________________
-        #   seed settings                                                           ####
-        
-        
-        shiny::uiOutput(ns("seed_field")),
-        
-        
-        shinyWidgets::actionBttn(
-          ns("change_seed"),
-          label = "Change seed",
-          style = "material-flat",
-          color = "warning"
-        ),
-        
-        
-        shinyWidgets::actionBttn(
-          ns("set_seed"),
-          label = "Set seed",
-          style = "material-flat",
-          color = "success"
-          
-        ),
-        col_4(
-          shinyWidgets::dropdownButton(
-            size = 'xs',
-            label = "Input file requirements",
-            shiny::includeMarkdown(system.file("extdata", "seed.md", package = "DIANE")),
-            circle = TRUE,
-            status = "success",
-            icon = shiny::icon("question"),
-            width = "1200px",
-            tooltip = shinyWidgets::tooltipOptions(title = "More details")
-          )
         )
+
+        ### Previous version, kept until the seed in the global options modal is validated.
+        # #   ____________________________________________________________________________
+        # #   seed settings                                                           ####
+
+
+        # # shiny::fluidRow(
+
+        # shiny::HTML(paste0(
+          # 'Seed ensuring reproducibility (optional, can be left as default)',
+          # shinyWidgets::dropdownButton(
+          # right = TRUE,
+          # size = 'xs',
+          # label = "Design file requirements",
+          # shiny::includeMarkdown(system.file("extdata", "seed.md", package = "DIANE")),
+          # circle = TRUE,
+          # status = "success",
+          # inline = TRUE,
+          # icon = shiny::icon("question"),
+          # width = "550px",
+          # tooltip = shinyWidgets::tooltipOptions(title = "More details")
+          # )
+          # )),
+
+          # shiny::column(3,
+            # shiny::uiOutput(ns("seed_field"))
+          # ),
+          # shiny::column(5,
+          # shinyWidgets::actionBttn(
+            # ns("change_seed"),
+            # label = "Change seed",
+            # style = "material-flat",
+            # color = "warning",
+            # width = "100%"
+          # )),
+
+          # shiny::column(4,
+          # shinyWidgets::actionBttn(
+            # ns("set_seed"),
+            # label = "Set seed",
+            # style = "material-flat",
+            # color = "success", width = '100%',
+
+          # )
+        # # )
+
       ),
       
       
@@ -136,15 +263,18 @@ mod_import_data_ui <- function(id) {
       
       
       shinydashboardPlus::box(
-        title = "Preview of the expression matrix",
+        title = "Sample to sample correlation",
         width = 4,
         solidHeader = FALSE,
         status = "success",
         collapsible = TRUE,
         closable = FALSE,
-        shiny::plotOutput(ns("heatmap_preview"), height = 550),
-        footer = "This might help you visualize the general aspect of the data and different sequencing depths
-      of your conditions."
+        # square : the matrix is
+        plotly::plotlyOutput(ns("heatmap_preview"), height = 420),
+        shiny::uiOutput(ns("outlier_warning")),
+        footer = "Replicates of a condition should form a block along the diagonal.
+      A sample that resembles other conditions more than its own replicates draws a
+      visible cross, and is worth checking before going further."
       ),
       
       
@@ -181,7 +311,16 @@ mod_import_data_ui <- function(id) {
 #' @noRd
 mod_import_data_server <- function(input, output, session, r) {
   ns <- session$ns
-  
+
+  #   ____________________________________________________________________________
+  #   Data source                                                             ####
+
+  # Kept logical : r$use_demo is read as such by mod_normalisation
+  use_demo <- shiny::reactive({
+    shiny::req(input$data_source)
+    input$data_source == "integrated"
+  })
+
   #   ____________________________________________________________________________
   #   Data reset                                                              ####
   
@@ -189,7 +328,7 @@ mod_import_data_server <- function(input, output, session, r) {
   # when demo usage is toggled :
   
   shiny::observeEvent(priority = 50, {
-    input$use_demo
+    use_demo()
     # r$selected_preloaded_dataset
     input$org_select
   }, {
@@ -207,7 +346,7 @@ mod_import_data_server <- function(input, output, session, r) {
     r$top_tags = list()
     r$fit = NULL
     # r$regulators = NULL
-    r$use_demo = input$use_demo
+    r$use_demo = use_demo()
     r$splicing_aware = NULL
     # r$gene_info = NULL
     # r$organism = NULL
@@ -222,33 +361,34 @@ mod_import_data_server <- function(input, output, session, r) {
   })
   
   
-  #   ____________________________________________________________________________
-  #   seed setting                                                            ####
-  
-  output$seed_field <- shiny::renderUI({
-    shiny::req(r$seed)
-    shiny::numericInput(
-      ns("seed"),
-      min = 0,
-      max = 2 ^ 8,
-      label = "Seed ensuring reproducibility (optional, can be left as default value) :",
-      value = r$seed,
-      width = "100%"
-    )
-  })
-  
-  
-  shiny::observeEvent(input$change_seed, {
-    r$seed = round(runif(n = 1, min = 0, max = 2 ^ 7))
-    shiny::updateNumericInput(session,
-                              ns("seed"),
-                              value = r$seed)
-  })
-  
-  shiny::observeEvent(input$set_seed, {
-    r$seed <- input$seed
-    print(paste("changed global seed to", r$seed))
-  })
+  ### Previous version, kept until the seed in the global options modal is validated.
+  # #   ____________________________________________________________________________
+  # #   seed setting                                                            ####
+
+  # output$seed_field <- shiny::renderUI({
+    # shiny::req(r$seed)
+    # shiny::numericInput(
+      # ns("seed"),
+      # min = 0,
+      # max = 2 ^ 8,
+      # label = NULL,
+      # value = r$seed,
+      # width = "100%"
+    # )
+  # })
+
+
+  # shiny::observeEvent(input$change_seed, {
+    # r$seed = round(runif(n = 1, min = 0, max = 2 ^ 7))
+    # shiny::updateNumericInput(session,
+                              # ns("seed"),
+                              # value = r$seed)
+  # })
+
+  # shiny::observeEvent(input$set_seed, {
+    # r$seed <- input$seed
+    # print(paste("changed global seed to", r$seed))
+  # })
   
   
   #   ____________________________________________________________________________
@@ -273,12 +413,12 @@ mod_import_data_server <- function(input, output, session, r) {
     r$top_tags = list()
     r$fit = NULL
     r$regulators = NULL
-    r$use_demo = input$use_demo
+    r$use_demo = use_demo()
     r$splicing_aware = NULL
     r$gene_info = NULL
     r$custom_go = NULL
     
-    if (input$use_demo) { ###Import demo count data. Demo also stands for integrated datasets.
+    if (use_demo()) { ###Import demo count data. Demo also stands for integrated datasets.
       
       req(r$integrated_dataset)
       req(all(r$integrated_dataset %in% dataset_choices()))
@@ -286,10 +426,10 @@ mod_import_data_server <- function(input, output, session, r) {
       
       # Import DIANE legacy demo data if Arabidopsis and this specific dataset is selected.
       if(r$integrated_dataset == "Abiotic Stresses" & r$organism == "Arabidopsis thaliana"){
-        r$use_demo = input$use_demo
+        r$use_demo = use_demo()
         d <- DIANE::abiotic_stresses[["raw_counts"]]
       } else {
-        r$use_demo = input$use_demo
+        r$use_demo = use_demo()
         d <- DIANE::integrated_datasets[[r$organism]][[r$integrated_dataset]][["count"]]
         # browser()
       }
@@ -312,7 +452,7 @@ mod_import_data_server <- function(input, output, session, r) {
       r$top_tags = list()
       r$fit = NULL
       r$regulators = NULL
-      r$use_demo = input$use_demo
+      r$use_demo = use_demo()
       r$splicing_aware = NULL
       r$gene_info = NULL
       r$custom_go = NULL
@@ -488,50 +628,65 @@ mod_import_data_server <- function(input, output, session, r) {
   #   ____________________________________________________________________________
   #   Design import UI                                                        ####
   
+  ### Previous version, kept until upload_field() is validated on this box.
+  # output$design_import_ui <- shiny::renderUI({
+    # req(!use_demo())
+    # shiny::tagList(
+      # shinyWidgets::awesomeRadio(
+        # ns('sep_design'),
+#
+        # 'Separator : ',
+        # c(
+          # Comma = ',',
+          # Semicolon = ';',
+          # Tab = '\t'
+        # ),
+#
+        # inline = TRUE,
+        # status = "success"
+      # ),
+#
+#
+#
+      # shiny::fileInput(
+        # ns('design'),
+        # label = shiny::HTML(paste0(shinyWidgets::dropdownButton(
+          # right = TRUE,
+          # size = 'xs',
+          # label = "Design file requirements",
+          # shiny::includeMarkdown(system.file("extdata", "designFile.md",
+                                             # package = "DIANE")),
+          # circle = TRUE,
+          # status = "success",
+          # inline = TRUE,
+          # icon = shiny::icon("question"),
+          # width = "550px",
+          # tooltip = shinyWidgets::tooltipOptions(title = "More details")
+        # ),
+        # 'Choose CSV/TXT design file (optional)'
+        # )),
+        # accept = c(
+          # 'text/csv',
+          # 'text/comma-separated-values,text/plain',
+          # '.csv',
+          # '.txt'
+        # )
+      # )
+      # )
+  # })
+
   output$design_import_ui <- shiny::renderUI({
-    req(!input$use_demo)
-    shiny::tagList(
-      shinyWidgets::awesomeRadio(
-        ns('sep_design'),
-        
-        'Separator : ',
-        c(
-          Comma = ',',
-          Semicolon = ';',
-          Tab = '\t'
-        ),
-        
-        inline = TRUE,
-        status = "success"
-      ),
-      
-      
-      
-      shiny::fileInput(
-        ns('design'),
-        label = shiny::HTML(paste0(shinyWidgets::dropdownButton(
-          right = TRUE,
-          size = 'xs',
-          label = "Design file requirements",
-          shiny::includeMarkdown(system.file("extdata", "designFile.md",
-                                             package = "DIANE")),
-          circle = TRUE,
-          status = "success",
-          inline = TRUE,
-          icon = shiny::icon("question"),
-          width = "550px",
-          tooltip = shinyWidgets::tooltipOptions(title = "More details")
-        ),
-        'Choose CSV/TXT design file (optional)'
-        )),
-        accept = c(
-          'text/csv',
-          'text/comma-separated-values,text/plain',
-          '.csv',
-          '.txt'
-        )
-      )
-      )
+    req(!use_demo())
+    upload_field(
+      file_id = ns("design"),
+      label = "Design file (optional)",
+      separator_id = ns("sep_design"),
+      help_md = "designFile.md",
+      help_width = "550px",
+      help_opens = "left",
+      accept = c("text/csv", "text/comma-separated-values,text/plain",
+                 ".csv", ".txt")
+    )
   })
   
   
@@ -541,16 +696,16 @@ mod_import_data_server <- function(input, output, session, r) {
   design <- shiny::reactive({
     req(r$organism)
     golem::print_dev("Design reactive")
-    if (input$use_demo) { ###Import demo count data
+    if (use_demo()) { ###Import demo count data
       req(r$integrated_dataset)
       if(r$integrated_dataset == "Abiotic Stresses"){
-        r$use_demo = input$use_demo
+        r$use_demo = use_demo()
         # data("abiotic_stresses", package = "DIANE")
         # d <- abiotic_stresses$design
         d <- DIANE::abiotic_stresses[["design"]]
       } else {
         # TODO: if there is not design ?? variable is set to NULL.
-        r$use_demo = input$use_demo
+        r$use_demo = use_demo()
         d <- DIANE::integrated_datasets[[r$organism]][[r$integrated_dataset]][["design"]]
       }
     } else {
@@ -586,89 +741,123 @@ mod_import_data_server <- function(input, output, session, r) {
   #   ____________________________________________________________________________
   #   organism                                                                ####
   
-  # Reactive vector of organism to chose from.
-  org_choices <- shiny::reactive({
-    ## TODO : check if these packages are always loaded. Could reduce RAM usage.
-    ## TODO : check for arabidopsis.
-    choices <- c("Arabidopsis thaliana")
-    if (requireNamespace("org.Mm.eg.db", quietly = TRUE))
-      choices <- c(choices, "Mus musculus")
-    
-    if (requireNamespace("org.Hs.eg.db", quietly = TRUE))
-      choices <- c(choices, "Homo sapiens")
-    
-    if (requireNamespace("org.Ce.eg.db", quietly = TRUE))
-      choices <- c(choices, "Caenorhabditis elegans")
-    
-    if (requireNamespace("org.Dm.eg.db", quietly = TRUE))
-      choices <- c(choices, "Drosophilia melanogaster")
-    
-    if (requireNamespace("org.EcK12.eg.db", quietly = TRUE))
-      choices <- c(choices, "Escherichia coli")
-    
-    
-    choices <- c("Other", choices)
-    
-    # Give name (genus) to pre-integrated data. We call them 'model".
-    names(choices) <- c("Other", rep("Model", length(choices)-1))
-    
-    # import custom data
-    custom_orgs <- names(DIANE::organisms_index)
-    genus_custom_orgs <- c()
-    # Give a name to custom orgs. Either genus, or just the name of the organism.
-    for(i in custom_orgs){
-      if(!is.null(DIANE::organisms_index[[i]][["genus"]])){
-        genus_custom_orgs <- c(genus_custom_orgs, DIANE::organisms_index[[i]][["genus"]])
-      } else {
-        genus_custom_orgs <- c(genus_custom_orgs, i)
-      }
-    }
-    names(custom_orgs) <- genus_custom_orgs
-    
-    choices <- c(choices, custom_orgs)
-    
-    # Chose organism based on url query and integrated data
-    if(!is.null(r$included_genus)){
-      if(all(r$included_genus %in% names(choices))){
-        choices <-choices[names(choices) %in% r$included_genus]
-      }
-    }
+  ### Previous version, kept until the static selectInput is validated.
+  # # Reactive vector of organism to chose from.
+  # org_choices <- shiny::reactive({
+    # ## TODO : check if these packages are always loaded. Could reduce RAM usage.
+    # ## TODO : check for arabidopsis.
+    # choices <- c("Arabidopsis thaliana")
+    # if (requireNamespace("org.Mm.eg.db", quietly = TRUE))
+      # choices <- c(choices, "Mus musculus")
 
-    golem::print_dev(unname(choices))
-    unname(choices)
-  })
+    # if (requireNamespace("org.Hs.eg.db", quietly = TRUE))
+      # choices <- c(choices, "Homo sapiens")
+
+    # if (requireNamespace("org.Ce.eg.db", quietly = TRUE))
+      # choices <- c(choices, "Caenorhabditis elegans")
+
+    # if (requireNamespace("org.Dm.eg.db", quietly = TRUE))
+      # choices <- c(choices, "Drosophilia melanogaster")
+
+    # if (requireNamespace("org.EcK12.eg.db", quietly = TRUE))
+      # choices <- c(choices, "Escherichia coli")
+
+
+    # choices <- c("Other", choices)
+
+    # # Give name (genus) to pre-integrated data. We call them 'model".
+    # names(choices) <- c("Other", rep("Model", length(choices)-1))
+
+    # # import custom data
+    # custom_orgs <- names(DIANE::organisms_index)
+    # genus_custom_orgs <- c()
+    # # Give a name to custom orgs. Either genus, or just the name of the organism.
+    # for(i in custom_orgs){
+      # if(!is.null(DIANE::organisms_index[[i]][["genus"]])){
+        # genus_custom_orgs <- c(genus_custom_orgs, DIANE::organisms_index[[i]][["genus"]])
+      # } else {
+        # genus_custom_orgs <- c(genus_custom_orgs, i)
+      # }
+    # }
+    # names(custom_orgs) <- genus_custom_orgs
+
+    # choices <- c(choices, custom_orgs)
+
+    # # Chose organism based on url query and integrated data
+    # if(!is.null(r$included_genus)){
+      # if(all(r$included_genus %in% names(choices))){
+        # choices <-choices[names(choices) %in% r$included_genus]
+      # }
+    # }
+
+    # golem::print_dev(unname(choices))
+    # unname(choices)
+  # })
+
+
+  # output$org_selection <- shiny::renderUI({
+
+    # # Check if URL organism is in the list.
+    # org_select <- "Arabidopsis thaliana"
+    # if(!is.null(r$preselected_organism)){
+      # if(r$preselected_organism %in% names(DIANE::organisms_index)){
+        # org_select <- r$preselected_organism
+      # }
+    # }
+
+    # shiny::selectInput(
+      # ns("org_select"),
+      # # label = "Your organism :",
+      # label = shiny::HTML(paste0(
+        # 'Your organism ',
+        # shinyWidgets::dropdownButton(
+        # right = FALSE,
+        # size = 'xs',
+        # label = "Organism description",
+        # shiny::htmlOutput(ns('organism_description')),
+        # circle = TRUE,
+        # status = "success",
+        # inline = TRUE,
+        # icon = shiny::icon("question"),
+        # width = "550px",
+        # tooltip = shinyWidgets::tooltipOptions(title = "Informations about selected organism")
+        # )
+      # )),
+      # choices = org_choices(),
+      # selected = org_select
+    # )
+  # })
   
-  
-  output$org_selection <- shiny::renderUI({
-    
-    # Check if URL organism is in the list.
-    org_select <- "Arabidopsis thaliana"
-    if(!is.null(r$preselected_organism)){
-      if(r$preselected_organism %in% names(DIANE::organisms_index)){
-        org_select <- r$preselected_organism
-      }
+  # Organisms without an integrated dataset ("Other" among them) : disable the
+  # option instead of silently moving the user's choice. Depends on the organism
+  # only, never on input$data_source, otherwise the update below loops.
+  shiny::observe({
+    shiny::req(r$organism)
+    if (length(dataset_choices()) > 0) {
+      shinyWidgets::updateRadioGroupButtons(
+        session = session,
+        inputId = "data_source",
+        disabledChoices = character(0)
+      )
+    } else {
+      shinyWidgets::updateRadioGroupButtons(
+        session = session,
+        inputId = "data_source",
+        selected = "upload",
+        disabledChoices = "integrated"
+      )
     }
-    
-    shiny::selectInput(
-      ns("org_select"),
-      label = "Your organism :",
-      choices = org_choices(),
-      selected = org_select
-    )
   })
-  
-  # Force to import a dataset when "other" is selected.
-  shiny::observeEvent({
-    input$org_select
-    input$use_demo
-    # r$use_demo
-  },{
-    req(input$use_demo)
-    req(r$organism)
-    if(input$org_select == "Other" & input$use_demo == TRUE){
-      shinyWidgets::updateSwitchInput(session = session, inputId = "use_demo", value = FALSE)
-    }
-  })
+
+  # Says why the integrated option is greyed out, next to the button itself
+  # output$data_source_hint <- shiny::renderUI({
+  #   shiny::req(r$organism)
+  #   shiny::req(length(dataset_choices()) == 0)
+  #   shiny::helpText(
+  #     paste("No integrated dataset is available for", r$organism,
+  #           "- import your own expression file below.")
+  #   )
+  # })
   
   ## TODO : Not used anymore. Could be commented out.
   # This was the old style tooltip.
@@ -707,7 +896,7 @@ mod_import_data_server <- function(input, output, session, r) {
     r$organism <- input$org_select
     golem::print_dev(paste("r$organism : ", r$organism))
   })
-  
+
   # Contain a vector of possible datasets for any organism.
   dataset_choices <- shiny::reactive({
     req(r$organism)
@@ -718,13 +907,18 @@ mod_import_data_server <- function(input, output, session, r) {
     }
   })
   
+  
+  output$integrated_label <- shiny::renderText({
+    if (length(dataset_choices()) > 0) "Integrated dataset" else "No integrated dataset"
+  })
+  
   # TODO : could be hidden !
   # Allow user to chose an integrated dataset.
   # TODO : Could be an UIupdate. 
   # NOTE : the req(dataset_choices()) was not there before. I had a bug without him I think, but cannot find it anymore.
   # Be carefull.
   output$dataset_selection_ui <- shiny::renderUI({
-    shiny::req(input$use_demo)
+    shiny::req(use_demo())
     req(dataset_choices())
     # if(!is.null(dataset_choices())){
     selected_dataset <- NULL
@@ -740,20 +934,23 @@ mod_import_data_server <- function(input, output, session, r) {
       choices = dataset_choices(), ###Will be "" if no existing dataset.
       selected = shiny::isolate(selected_dataset)
     )
-    # } 
-    
-      
+    # }
+
+
     # }
   })
-  
-  
+
+  ### Cheap : rendered while the user is still on another tab.
+  shiny::outputOptions(output, "dataset_selection_ui", suspendWhenHidden = FALSE)
+
+
   # Store integrated dataset value.
   shiny::observeEvent({
     input$dataset_selection
-    input$use_demo
+    use_demo()
     r$organism ## to fix loading problem. Dataset was not loaded when an organism without integrated dataset was selected.
   }, {
-    if(input$use_demo){
+    if(use_demo()){
       req(input$dataset_selection) ## to fix loading problem
       req(r$organism)
       req(dataset_choices())
@@ -763,17 +960,9 @@ mod_import_data_server <- function(input, output, session, r) {
     }
   })
   
-  ##Print a warning when no dataset are available for selected org
-  output$no_dataset_warning <- shiny::renderText({
-    # shiny::req(input$use_demo, length(dataset_choices())==0)
-    # shiny::req(length(dataset_choices())==0)
-    if(input$use_demo && length(dataset_choices())==0){
-      "<div style='color: orange'><b>Information</b> : There is no pre-integrated dataset for this organism. But you can import your own count data ! Click on on the big green button above to do so.</div><hr>"
-    } else if (!input$use_demo) {
-      "<div>Import your own dataset.</div><hr>"
-    }
-  })
-  
+  # The "no integrated dataset" case is now signalled by data_source_hint,
+  # next to the disabled button rather than inside a tab panel.
+
         
   #   ____________________________________________________________________________
   #   Organism description                                                    ####
@@ -789,12 +978,12 @@ mod_import_data_server <- function(input, output, session, r) {
       "Homo sapiens",
       "Mus musculus"
     )) {
-      "<p>This organism was installed using the corresponding orgdb package from bioconductor.
-            You can check the specific version in the \"Software versions\" tab<p><hr>"
+      "<h4>Organism descripton</h4><p>This organism was installed using the corresponding orgdb package from bioconductor.
+            You can check the specific version in the \"Software versions\" tab<p>"
     } else {
       "Nothing"
       req(r$organism)
-      # req(input$use_demo)
+      # req(use_demo())
       
       organism_informations <- DIANE::organisms_index[[r$organism]][["informations"]]
       organism_description = ""
@@ -810,11 +999,15 @@ mod_import_data_server <- function(input, output, session, r) {
             string = paste(string, paste(tags$b(i), " : ", organism_informations[[i]], "</br>"), " ")
           }
         }
-        organism_description <- paste0(string, "</div><hr>")
+        organism_description <- paste0(string, "</div>")
       } else {
-        organism_description <- "<p>No organism description provided<p><hr>"
+        organism_description <- "<p>No organism description provided<p>"
       }
-      organism_description
+      paste0(
+        "<h4>Organism descripton</h4>",
+        organism_description
+      )
+      
     }
     # These organism are installed via orgdb. 
     
@@ -824,47 +1017,66 @@ mod_import_data_server <- function(input, output, session, r) {
   #   ____________________________________________________________________________
   #   import user data UI                                                     ####
   
+  ### Previous version, kept until upload_field() is validated on this box.
+  # output$count_import_ui <- shiny::renderUI({
+    # shiny::req(!use_demo())
+    # print("output$data_import_ui")
+    # shiny::tagList(
+      # shiny::h3("Import expression file", style="text-decoration: underline"),
+      # shinyWidgets::awesomeRadio(
+        # ns('sep'),
+        # 'Separator : ',
+        # c(
+          # Comma = ',',
+          # Semicolon = ';',
+          # Tab = '\t'
+        # ),
+        # inline = TRUE,
+        # status = "success"
+      # ),
+#
+      # shiny::fileInput(
+        # ns('raw_data'),
+        # label = shiny::HTML(paste0('Choose CSV/TXT expression file',
+                                   # shinyWidgets::dropdownButton(
+                                     # size = 'xs',
+                                     # label = "Input file requirements",
+                                     # shiny::includeMarkdown(
+                                       # system.file("extdata", "expressionFile.md", package = "DIANE")
+                                     # ),
+                                     # circle = TRUE,
+                                     # status = "success",
+                                     # inline = TRUE,
+                                     # icon = shiny::icon("question"),
+                                     # width = "1200px",
+                                     # tooltip = shinyWidgets::tooltipOptions(title = "More details")
+                                   # )                     
+        # )),
+        # accept = c(
+          # 'text/csv',
+          # 'text/comma-separated-values,text/plain',
+          # '.csv',
+          # '.txt'
+        # )
+      # ),
+    # )
+  # })
+
   output$count_import_ui <- shiny::renderUI({
-    shiny::req(!input$use_demo)
-    print("output$data_import_ui")
+    shiny::req(!use_demo())
     shiny::tagList(
-      shiny::h3("Import expression file", style="text-decoration: underline"),
-      shinyWidgets::awesomeRadio(
-        ns('sep'),
-        'Separator : ',
-        c(
-          Comma = ',',
-          Semicolon = ';',
-          Tab = '\t'
-        ),
-        inline = TRUE,
-        status = "success"
-      ),
-      
-      shiny::fileInput(
-        ns('raw_data'),
-        label = shiny::HTML(paste0('Choose CSV/TXT expression file',
-                                   shinyWidgets::dropdownButton(
-                                     size = 'xs',
-                                     label = "Input file requirements",
-                                     shiny::includeMarkdown(
-                                       system.file("extdata", "expressionFile.md", package = "DIANE")
-                                     ),
-                                     circle = TRUE,
-                                     status = "success",
-                                     inline = TRUE,
-                                     icon = shiny::icon("question"),
-                                     width = "1200px",
-                                     tooltip = shinyWidgets::tooltipOptions(title = "More details")
-                                   )                     
-        )),
-        accept = c(
-          'text/csv',
-          'text/comma-separated-values,text/plain',
-          '.csv',
-          '.txt'
-        )
-      ),
+    upload_field(
+      file_id = ns("raw_data"),
+      label = "Expression file",
+      separator_id = ns("sep"),
+      help_md = "expressionFile.md", 
+      help_opens = "right",
+      help_width = "900px",
+      hint = shiny::uiOutput(ns("gene_ids")),
+      accept = c("text/csv", "text/comma-separated-values,text/plain",
+                 ".csv", ".txt")
+    ),
+    shiny::br()
     )
   })
   
@@ -872,42 +1084,60 @@ mod_import_data_server <- function(input, output, session, r) {
   #   ____________________________________________________________________________
   #   gene infos upload                                                           ####
   
+  ### Previous version, kept until upload_field() is validated on this box.
+  # output$custom_organism_ui <- shiny::renderUI({
+    # shiny::req(r$organism == "Other")
+    # shiny::tagList(
+      # shiny::h3("Import gene information file", style="text-decoration: underline"),
+      # shinyWidgets::awesomeRadio(
+        # ns('sep_gene_info'),
+        # status = "success",
+        # 'Separator : ',
+        # c(Tab = '\t'),
+        # inline = TRUE
+      # ),
+#
+      # shiny::fileInput(
+        # inputId = ns('gene_info_input'),
+        # label = HTML(paste0('Choose CSV/TXT gene information file (optional)',
+                            # shinyWidgets::dropdownButton(
+                              # size = 'xs',
+                              # label = "Gene information file requirements",
+                              # shiny::includeMarkdown(system.file("extdata", "infoFile.md",
+                                                                 # package = "DIANE")),
+                              # circle = TRUE,
+                              # status = "success",
+                              # inline = TRUE,
+                              # icon = shiny::icon("question"),
+                              # width = "1200px",
+                              # tooltip = shinyWidgets::tooltipOptions(title = "More details")
+                            # )
+        # )),
+        # accept = c(
+          # 'text/csv',
+          # 'text/comma-separated-values,text/plain',
+          # '.csv',
+          # '.txt'
+        # )
+      # )
+      # )
+  # })
+
   output$custom_organism_ui <- shiny::renderUI({
     shiny::req(r$organism == "Other")
     shiny::tagList(
-      shiny::h3("Import gene information file", style="text-decoration: underline"),
-      shinyWidgets::awesomeRadio(
-        ns('sep_gene_info'),
-        status = "success",
-        'Separator : ',
-        c(Tab = '\t'),
-        inline = TRUE
+      upload_field(
+        file_id = ns("gene_info_input"),
+        label = "Gene information file (optional)",
+        separator_id = ns("sep_gene_info"),
+        help_md = "infoFile.md",
+        help_width = "900px",
+        separator = "\t",
+        accept = c("text/csv", "text/comma-separated-values,text/plain",
+                   ".csv", ".txt")
       ),
-      
-      shiny::fileInput(
-        inputId = ns('gene_info_input'),
-        label = HTML(paste0('Choose CSV/TXT gene information file (optional)',
-                            shinyWidgets::dropdownButton(
-                              size = 'xs',
-                              label = "Gene information file requirements",
-                              shiny::includeMarkdown(system.file("extdata", "infoFile.md",
-                                                                 package = "DIANE")),
-                              circle = TRUE,
-                              status = "success",
-                              inline = TRUE,
-                              icon = shiny::icon("question"),
-                              width = "1200px",
-                              tooltip = shinyWidgets::tooltipOptions(title = "More details")
-                            )
-        )),
-        accept = c(
-          'text/csv',
-          'text/comma-separated-values,text/plain',
-          '.csv',
-          '.txt'
-        )
-      )
-      )
+    shiny::br(),
+    )
   })
   
   #   ____________________________________________________________________________
@@ -916,11 +1146,11 @@ mod_import_data_server <- function(input, output, session, r) {
   output$dataset_description <- shiny::renderText({
     req(r$organism)
     req(r$integrated_dataset)
-    # req(input$use_demo)
+    # req(use_demo())
     
     dataset_informations <- DIANE::integrated_datasets[[r$organism]][[r$integrated_dataset]][["description"]]
     dataset_description = ""
-    string = "<div class='descriptive-field'"
+    string = "<div class='descriptive-field'>"
     url_pattern <- "(http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\\(\\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+)" ###Use to detect URL. Need that the field contains ONLY and url.
     if(!is.null(dataset_informations)){
       ###We need to have everything stored in a string. So we just create this string field by field. And then we just print her.
@@ -949,7 +1179,10 @@ mod_import_data_server <- function(input, output, session, r) {
     }
     dataset_description
   })
-  
+
+  ### Same, and keeps it out of the heatmap's flush.
+  shiny::outputOptions(output, "dataset_description", suspendWhenHidden = FALSE)
+
 
   #   ____________________________________________________________________________
   #   genes info                                                              ####
@@ -1011,7 +1244,7 @@ mod_import_data_server <- function(input, output, session, r) {
 
   output$raw_data_preview <- DT::renderDataTable({
     shiny::req(r$organism)
-    if(input$use_demo){
+    if(use_demo()){
       shiny::req(r$integrated_dataset)
     }
     raw_data()
@@ -1020,13 +1253,37 @@ mod_import_data_server <- function(input, output, session, r) {
   })
   
   ########## matrix preview
-  output$heatmap_preview <- shiny::renderPlot({
+
+  # low counts dropped : their log inflates variance and blurs the blocks
+  preview_counts <- shiny::reactive({
     shiny::req(r$raw_counts)
-    
-    golem::print_dev("Print heatmap")
-    d <- r$raw_counts[rowSums(r$raw_counts) > 25,]
-    # d <- r$raw_counts[sample(which(rowSums(r$raw_counts) > 0), 100),]
-    draw_heatmap(d, title = NA)
+    r$raw_counts[rowSums(r$raw_counts) > 25, , drop = FALSE]
+  })
+
+  output$heatmap_preview <- plotly::renderPlotly({
+    golem::print_dev("Print correlation heatmap")
+    draw_correlation_heatmap_interactive(preview_counts())
+  })
+
+  output$outlier_warning <- shiny::renderUI({
+    suspects <- tryCatch(detect_sample_outliers(preview_counts()),
+                         error = function(e) NULL)
+    shiny::req(suspects)
+    suspects <- suspects[suspects$flagged, ]
+    shiny::req(nrow(suspects) > 0)
+
+    lines <- paste0("<li><b>", suspects$sample, "</b> &mdash; ", suspects$reason,
+                    " (median r = ", round(suspects$overall, 2), ")</li>",
+                    collapse = "")
+    shiny::div(
+      style = "color: #b2482f; font-size: 12px; margin-top: 8px;",
+      shiny::icon("exclamation-triangle"),
+      shiny::HTML(paste0(
+        "<b>", nrow(suspects), " sample",
+        if (nrow(suspects) > 1) "s" else "", " worth checking</b>",
+        "<ul style='margin: 4px 0 0 0; padding-left: 20px;'>", lines, "</ul>"
+      ))
+    )
   })
   
   
@@ -1036,6 +1293,7 @@ mod_import_data_server <- function(input, output, session, r) {
   
   output$gene_ids <- shiny::renderUI({
     shiny::req(r$organism)
+    shiny::req(!use_demo())  # nothing to satisfy when the data is already in
     # browser()
     if (r$organism == "Other" || r$organism == "other")
       txt <- "No gene ID requirement"
@@ -1051,12 +1309,11 @@ mod_import_data_server <- function(input, output, session, r) {
       data("regulators_per_organism", package = "DIANE")
       txt <- regulators_per_organism[[r$organism]]
     }
-    shinydashboardPlus::descriptionBlock(
-      number = "Expected gene IDs are in the form",
-      numberColor = "teal",
-      header =  sample(txt, size = 1),
-      text = paste("for", r$organism),
-      rightBorder = FALSE
+    # Display a gene ID exemple.
+    shiny::tags$p(
+      class = "uf-hint",
+      "Gene ID example: ",
+      shiny::tags$code(sample(txt, size = 1))
     )
   })
   
