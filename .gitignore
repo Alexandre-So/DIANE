@@ -4,15 +4,26 @@
 int/doc
 inst/doc
 *.Rproj
-app.R
 logs/next_id.txt
 logs/loggit.log
 inst/extdata/datasets/*.csv
 *.DS_Store
-docs
 /doc/
 /Meta/
 .RData
 Docker_deployment_renv/
 Docker_deployment_shinyproxy/
 input_data_for_online_DIANE/
+data-raw/
+data.old/
+find_*.txt
+*.tar.gz
+
+# renv stays local: an .Rprofile in the deployed directory breaks every session
+.Rprofile
+renv.lock
+renv/
+
+# Sauvegardes horodatees creees par import_organism_auto_yaml.R
+data_backup/
+import_report_*.tsv

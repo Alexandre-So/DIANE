@@ -1,6 +1,8 @@
-#' Gene annotations for supported organisms in DIANE
+#' Gene annotations for Arabidopsis thaliana
 #'
 #' For each gene identifier, are provided its common name and description.
+#' Other organisms carry their own annotations in their file under
+#' \code{inst/extdata/organisms}, read with \code{\link{organism}}.
 #'
 #' @source 
 #' \describe{
@@ -11,8 +13,6 @@
 #' \describe{
 #'  \item{Arabidopsis thaliana}{Dataframe with AGI terms as rownames, and two columns :
 #'  description and name.}
-#'  \item{Oryza sativa rapdb}{Dataframe with IDs as rownames, and two columns :
-#'  description and label}
 #' }
 #' @examples
 #' {

@@ -12,7 +12,7 @@
 ###################################
 
 # Engineering
-golem::set_golem_version("1.2.1")
+golem::set_golem_version("1.3")
 
 ## Dependencies ----
 ## Add one line by package you want to add as dependency

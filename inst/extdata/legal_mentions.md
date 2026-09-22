@@ -1,6 +1,6 @@
 # Legal mentions
 
-For DIANE's online version [\<https://diane.bpmp.inrae.fr\>](https://diane.bpmp.inrae.fr){.uri}
+For DIANE's online version [\<https://diane.ipsim.inrae.fr\>](https://diane.ipsim.inrae.fr){.uri}
 
 ------------------------------------------------------------------------
 

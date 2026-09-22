@@ -16,11 +16,9 @@ knitr::opts_chunk$set(
 
 # Add new data
 
-Since version 1.2, DIANE can now customized more easily with custom organisms and datasets. A script that aims to make this more easy is also included.
+Since version 1.3, each custom organism is stored in its own file under `inst/extdata/organisms`, next to a small index in `data/organisms_index.rda` that DIANE reads at startup to list them.
 
-The scripts are for now stored in another repository : https://github.com/Alexandre-So/DIANE_helper_scripts
-
-They will be later integrated into DIANE. For now, download them inside of DIANE directory if you want to use them. They take a yaml file, with path to the different files needed to store organisms and datasets informations as well as some descriptive informations. 
+The scripts that produce them are available on request at alexandre.soriano@cirad.fr. They take a yaml file, with path to the different files needed to store organisms and datasets informations as well as some descriptive informations. All those files are tab separated.
 
 ## Organism
 

@@ -9,4 +9,5 @@ rm(list = ls(all.names = TRUE))
 golem::document_and_reload()
 
 # Run the application
-run_app()
+run_app(prod = FALSE)
+# profvis::profvis(print(run_app()))

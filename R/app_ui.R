@@ -39,7 +39,10 @@ dbHeader <- shinydashboard::dashboardHeader(title = logo_diane, titleWidth = "30
                                                            shiny::tags$li(shiny::actionButton("plot_params", label = NULL, icon = shiny::icon("image", class = "duotone"), class = "btn-success"), style = "padding-top: 8px; padding-left: 10px; display: inline-block;  color:#0098f8;")
                                             ),
                                             shiny::tags$li(class = "dropdown",
-                                                           shiny::tags$li(shiny::actionButton("version_info", label = "Version 1.2.1", class = "btn-success"), style = "padding-top: 8px; padding-left: 10px; display: inline-block;")
+                                                           shiny::tags$li(shiny::actionButton("version_info", label = "Version 1.3", class = "btn-success"), style = "padding-top: 8px; padding-left: 10px; display: inline-block;")
+                                            ),
+                                            shiny::tags$li(class = "dropdown",
+                                                           shiny::tags$li(shinydashboardPlus::socialButton(href = "https://github.com/Alexandre-So/DIANE", icon = shiny::icon("github")), style = "padding-top: 8px; padding-left: 10px; display: inline-block;")
                                             ),
                                             shinydashboard::dropdownMenu(type = "messages", badgeStatus = "success",
                                                          icon = shiny::icon("info"), headerText = "Information",
@@ -55,7 +58,7 @@ dbHeader <- shinydashboard::dashboardHeader(title = logo_diane, titleWidth = "30
                                                                                           icon = shiny::icon("envelope")
                                                          ),
                                                          shinydashboard::notificationItem(text = "Report bugs on github",
-                                                                          href = "https://github.com/OceaneCsn/DIANE/issues",
+                                                                          href = "https://github.com/Alexandre-So/DIANE/issues",
                                                                           icon = shiny::icon("bug")
                                                          ),
                                                          shiny::uiOutput("general_debug_button")

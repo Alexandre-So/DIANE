@@ -8,3 +8,18 @@ rsconnect/
 Docker_deployment_renv/
 Docker_deployment_shinyproxy/
 input_data_for_online_DIANE/
+
+# renv : ne doit jamais entrer dans une image. Un .Rprofile dans le repertoire
+# de travail de R detourne .libPaths() vers une bibliotheque de projet absente.
+.Rprofile
+renv/
+
+# Donnees sources et documentation : inutiles dans l'image, ~260 Mo de contexte.
+data-raw/
+data.old/
+docs/
+doc/
+Meta/
+logs/
+*.tar.gz
+*.Rproj

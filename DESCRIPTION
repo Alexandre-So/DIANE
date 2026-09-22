@@ -1,18 +1,19 @@
 Package: DIANE
 Title: DIANE
-Version: 1.2.1
+Version: 1.3
 Authors@R: c(
     person("Océane", "Cassan", , "oceane.cassan@lirm.fr", role = "aut",
            comment = c(ORCID = "0000-0002-4595-2457", Role = "Initial developer of the package")),
     person("Alexandre", "Soriano", , "alexandre.soriano@cirad.fr", role = c("aut", "cre"),
-           comment = c(ORCID = "0000-0003-1406-46067", Role = "Took over development and maintenance"))
+           comment = c(ORCID = "0000-0003-1406-4606", Role = "Took over development and maintenance"))
   )
 Description: Dashboard for the Inference and Analysis of Network from
     Expression data. This package is particularly well suited for
     combinatoric design such as perturbation experiments.
 License: GPL-3
-URL: https://github.com/OceaneCsn/DIANE
-BugReports: https://github.com/OceaneCsn/DIANE/issues
+URL: https://github.com/Alexandre-So/DIANE,
+    https://alexandre-so.github.io/DIANE/
+BugReports: https://github.com/Alexandre-So/DIANE/issues
 Depends: 
     R (>= 4.0.0)
 Imports: 
@@ -42,6 +43,7 @@ Imports:
     htmltools,
     igraph,
     loggit,
+    markdown,
     matrixStats,
     org.At.tair.db,
     org.Ce.eg.db,

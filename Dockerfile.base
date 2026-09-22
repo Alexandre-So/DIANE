@@ -1,0 +1,72 @@
+# DIANE base image: R, system libraries, and every dependency in DESCRIPTION.
+# Only rebuilt when DESCRIPTION changes.
+#   docker build -f Dockerfile.base -t diane-base:latest .
+
+ARG R_VERSION=4.6.1
+FROM rocker/shiny:${R_VERSION}
+
+# CRAN snapshot. Never "latest".
+ARG CRAN_SNAPSHOT=2026-09-18
+# Pinned. Leave empty to let BiocManager pair a release with this R instead;
+# the resolved value then lands in /etc/diane-versions.txt.
+ARG BIOC_VERSION=3.23
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+# System libraries. Regenerate from the authoritative source, one batch at a time:
+#   https://packagemanager.posit.co/__api__/repos/cran/sysreqs
+#     ?all=false&distribution=ubuntu&release=24.04&pkgname=<pkg>&pkgname=...
+# libuv1-dev is not optional: the binary `fs` links against libuv.so.1, and
+# without it the whole clusterProfiler family fails to load.
+RUN apt-get update && apt-get install -y --no-install-recommends \
+      cmake gdal-bin jags libabsl-dev libcurl4-openssl-dev libgdal-dev \
+      libgeos-dev libgeos++-dev libglpk-dev libgmp-dev libicu-dev libproj-dev \
+      libsqlite3-dev libssl-dev libudunits2-dev libuv1-dev libxml2-dev make \
+      pandoc zlib1g-dev \
+ && rm -rf /var/lib/apt/lists/*
+
+# Prebuilt binaries for the base image's distribution. If Posit does not serve
+# it, drop "__linux__/$VERSION_CODENAME/".
+RUN . /etc/os-release \
+ && echo "options(repos = c(CRAN = 'https://packagemanager.posit.co/cran/__linux__/${VERSION_CODENAME}/${CRAN_SNAPSHOT}'), download.file.method = 'libcurl', Ncpus = 4)" \
+      > /usr/local/lib/R/etc/Rprofile.site \
+ && R -q -e 'print(getOption("repos"))'
+
+RUN R -q -e 'install.packages(c("remotes", "BiocManager"))'
+
+RUN if [ -n "$BIOC_VERSION" ]; then \
+      R -q -e "BiocManager::install(version = '$BIOC_VERSION', ask = FALSE)" ; \
+    fi \
+ && R -q -e 'cat("Bioconductor", as.character(BiocManager::version()), "\n")'
+
+# Before install_deps(), so upgrade = "never" leaves it alone. loggit was
+# archived from CRAN: absent from the snapshot index, and install_version()
+# cannot find it either. The exact tarball, same snapshot date, no dependencies.
+RUN R -q -e "install.packages('https://packagemanager.posit.co/cran/${CRAN_SNAPSHOT}/src/contrib/Archive/loggit/loggit_2.1.1.tar.gz', repos = NULL, type = 'source'); if (!requireNamespace('loggit', quietly = TRUE)) stop('loggit did not install')"
+
+# The two non-CRAN packages, pinned to a commit.
+RUN R -q -e 'remotes::install_github("Alexandre-So/CorLevelPlot@6bca8ab2e8acd4788dd6a294f57f63841821206b", upgrade = "never")'
+RUN R -q -e 'remotes::install_github("nik01010/dashboardthemes@e931e9b422ccbfd2f1533402b2b5cdb5907f5169", upgrade = "never")'
+
+# DESCRIPTION is the only dependency list. install_deps() warns instead of
+# failing, so the third call re-reads it and stops the build on anything
+# missing. Remotes is stripped: both GitHub packages are installed above.
+COPY DESCRIPTION /tmp/diane/DESCRIPTION
+RUN R -q -e 'd <- "/tmp/diane/DESCRIPTION"; x <- read.dcf(d); write.dcf(x[, setdiff(colnames(x), "Remotes"), drop = FALSE], d)' \
+ && R -q -e 'options(repos = BiocManager::repositories()); remotes::install_deps("/tmp/diane", dependencies = c("Depends", "Imports"), upgrade = "never")' \
+ && R -q -e 'd <- read.dcf("/tmp/diane/DESCRIPTION"); p <- unlist(strsplit(d[1, c("Depends", "Imports")], ",")); p <- gsub("[[:space:]]", "", gsub("\\(.*\\)", "", p)); p <- setdiff(p[nzchar(p)], "R"); miss <- p[!p %in% rownames(installed.packages())]; if (length(miss)) stop("NOT INSTALLED: ", paste(miss, collapse = ", ")); cat("all", length(p), "declared dependencies are installed\\n")' \
+ && rm -rf /tmp/diane
+
+# Two runtime dependencies DESCRIPTION does not declare: pkgload, for the
+# load_all() in app.R (Rbuildignored, so a deployment dependency), and
+# markdown, which shiny::includeMarkdown() needs but never names.
+RUN R -q -e 'install.packages(c("pkgload", "markdown"))'
+
+# Record of what the base image actually holds.
+RUN R -q -e 'writeLines(c( \
+      paste("R           :", getRversion()), \
+      paste("Bioconductor:", BiocManager::version()), \
+      paste("CRAN        :", getOption("repos")[["CRAN"]]), \
+      paste("base built  :", format(Sys.time(), "%Y-%m-%d %H:%M:%S")) \
+    ), "/etc/diane-versions.txt"); \
+    write.csv(installed.packages()[, c("Package", "Version")], "/etc/diane-packages.csv", row.names = FALSE)'

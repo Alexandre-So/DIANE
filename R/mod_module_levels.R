@@ -215,6 +215,10 @@ mod_module_levels_server <- function(input, output, session, r){
                                                                     as.character(1:(ncol(pca_raw_results()$co)-2)),
                                                                     selected = "2")
                                    ),
+                                   
+                                   # shiny::column(4, align = "center",
+                                   #   shiny::uiOutput(outputId = "specific_pca_elipses_uioutput")
+                                   # ),
                                    shiny::column(12, align = "center",
                                                  shiny::plotOutput(ns("specific_pca_plot"), height = "800px"),
                                                  shiny::column(width = 12, align = "right", class="download_plot_button",
@@ -280,6 +284,13 @@ mod_module_levels_server <- function(input, output, session, r){
     golem::print_dev("specific_pca_plot")
     specific_pca_plot_plot()
   })
+  
+#   Uioutput for elipse variable selection
+  # output$specific_pca_elipses_uioutput <- shiny::renderUI({
+  #   shiny::selectInput(inputId = ns("specific_pca_elipses"), label = "Elipses",
+  #     as.character(1:(ncol(pca_raw_results()$co)-2)),
+  #     selected = "2")
+  # })
 
   
   ##  ............................................................................

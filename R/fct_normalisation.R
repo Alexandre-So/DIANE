@@ -115,7 +115,6 @@ filter_low_count_condition_wise <- function(tcc, threshold = 10, conditions = NU
 #' @param design vector with the different condition names from the count matrix.
 #'
 #' @returns new matrix with median of counts per condition.
-#' @export
 #'
 #' @noRd
 summarize_per_conditions <- function(count_data, design = NULL) {

@@ -49,7 +49,7 @@ For users more familiar with R programming, all server-side functions in DIANE a
 
 ## Use DIANE locally
 
-DIANE relies on R \>= 4.0.1, available for all OS at <https://cloud.r-project.org/>.
+DIANE is built and tested on R 4.6.1, available for all OS at <https://cloud.r-project.org/>.
 
 Download and install DIANE in your R console as follows (you need the remotes package installed `install.packages("remotes")`) :
 
@@ -64,61 +64,88 @@ library(DIANE)
 DIANE::run_app()
 ```
 
-In case your expression input file exceeds 5MB, you may need to run the command `options(shiny.maxRequestSize=30*1024^2)` before calling `DIANE::run_app()` to upload up to 30BM.
+In case your expression input file exceeds 5MB, you may need to run the command `options(shiny.maxRequestSize=30*1024^2)` before calling `DIANE::run_app()` to upload up to 30MB.
 
 Once the application is launched, if the resolution poorly fits your screen, you can adjust it with the keyboard shortcuts `ctrl +` or `ctrl -` (use `cmd` on Mac).
 
 
-**Note for Debian users** : some packages are required by some DIANE dependencies :
- * libssl-dev
- * libcurl4-openssl-dev
- * libudunits2-dev
- * libabsl-dev
- * cmake
- * libfontconfig1-dev
- * libgdal-dev
+**Note for Debian and Ubuntu users** : DIANE's dependencies need a number of system libraries. `Dockerfile.base` holds the up to date list :
+
+```bash
+sudo apt-get install cmake gdal-bin jags libabsl-dev libcurl4-openssl-dev \
+  libgdal-dev libgeos-dev libgeos++-dev libglpk-dev libgmp-dev libicu-dev \
+  libproj-dev libsqlite3-dev libssl-dev libudunits2-dev libuv1-dev \
+  libxml2-dev make pandoc zlib1g-dev
+```
 
 
-## Deploy DIANE on your server
+## Deploy DIANE with Docker
 
-We provide a [solution based on Docker and Shiny server](https://hub.docker.com/r/rocker/shiny) to deploy DIANE on any linux server, just as it is at <https://diane.bpmp.inrae.fr>. To do so, see the following command line instructions.
+The build has two steps. `Dockerfile.base` installs R, the system libraries and every package DIANE depends on : about an hour, and only again when `DESCRIPTION` changes. `Dockerfile.app` adds DIANE on top in about a minute, as one of two variants — **public**, self-contained, or **server**, which serves a directory you mount.
 
-Get DIANE source code via Git :
+`build.sh` drives both, and checks the machine before it builds anything. `./build.sh --check` runs the checks alone.
+
+Install the Docker engine as described in the [Docker docs](https://docs.docker.com/engine/install/), then :
 
 ```bash
 git clone https://github.com/Alexandre-So/DIANE.git
-```
-
-Install Docker engine, as described in the [Docker docs](https://docs.docker.com/engine/install/).
-
-Go to DIANE's folder.
-
-First, you can change the default settings for the dockerized shiny-server by editing the file shiny-customized.config (like changing the port, the user to run with, and more)
-
-Now let's build the image, that we'll name diane, from the Dockerfile (superuser rights required).
-
-```bash
 cd DIANE
-docker build -t diane .
+./build.sh --base
 ```
 
-This might take a while. You can check that the container image was built with `docker images`. Then, you can start the container diane, by setting appropriately the following options in the above command:
-
-`/path/to/app/on/host/` is the path to DIANE on the host, that is to say the location where you cloned it, containing the app.R file. `/path/to/logs/on/host/` is the folder you want to store your app logs.
-
-`-p 8086:8086` is the port to use, change the first 8086 to use another one on the host.
-
-`--user shiny` allows to run as non root, with the shiny user that must have been created before, and granted rights to the folder `/path/to/app/on/host/logs` and `/path/to/logs/on/host/`.
-
-`-d --rm` are options for the detached mode.
-
-Plus, in the following example, a session of DIANE will be allowed to use 16 CPU cores :
+### Self-contained image
 
 ```bash
-docker run -d --cpus 16 --user shiny --rm -p 8086:8086 -v /path/to/app/on/host/:/srv/shiny-server/ -v /path/to/logs/on/host/:/var/log/shiny-server/ diane
+./build.sh --public
+docker run --rm -p 8086:8086 diane:1.3-public
 ```
 
-You can check that the container is running with `docker ps`.
+DIANE is then at <http://localhost:8086>, with the organisms bundled in the package. Nothing to mount.
+
+### Served from a mounted directory
+
+The image serves whatever sits on `/srv/shiny-server`, so the code can be updated without rebuilding, as long as no dependency changed.
+
+```bash
+./build.sh
+docker run -d --rm --cpus 16 -p 8086:8086 \
+  -v /path/to/DIANE/:/srv/shiny-server/ \
+  -v /path/to/logs/:/var/log/shiny-server/ \
+  diane:1.3
+```
+
+- `/path/to/DIANE/` is the clone on the host, the directory holding `app.R`.
+- `/path/to/logs/` is where shiny-server writes its logs.
+- `-p 8086:8086` is the port ; change the first number to serve on another one.
+- `--cpus 16` is how many cores one session may use, `--memory 8g` caps its memory.
+- `-d` detaches the container, `--rm` removes it when it stops.
+
+Do not pass `--user` : the container starts as root and shiny-server drops to the `shiny` account itself, as set by `run_as` in `shiny-customized.config`. Give that account its rights, reading its ids from the image rather than assuming them :
+
+```bash
+docker run --rm --entrypoint sh diane:1.3 -c 'id shiny'
+chmod -R a+rX /path/to/DIANE
+chown -R <uid>:<gid> /path/to/DIANE/logs
+```
+
+### Serving your own organisms
+
+Mount the dataset over the served directory :
+
+```bash
+docker run -d --rm -p 8086:8086 \
+  -v /path/to/DIANE/:/srv/shiny-server/ \
+  -v /path/to/dataset/data/:/srv/shiny-server/data/ \
+  -v /path/to/dataset/inst/extdata/organisms/:/srv/shiny-server/inst/extdata/organisms/ \
+  -v /path/to/logs/:/var/log/shiny-server/ \
+  diane:1.3
+```
+
+Mounting `data/` replaces the whole directory, so the dataset must also carry `abiotic_stresses.rda`, `gene_annotations.rda` and `regulators_per_organism.rda`. A `.Rprofile` or a `renv/` directory must never reach the served directory : R reads them at startup and no session opens.
+
+`./build.sh --check --data-dir /path/to/dataset` verifies all of this before building.
+
+Behind ShinyProxy, the same mounts go into `application.yml` as `container-volumes`, with `container-cpu-limit` and `container-memory-limit`.
 
 ------------------------------------------------------------------------
 
@@ -142,6 +169,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 ------------------------------------------------------------------------
 
-Authors : Océane Cassan, Antoine Martin, Sophie Lèbre.
+Authors of the published work : Océane Cassan, Antoine Martin, Sophie Lèbre.
 
 The application is now maintained by Alexandre Soriano (CIRAD)

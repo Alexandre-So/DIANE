@@ -99,12 +99,20 @@ Bug fixes :
 
 -   A new low count removal method has been added.
 
-### 1.3 Custom gene lists
+### 1.3 Custom gene lists and interactive heatmap
 
 -   Gene lists can now be imported, by pasting identifiers or uploading a file, and used like any other list.
 
--   Gene list names are checked : empty or already taken names are refused.
+-   Several gene lists can now be selected at once for network inference.
 
-Bug fixes :
+-   The condition correlation heatmap is now interactive, and samples behaving as outliers are reported.
+
+-   The data import tab was redesigned.
+
+-   The random seed is now set once for the whole session (to 42), from the global options, instead of from the import tab. The field always shows the value currently in use.
+
+-   Custom organisms are now stored one file per organism.
+
+-   lowers application memory footprint.
 
 -   The Venn diagram no longer silently drops a gene list without differential statistics.

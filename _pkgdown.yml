@@ -58,13 +58,15 @@ reference:
   - compute_pca
   - pca_plot_correlation
   - quick_pca
-  - draw_correlation_heatmap
+  - sample_correlation
+  - detect_sample_outliers
 
 - title: Data
 - contents:
   - regulators_per_organism
   - abiotic_stresses
   - gene_annotations
-  - organisms
+  - organisms_index
+  - organism
   - integrated_datasets
 

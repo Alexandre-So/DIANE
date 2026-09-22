@@ -81,7 +81,7 @@ A number of model organisms are already stored in the application, so that, if y
 
 Else, you can upload those information for your organism.
 
-You can find a number of pre-formatted datasets in the last tab of the online application at <https://diane.bpmp.inrae.fr>, that meet the expected format and type of gene IDs.
+You can find a number of pre-formatted datasets in the last tab of the online application at <https://diane.ipsim.inrae.fr>, that meet the expected format and type of gene IDs.
 
 # Add data to server mode
 

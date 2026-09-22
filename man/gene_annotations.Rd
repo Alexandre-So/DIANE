@@ -3,14 +3,12 @@
 \docType{data}
 \name{gene_annotations}
 \alias{gene_annotations}
-\title{Gene annotations for supported organisms in DIANE}
+\title{Gene annotations for Arabidopsis thaliana}
 \format{
 A named list with the following elements:
 \describe{
  \item{Arabidopsis thaliana}{Dataframe with AGI terms as rownames, and two columns :
  description and name.}
- \item{Oryza sativa rapdb}{Dataframe with IDs as rownames, and two columns :
- description and label}
 }
 }
 \source{
@@ -24,6 +22,8 @@ gene_annotations
 }
 \description{
 For each gene identifier, are provided its common name and description.
+Other organisms carry their own annotations in their file under
+\code{inst/extdata/organisms}, read with \code{\link{organism}}.
 }
 \examples{
 {

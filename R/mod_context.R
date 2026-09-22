@@ -10,12 +10,30 @@
 mod_context_ui <- function(id){
   ns <- NS(id)
   tagList(
-      shiny::includeMarkdown(system.file("extdata", "welcome.md", package = "DIANE")),
-      shinydashboardPlus::socialButton(
-        href = "https://github.com/OceaneCsn/DIANE",
-        icon = shiny::icon("github")
+    shiny::h1("Dashboard for the Inference and Analysis of Networks from Expression data" ),
+    shiny::fluidRow(
+      shiny::column(6,
+        img(src = "www/DIANE_workflow.png", width = "100%")
+      ),
+      shiny::column(6,
+        shiny::includeMarkdown(system.file("extdata", "welcome.md", package = "DIANE")),
       )
- 
+    ),
+    shiny::hr(),
+    shiny::fluidRow(
+      shiny::column(8,
+        shiny::includeMarkdown(system.file("extdata", "details.md", package = "DIANE")),
+      ),
+      shiny::column(4,
+        shiny::br(),
+        shiny::br(),
+        shiny::br(),
+        # shiny::h2("Partner institutions"),
+        img(src = "www/partners_vertical.png", width = "100%"),
+        # shiny::h2("Non-exhaustive ecosystem of featured packagess"),
+        img(src = "www/logos_vertical.png", width = "100%")
+      )
+    )
   )
 }
     
