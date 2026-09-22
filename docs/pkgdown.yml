@@ -1,4 +1,4 @@
-pandoc: '3.4'
+pandoc: 2.9.2.1
 pkgdown: 2.1.1
 pkgdown_sha: ~
 articles:
@@ -7,4 +7,7 @@ articles:
   DIANE_normalize: DIANE_normalize.html
   DIANE_Programming_Interface: DIANE_Programming_Interface.html
   DIANE: DIANE.html
-last_built: 2025-09-11T11:32Z
+last_built: 2026-09-22T07:14Z
+urls:
+  reference: https://alexandre-so.github.io/DIANE/reference
+  article: https://alexandre-so.github.io/DIANE/articles

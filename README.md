@@ -100,11 +100,9 @@ cd DIANE
 docker run --rm -p 8086:8086 diane:1.3-public
 ```
 
-DIANE is then at <http://localhost:8086>, with the organisms bundled in the package. Nothing to mount.
+DIANE is then at <http://localhost:8086>, with the organisms bundled in the package.
 
 ### Served from a mounted directory
-
-The image serves whatever sits on `/srv/shiny-server`, so the code can be updated without rebuilding, as long as no dependency changed.
 
 ```bash
 ./build.sh
@@ -120,7 +118,7 @@ docker run -d --rm --cpus 16 -p 8086:8086 \
 - `--cpus 16` is how many cores one session may use, `--memory 8g` caps its memory.
 - `-d` detaches the container, `--rm` removes it when it stops.
 
-Do not pass `--user` : the container starts as root and shiny-server drops to the `shiny` account itself, as set by `run_as` in `shiny-customized.config`. Give that account its rights, reading its ids from the image rather than assuming them :
+The application runs as the `shiny` account of the image, set by `run_as` in `shiny-customized.config`, so do not pass `--user`. Give that account read access to the served directory, and write access to its `logs/` :
 
 ```bash
 docker run --rm --entrypoint sh diane:1.3 -c 'id shiny'
@@ -141,9 +139,9 @@ docker run -d --rm -p 8086:8086 \
   diane:1.3
 ```
 
-Mounting `data/` replaces the whole directory, so the dataset must also carry `abiotic_stresses.rda`, `gene_annotations.rda` and `regulators_per_organism.rda`. A `.Rprofile` or a `renv/` directory must never reach the served directory : R reads them at startup and no session opens.
+Mounting `data/` replaces the whole directory, so the dataset must also carry `abiotic_stresses.rda`, `gene_annotations.rda` and `regulators_per_organism.rda`.
 
-`./build.sh --check --data-dir /path/to/dataset` verifies all of this before building.
+`./build.sh --check --data-dir /path/to/dataset` checks all of this before building.
 
 Behind ShinyProxy, the same mounts go into `application.yml` as `container-volumes`, with `container-cpu-limit` and `container-memory-limit`.
 

@@ -21,7 +21,7 @@ log ratios are expressed as log(perturbation/reference)"><!-- mathjax --><script
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">DIANE</a>
-        <span class="version label label-danger" data-toggle="tooltip" data-placement="bottom" title="Unreleased version">1.2.1</span>
+        <span class="version label label-danger" data-toggle="tooltip" data-placement="bottom" title="Unreleased version">1.3</span>
       </span>
     </div>
 
@@ -52,7 +52,7 @@ log ratios are expressed as log(perturbation/reference)"><!-- mathjax --><script
     </li>
   </ul></li>
       </ul><ul class="nav navbar-nav navbar-right"><li>
-  <a href="https://github.com/OceaneCsn/DIANE/" class="external-link">
+  <a href="https://github.com/Alexandre-So/DIANE/" class="external-link">
     <span class="fab fa-github fa-lg"></span>
 
   </a>
@@ -67,7 +67,7 @@ log ratios are expressed as log(perturbation/reference)"><!-- mathjax --><script
   <div class="col-md-9 contents">
     <div class="page-header">
     <h1>Estimates Differentially Expression Genes</h1>
-    <small class="dont-index">Source: <a href="https://github.com/OceaneCsn/DIANE/blob/HEAD/R/fct_dea.R" class="external-link"><code>R/fct_dea.R</code></a></small>
+    <small class="dont-index">Source: <a href="https://github.com/Alexandre-So/DIANE/blob/HEAD/R/fct_dea.R" class="external-link"><code>R/fct_dea.R</code></a></small>
     <div class="hidden name"><code>estimateDEGs.Rd</code></div>
     </div>
 
@@ -131,24 +131,24 @@ differentially expressed.</p></dd>
 <span class="r-in"><span><span class="va">DEGs</span> <span class="op">&lt;-</span> <span class="va">topTags</span><span class="op">$</span><span class="va">table</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">DEGs</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                   genes    logFC   logCPM       LR        PValue           FDR</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> AT4G12400.2 AT4G12400.2 7.756985 7.564179 2257.898  0.000000e+00  0.000000e+00</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> AT5G48570.1 AT5G48570.1 7.067740 8.853736 1961.261  0.000000e+00  0.000000e+00</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> AT5G12110.1 AT5G12110.1 5.939007 7.952267 2181.249  0.000000e+00  0.000000e+00</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> AT5G64510.1 AT5G64510.1 5.879517 6.067228 2209.460  0.000000e+00  0.000000e+00</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> AT2G19310.1 AT2G19310.1 4.212069 7.686615 1377.818 1.388536e-301 5.347531e-298</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> AT2G29500.1 AT2G29500.1 7.731411 9.482692 1264.481 5.917282e-277 1.899053e-273</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> AT4G12400.2 AT4G12400.2 7.756985 7.564179 2272.130  0.000000e+00  0.000000e+00</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> AT5G48570.1 AT5G48570.1 7.067740 8.853736 1970.131  0.000000e+00  0.000000e+00</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> AT5G12110.1 AT5G12110.1 5.939006 7.952267 2202.123  0.000000e+00  0.000000e+00</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> AT5G64510.1 AT5G64510.1 5.879518 6.067228 2228.044  0.000000e+00  0.000000e+00</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> AT2G19310.1 AT2G19310.1 4.212070 7.686615 1389.691 3.651876e-304 1.406410e-300</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> AT2G29500.1 AT2G29500.1 7.731411 9.482692 1260.703 3.919280e-276 1.257828e-272</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># For multiple conditions</span></span></span>
 <span class="r-in"><span><span class="va">topTags</span> <span class="op">&lt;-</span> <span class="fu">DIANE</span><span class="fu">::</span><span class="fu">estimateDEGs</span><span class="op">(</span><span class="va">fit</span>, reference <span class="op">=</span> <span class="st">"C"</span>, perturbation <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"H"</span>,<span class="st">"M"</span>,<span class="st">"S"</span><span class="op">)</span>, p.value <span class="op">=</span> <span class="fl">0.01</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">DEGs</span> <span class="op">&lt;-</span> <span class="va">topTags</span><span class="op">$</span><span class="va">table</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">DEGs</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                   genes    logFC   logCPM       LR        PValue           FDR</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> AT5G48570.1 AT5G48570.1 2.944751 8.853736 492.3495 4.391161e-109 8.455619e-105</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> AT5G12110.1 AT5G12110.1 2.448426 7.952267 489.9542 1.458099e-108 1.403858e-104</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> AT5G64510.1 AT5G64510.1 2.489492 6.067228 335.8761  5.046597e-75  3.239242e-71</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> AT4G12400.2 AT4G12400.2 3.016083 7.564179 327.8235  2.863125e-73  1.378309e-69</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> AT2G19310.1 AT2G19310.1 1.661515 7.686615 302.5988  8.945014e-68  3.444904e-64</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> AT1G07350.1 AT1G07350.1 1.396260 7.417268 262.5607  4.746310e-59  1.523249e-55</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> AT5G48570.1 AT5G48570.1 2.944751 8.853736 494.1928 1.743902e-109 2.257907e-105</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> AT5G12110.1 AT5G12110.1 2.448426 7.952267 493.6015 2.345147e-109 2.257907e-105</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> AT5G64510.1 AT5G64510.1 2.489493 6.067228 337.1602  2.650524e-75  1.701283e-71</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> AT4G12400.2 AT4G12400.2 3.016083 7.564179 328.7910  1.762388e-73  8.484134e-70</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> AT2G19310.1 AT2G19310.1 1.661515 7.686615 304.9245  2.785603e-68  1.072791e-64</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> AT1G07350.1 AT1G07350.1 1.396260 7.417268 265.3094  1.194669e-59  3.834092e-56</span>
 </code></pre></div>
     </div>
   </div>

@@ -32,7 +32,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">DIANE</a>
-        <span class="version label label-danger" data-toggle="tooltip" data-placement="bottom" title="Unreleased version">1.2.1</span>
+        <span class="version label label-danger" data-toggle="tooltip" data-placement="bottom" title="Unreleased version">1.3</span>
       </span>
     </div>
 
@@ -68,7 +68,7 @@
       </ul>
 <ul class="nav navbar-nav navbar-right">
 <li>
-  <a href="https://github.com/OceaneCsn/DIANE/" class="external-link">
+  <a href="https://github.com/Alexandre-So/DIANE/" class="external-link">
     <span class="fab fa-github fa-lg"></span>
 
   </a>
@@ -83,13 +83,13 @@
 
 
 
-      </header><div class="row">
+      </header><script src="DIANE_normalize_files/accessible-code-block-0.0.1/empty-anchor.js"></script><div class="row">
   <div class="col-md-9 contents">
     <div class="page-header toc-ignore">
       <h1 data-toc-skip>Normalization</h1>
             
       
-      <small class="dont-index">Source: <a href="https://github.com/OceaneCsn/DIANE/blob/HEAD/vignettes/DIANE_normalize.Rmd" class="external-link"><code>vignettes/DIANE_normalize.Rmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Alexandre-So/DIANE/blob/HEAD/vignettes/DIANE_normalize.Rmd" class="external-link"><code>vignettes/DIANE_normalize.Rmd</code></a></small>
       <div class="hidden name"><code>DIANE_normalize.Rmd</code></div>
 
     </div>
@@ -103,45 +103,25 @@
 <div class="section level3">
 <h3 id="sequencing-depth-correction">Sequencing depth correction<a class="anchor" aria-label="anchor" href="#sequencing-depth-correction"></a>
 </h3>
-<p>The <a href="https://rdrr.io/bioc/TCC" class="external-link">TCC R package</a> is used for
-the normalization. step here, to make samples comparable by correcting
-for their differences in <strong>sequencing depths</strong>. This step
-is mandatory before further statistical analysis.</p>
-<p>You can choose to normalize using the methods implemented in edgeR,
-referenced as ‘tmm’, or the one used in DESeq2, referenced as
-‘deseq2’.</p>
-<p>Those normalization methods rely on the hypothesis that a very small
-proportion of genes are differentially expressed between samples. If you
-suspect a lot of genes could be differentially expressed in your data,
-TCC offers the possibility to proceed to a first detection of potential
-differentially expressed genes, to remove them, and then provide a final
-less biased normalization.</p>
-<p>In that case, enable “prior removal of differentially expressed
-genes”. TCC will perform the following setp, depending on the
-normalization. method you chose :</p>
+<p>The <a href="https://rdrr.io/bioc/TCC" class="external-link">TCC R package</a> is used for the normalization. step here, to make samples comparable by correcting for their differences in <strong>sequencing depths</strong>. This step is mandatory before further statistical analysis.</p>
+<p>You can choose to normalize using the methods implemented in edgeR, referenced as ‘tmm’, or the one used in DESeq2, referenced as ‘deseq2’.</p>
+<p>Those normalization methods rely on the hypothesis that a very small proportion of genes are differentially expressed between samples. If you suspect a lot of genes could be differentially expressed in your data, TCC offers the possibility to proceed to a first detection of potential differentially expressed genes, to remove them, and then provide a final less biased normalization.</p>
+<p>In that case, enable “prior removal of differentially expressed genes”. TCC will perform the following setp, depending on the normalization. method you chose :</p>
 <ul>
 <li>tmm/deseq2 temporary normalization.</li>
-<li>potential DEG identification and removal using edgeR test
-method</li>
+<li>potential DEG identification and removal using edgeR test method</li>
 <li>tmm/deseq2 definitive normalization.</li>
 </ul>
 </div>
 <div class="section level3">
 <h3 id="low-counts-filtering">Low counts filtering<a class="anchor" aria-label="anchor" href="#low-counts-filtering"></a>
 </h3>
-<p>Removing genes with very low abundance is a common practice in
-RNA-Seq analysis pipelines for several reasons :</p>
+<p>Removing genes with very low abundance is a common practice in RNA-Seq analysis pipelines for several reasons :</p>
 <ul>
-<li><p>They have little biological significance, and could be caused
-either by noise or mapping errors.</p></li>
-<li><p>The statistical modeling we are planning to perform next is not
-well suited for low counts, as they make the mean-variance relationship
-harder to estimate.</p></li>
+<li><p>They have little biological significance, and could be caused either by noise or mapping errors.</p></li>
+<li><p>The statistical modeling we are planning to perform next is not well suited for low counts, as they make the mean-variance relationship harder to estimate.</p></li>
 </ul>
-<p>There is no absolute and commonly accpeted threshold value, but it is
-recommended to allow only genes with more than 10 counts per sample in
-average. DIANE thus proposes a threshold at 10*sampleNumber, but feel
-free to experiment with other values depending on your dataset.</p>
+<p>There is no absolute and commonly accpeted threshold value, but it is recommended to allow only genes with more than 10 counts per sample in average. DIANE thus proposes a threshold at 10*sampleNumber, but feel free to experiment with other values depending on your dataset.</p>
 </div>
 </div>
   </div>

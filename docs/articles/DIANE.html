@@ -32,7 +32,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">DIANE</a>
-        <span class="version label label-danger" data-toggle="tooltip" data-placement="bottom" title="Unreleased version">1.2.1</span>
+        <span class="version label label-danger" data-toggle="tooltip" data-placement="bottom" title="Unreleased version">1.3</span>
       </span>
     </div>
 
@@ -68,7 +68,7 @@
       </ul>
 <ul class="nav navbar-nav navbar-right">
 <li>
-  <a href="https://github.com/OceaneCsn/DIANE/" class="external-link">
+  <a href="https://github.com/Alexandre-So/DIANE/" class="external-link">
     <span class="fab fa-github fa-lg"></span>
 
   </a>
@@ -83,188 +83,122 @@
 
 
 
-      </header><div class="row">
+      </header><script src="DIANE_files/accessible-code-block-0.0.1/empty-anchor.js"></script><div class="row">
   <div class="col-md-9 contents">
     <div class="page-header toc-ignore">
       <h1 data-toc-skip>DIANE</h1>
             
       
-      <small class="dont-index">Source: <a href="https://github.com/OceaneCsn/DIANE/blob/HEAD/vignettes/DIANE.Rmd" class="external-link"><code>vignettes/DIANE.Rmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Alexandre-So/DIANE/blob/HEAD/vignettes/DIANE.Rmd" class="external-link"><code>vignettes/DIANE.Rmd</code></a></small>
       <div class="hidden name"><code>DIANE.Rmd</code></div>
 
     </div>
 
     
     
-<p>The Dashboard for the Inference and Analysis of Networks from
-Expression data is a web service as well as a local program, created to
-elucidate regulatory pathways from gene expression datasets.</p>
+<p>The Dashboard for the Inference and Analysis of Networks from Expression data is a web service as well as a local program, created to elucidate regulatory pathways from gene expression datasets.</p>
 <div class="section level2">
 <h2 id="discover-the-user-interface">Discover the user interface<a class="anchor" aria-label="anchor" href="#discover-the-user-interface"></a>
 </h2>
-<p>DIANE can be used at <a href="https://diane.bpmp.inrae.fr" class="external-link uri">https://diane.bpmp.inrae.fr</a>, or locally installed.</p>
-<p>In case of local use, it is launched with the following R code lines
-:</p>
+<p>DIANE can be used at <a href="https://diane.ipsim.inrae.fr" class="external-link uri">https://diane.ipsim.inrae.fr</a>, or locally installed.</p>
+<p>In case of local use, it is launched with the following R code lines :</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/OceaneCsn/DIANE" class="external-link">DIANE</a></span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/Alexandre-So/DIANE" class="external-link">DIANE</a></span><span class="op">)</span></span>
 <span><span class="fu"><a href="../reference/run_app.html">run_app</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
-<p>As a statistical analysis pipeline, DIANE is meant to be sequentially
-used, so please follow the order of the tab items in the left side of
-the interface.</p>
-<p>You will find listed below the different possibilities and analyses
-offered by this tool.</p>
+<p>As a statistical analysis pipeline, DIANE is meant to be sequentially used, so please follow the order of the tab items in the left side of the interface.</p>
+<p>You will find listed below the different possibilities and analyses offered by this tool.</p>
 </div>
 <div class="section level2">
 <h2 id="data-upload-and-organisms">Data upload and organisms<a class="anchor" aria-label="anchor" href="#data-upload-and-organisms"></a>
 </h2>
-<p>You should upload in DIANE the raw counts that were obtained after
-the bioinformatic pipeline of mapping and quantification of your reads.
-It gives, for each gene, the transcript abundance found in each of your
-experimental condition and replicates.</p>
+<p>You should upload in DIANE the raw counts that were obtained after the bioinformatic pipeline of mapping and quantification of your reads. It gives, for each gene, the transcript abundance found in each of your experimental condition and replicates.</p>
 <p>The application tab for dataset upload is shown below :</p>
 <p><img src="import.PNG" align="center" width="800"></p>
-<p>A number of model organisms are already stored in the application, so
-that, if your expression file contains the expected gene IDs, an
-annotation will automatically be found and displayed along the pipeline.
-This includes gene labels, description, ontologies and transcriptional
-regulators.</p>
-<p>Else, you can upload those information for your organism. You can
-find more information on data upload in the corresponding vignette
-article.</p>
+<p>A number of model organisms are already stored in the application, so that, if your expression file contains the expected gene IDs, an annotation will automatically be found and displayed along the pipeline. This includes gene labels, description, ontologies and transcriptional regulators.</p>
+<p>Else, you can upload those information for your organism. You can find more information on data upload in the corresponding vignette article.</p>
 </div>
 <div class="section level2">
 <h2 id="normalization-and-low-counts-filtering">Normalization and low counts filtering<a class="anchor" aria-label="anchor" href="#normalization-and-low-counts-filtering"></a>
 </h2>
 <p><img src="norm.PNG" align="center" width="800"></p>
-<p>This tab allows to correct for differences in sequencing depths, so
-that all samples are comparable in downstream analysis.</p>
-<p>Three state of the art normalization methods are provided : TMM,
-DESeq2, or TCC.</p>
-<p>In case your data is already normalized, this part can be
-skipped.</p>
+<p>This tab allows to correct for differences in sequencing depths, so that all samples are comparable in downstream analysis.</p>
+<p>Three state of the art normalization methods are provided : TMM, DESeq2, or TCC.</p>
+<p>In case your data is already normalized, this part can be skipped.</p>
 </div>
 <div class="section level2">
 <h2 id="exploratory-analysis">Exploratory analysis<a class="anchor" aria-label="anchor" href="#exploratory-analysis"></a>
 </h2>
-<p>To assess sample homogeneity and while having first glimpse at the
-experimental factors driving gene expression, dimensonality reduction
-techniques such as PCA or MDS are available.</p>
+<p>To assess sample homogeneity and while having first glimpse at the experimental factors driving gene expression, dimensonality reduction techniques such as PCA or MDS are available.</p>
 <p><img src="pca.PNG" align="center" width="800"></p>
-<p>It is also possible to visualize the expression levels of particular
-genes in your dataset.</p>
+<p>It is also possible to visualize the expression levels of particular genes in your dataset.</p>
 </div>
 <div class="section level2">
 <h2 id="differential-expression-analysis">Differential expression analysis<a class="anchor" aria-label="anchor" href="#differential-expression-analysis"></a>
 </h2>
-<p>This tab allows to detect genes with significant expression change
-between two transcriptomes.</p>
-<p>To do so, select the conditions that you want to compare for
-differential expression, and they will be the one tested against one
-another via likelihood ratio tests, as implemented in EdgeR. It is also
-possible to select multiples conditions as references and/or
-perturbations to make more complex comparisons.</p>
-<p>The results are presented in a dataframe, ordered by adjusted pvalues
-(FDR). The dataframe contains the log2 fold changes (logFC), the average
-expression (logCPM) for each genes which FDR is lower than the specified
-adjusted p-value threshold. You can also choose to select genes having
-their absolute log2 fold change over a certain constant.</p>
+<p>This tab allows to detect genes with significant expression change between two transcriptomes.</p>
+<p>To do so, select the conditions that you want to compare for differential expression, and they will be the one tested against one another via likelihood ratio tests, as implemented in EdgeR. It is also possible to select multiples conditions as references and/or perturbations to make more complex comparisons.</p>
+<p>The results are presented in a dataframe, ordered by adjusted pvalues (FDR). The dataframe contains the log2 fold changes (logFC), the average expression (logCPM) for each genes which FDR is lower than the specified adjusted p-value threshold. You can also choose to select genes having their absolute log2 fold change over a certain constant.</p>
 <p><img src="dea.PNG" alt="Differential expression" align="center" width="800"></p>
-<p>Various options for visualization of differentially expressed genes
-are proposed, such as MA plot, volcano plot, or heatmaps.</p>
+<p>Various options for visualization of differentially expressed genes are proposed, such as MA plot, volcano plot, or heatmaps.</p>
 <p><img src="heatmap.PNG" alt="Heatmap" align="center" width="800"></p>
 <p><img src="maplot.PNG" align="center" width="800"></p>
-<p>Finally, it is possible to compare lists of differentially expressed
-genes via Venn diagrams :</p>
+<p>Finally, it is possible to compare lists of differentially expressed genes via Venn diagrams :</p>
 <p><img src="venn.PNG" align="center" width="800"></p>
+</div>
+<div class="section level2">
+<h2 id="custom-gene-lists">Custom gene lists<a class="anchor" aria-label="anchor" href="#custom-gene-lists"></a>
+</h2>
+<p>Gene lists do not have to come from a differential expression analysis. In this tab you can paste gene identifiers, or upload a file containing them, to build your own list : a gene family, a QTL interval, or a list taken from a publication.</p>
+<p>Only the genes found in your normalized expression matrix are kept, and counters show how many were submitted, found, and missing. Once imported, a custom list is usable for clustering, network inference and Venn comparisons, exactly like a differentially expressed gene list.</p>
 </div>
 <div class="section level2">
 <h2 id="gene-ontology-analysis">Gene ontology analysis<a class="anchor" aria-label="anchor" href="#gene-ontology-analysis"></a>
 </h2>
-<p>Among a list of genes, the user can compute significantly enriched
-ontologies, and visualize the result as GO term dotplots or enrichment
-maps :</p>
+<p>Among a list of genes, the user can compute significantly enriched ontologies, and visualize the result as GO term dotplots or enrichment maps :</p>
 <p><img src="go.PNG" align="center" width="800"></p>
 <p><img src="go_map.PNG" align="center" width="800"></p>
 </div>
 <div class="section level2">
 <h2 id="expression-based-clustering">Expression based clustering<a class="anchor" aria-label="anchor" href="#expression-based-clustering"></a>
 </h2>
-<p>Performing gene clustering to gather genes with similar behavior is
-proposed in this tab, via the <a href="https://www.bioconductor.org/packages/release/bioc/vignettes/coseq/inst/doc/coseq.html" class="external-link">coseq
-package</a>. It relies on the Mixture Models framework, and lets the
-user decide between Poisson or Gaussian mixtures.</p>
+<p>Performing gene clustering to gather genes with similar behavior is proposed in this tab, via the <a href="https://www.bioconductor.org/packages/release/bioc/vignettes/coseq/inst/doc/coseq.html" class="external-link">coseq package</a>. It relies on the Mixture Models framework, and lets the user decide between Poisson or Gaussian mixtures.</p>
 <p>The range of number of clusters to test can also be adjusted.</p>
 <p><img src="coseq.PNG" align="center" width="800"></p>
-<p>After the clustering step, individual clusters can be explored, via
-their profile visualization, gene ontology enrichment, and Poisson
-Generealized regression.</p>
+<p>After the clustering step, individual clusters can be explored, via their profile visualization, gene ontology enrichment, and Poisson Generealized regression.</p>
 <p><img src="clust.PNG" align="center" width="800"></p>
 </div>
 <div class="section level2">
 <h2 id="network-inference">Network inference<a class="anchor" aria-label="anchor" href="#network-inference"></a>
 </h2>
-<p>Network inference takes as input a list of genes, generated by
-differential expression tests, that will be the nodes of the inferred
-network. Among those genes, some must be identified as potential
-transcriptional regulators. It is also possible to use a subset of genes
-for network inference, as clusters determined in the expression based
-clustering tab.</p>
-<p>The <a href="https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0012776" class="external-link">GENIE3
-package</a> is a method based on Machine Learning (Random Forests) to
-infer regulatory links between target genes and regulator genes. The
-advantages of this method is that it returns oriented edges from
-regulators to targets, which is desired in the context of regulatory
-networks, and can capture high order interactions between
-regulators.</p>
-<p>For each target gene, the methods uses Random Forests to provide a
-ranking of all regulators based on their influence on the target
-expression. This ranking is then merged across all targets, giving a
-global regulatory links ranking. Settings relative to regulatory weights
-inference are presented in the left pane.</p>
-<p>The idea is then to keep the strongest links to build the gene
-regulatory network. The way of determining the right number of final
-edges in the network can be based on a desired network density alone, or
-followed by edges statistical testing. This can be adjusted in the right
-panel.</p>
+<p>Network inference takes as input a list of genes, generated by differential expression tests, that will be the nodes of the inferred network. Among those genes, some must be identified as potential transcriptional regulators. It is also possible to use a subset of genes for network inference, as clusters determined in the expression based clustering tab.</p>
+<p>The <a href="https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0012776" class="external-link">GENIE3 package</a> is a method based on Machine Learning (Random Forests) to infer regulatory links between target genes and regulator genes. The advantages of this method is that it returns oriented edges from regulators to targets, which is desired in the context of regulatory networks, and can capture high order interactions between regulators.</p>
+<p>For each target gene, the methods uses Random Forests to provide a ranking of all regulators based on their influence on the target expression. This ranking is then merged across all targets, giving a global regulatory links ranking. Settings relative to regulatory weights inference are presented in the left pane.</p>
+<p>The idea is then to keep the strongest links to build the gene regulatory network. The way of determining the right number of final edges in the network can be based on a desired network density alone, or followed by edges statistical testing. This can be adjusted in the right panel.</p>
 <p><img src="thr.PNG" align="center" width="800"></p>
 </div>
 <div class="section level2">
 <h2 id="network-analysis">Network analysis<a class="anchor" aria-label="anchor" href="#network-analysis"></a>
 </h2>
-<p>After the inference and regulatory weights selection, the user can
-browse the resulting network.</p>
-<p>Genes are color and shape-coded depending on their nature (regulators
-or targets), or depending on their community membership.</p>
-<p>The first tab in the right side of the screen shows a ranking of the
-graph’s nodes based on their connectivity. This can be used to extract
-regulators with a key role in the response of interest, because they are
-predicted to have a large number of target genes.</p>
+<p>After the inference and regulatory weights selection, the user can browse the resulting network.</p>
+<p>Genes are color and shape-coded depending on their nature (regulators or targets), or depending on their community membership.</p>
+<p>The first tab in the right side of the screen shows a ranking of the graph’s nodes based on their connectivity. This can be used to extract regulators with a key role in the response of interest, because they are predicted to have a large number of target genes.</p>
 <p><img src="net.PNG" align="center" width="800"></p>
-<p>Network statistics such as the in and out degree distributions are
-available, as well as highly correlated regulators groupings.</p>
-<p>For each topological module, the user can display their expression
-profiles, gene composition, or enriched go terms.</p>
+<p>Network statistics such as the in and out degree distributions are available, as well as highly correlated regulators groupings.</p>
+<p>For each topological module, the user can display their expression profiles, gene composition, or enriched go terms.</p>
 <p><img src="mod.PNG" align="center" width="800"></p>
 </div>
 <div class="section level2">
 <h2 id="session-reporting-and-communicable-research">Session reporting and communicable research<a class="anchor" aria-label="anchor" href="#session-reporting-and-communicable-research"></a>
 </h2>
-<p>In each important step of this pipeline, it is possible to download
-results as csv files. Also, analyses reports can be generated so that
-settings used during a session in DIANE are kept, making them
-reproducible, and easy to share between users.</p>
+<p>In each important step of this pipeline, it is possible to download results as csv files. Also, analyses reports can be generated so that settings used during a session in DIANE are kept, making them reproducible, and easy to share between users.</p>
 </div>
 <div class="section level2">
 <h2 id="diane-as-a-programming-interface">DIANE as a programming interface<a class="anchor" aria-label="anchor" href="#diane-as-a-programming-interface"></a>
 </h2>
-<p>In addition to the Graphical User Interface, DIANE also comes with
-all it’s server-side functions. They can be called from any R
-environment or scripts, after locally installing and loading DIANE.</p>
-<p>Using DIANE’s functions outside of the interface can be an
-interesting option for several reasons, among which :</p>
+<p>In addition to the Graphical User Interface, DIANE also comes with all it’s server-side functions. They can be called from any R environment or scripts, after locally installing and loading DIANE.</p>
+<p>Using DIANE’s functions outside of the interface can be an interesting option for several reasons, among which :</p>
 <ul>
-<li><p>It allows more flexibility and additional user-specific R
-analysis</p></li>
+<li><p>It allows more flexibility and additional user-specific R analysis</p></li>
 <li><p>It can be part of an automated pipeline</p></li>
 </ul>
 </div>
