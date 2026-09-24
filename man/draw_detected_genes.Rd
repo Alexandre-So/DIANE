@@ -7,6 +7,7 @@
 draw_detected_genes(
   data,
   conds = unique(stringr::str_split_fixed(colnames(data), "_", 2)[, 1]),
+  min_count = 5,
   k = 5,
   delta = 0.05,
   palette = getOption("DIANE.palette", "ggplot")
@@ -16,6 +17,9 @@ draw_detected_genes(
 \item{data}{a matrix of raw counts, samples as columns.}
 
 \item{conds}{conditions to keep. Default : all of them.}
+
+\item{min_count}{minimal count for a gene to be detected. Default : 5, as
+RNA-SeQC.}
 
 \item{k}{number of median absolute deviations below the median beyond which a
 sample is flagged.}
@@ -31,10 +35,9 @@ getOption("DIANE.palette"), else "ggplot".}
 a ggplot object
 }
 \description{
-Genes with at least one count. Read together with
-\code{\link{draw_sequencing_depth}}, it separates a shallow library, which sees
-less of everything, from a degraded one, which sees fewer genes : the first
-stays usable, the second does not.
+Genes with at least \code{min_count} counts. A sample detecting
+clearly fewer genes than the others may be degraded or contaminated. The count
+also grows with depth, so read it with \code{\link{draw_sequencing_depth}}.
 
 Only a deficit is flagged. A sample detecting more genes than the others is
 not failing.

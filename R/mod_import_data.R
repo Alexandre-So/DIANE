@@ -315,9 +315,11 @@ mod_import_data_ui <- function(id,
           col_6(shiny::plotOutput(ns("depth_preview"), height = 420)),
           col_6(shiny::plotOutput(ns("detected_preview"), height = 420))
         ),
-        footer = "Read together, those two separate a shallow library, which sees
-      less of everything, from a degraded one, which sees fewer genes. The first
-      stays usable, the second does not."
+        footer = "Samples are expected to be comparable on both plots. Library
+      sizes differing by more than a few fold weaken the comparison even after
+      normalisation; a sample detecting clearly fewer genes than the others may
+      be degraded or contaminated. Neither plot alone is enough to discard a
+      sample."
       ),
 
       # Not collapsible : this table's rendering is what loads r$raw_counts, and

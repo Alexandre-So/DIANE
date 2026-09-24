@@ -1342,21 +1342,22 @@ draw_sequencing_depth <- function(data,
     ggplot2::scale_y_continuous(expand = ggplot2::expansion(mult = c(0, .12))) +
     ggplot2::labs(fill = "Condition") +
     qc_layout("Sequencing depth", "Total counts per sample.", "million counts",
-              paste("dashed: median  |  * : more than", k, "MADs from it"))
+              "dashed: median  |  * : far from the other samples")
 }
 
 #' Number of genes detected in each sample
 #'
-#' @description Genes with at least one count. Read together with
-#' \code{\link{draw_sequencing_depth}}, it separates a shallow library, which sees
-#' less of everything, from a degraded one, which sees fewer genes : the first
-#' stays usable, the second does not.
+#' @description Genes with at least \code{min_count} counts. A sample detecting
+#' clearly fewer genes than the others may be degraded or contaminated. The count
+#' also grows with depth, so read it with \code{\link{draw_sequencing_depth}}.
 #'
 #' Only a deficit is flagged. A sample detecting more genes than the others is
 #' not failing.
 #'
 #' @param data a matrix of raw counts, samples as columns.
 #' @param conds conditions to keep. Default : all of them.
+#' @param min_count minimal count for a gene to be detected. Default : 5, as
+#' RNA-SeQC.
 #' @param k number of median absolute deviations below the median beyond which a
 #' sample is flagged.
 #' @param delta minimal deviation from the median, as a fraction of it. A sample
@@ -1375,11 +1376,13 @@ draw_sequencing_depth <- function(data,
 draw_detected_genes <- function(data,
                                 conds = unique(stringr::str_split_fixed(
                                   colnames(data), '_', 2)[, 1]),
-                                k = 5, delta = 0.05,
+                                min_count = 5, k = 5, delta = 0.05,
                                 palette = getOption("DIANE.palette", "ggplot")) {
   data <- usable_counts(data, conds)
+  if (!is.numeric(min_count) || length(min_count) != 1L || !is.finite(min_count))
+    stop("`min_count` must be a single finite number")
   d <- sample_frame(data)
-  d$detected <- colSums(data > 0)
+  d$detected <- colSums(data >= min_count)
   d$flagged <- flag_deviant(d$detected, k, delta, sided = "low")
   med <- stats::median(d$detected)
   # sous le point : seul un deficit est signale, l'etoile s'ecarte de la mediane
@@ -1399,8 +1402,10 @@ draw_detected_genes <- function(data,
     ggplot2::scale_colour_manual(values = pal$colours) +
     ggplot2::scale_y_continuous(expand = ggplot2::expansion(mult = .1)) +
     ggplot2::labs(colour = "Condition") +
-    qc_layout("Genes detected", "Genes with at least one count.", "genes",
-              paste("dashed: median  |  * : more than", k, "MADs below it"))
+    qc_layout("Genes detected",
+              paste0("Genes with at least ", min_count, " count",
+                     if (min_count != 1) "s", "."), "genes",
+              "dashed: median  |  * : far below the other samples")
 }
 
 #' Normalisation factor of each sample
@@ -1460,6 +1465,5 @@ draw_normalisation_factors <- function(tcc, k = 5, delta = 0.05,
     ggplot2::labs(fill = "Condition") +
     qc_layout("Normalisation factors",
               "How far each sample had to be moved to be comparable.", "factor",
-              paste("solid: 1, no correction  |  * : more than", k,
-                    "MADs from the median"))
+              "solid: 1, no correction  |  * : far from the other samples")
 }
