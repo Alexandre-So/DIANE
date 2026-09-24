@@ -35,6 +35,7 @@ app_server <- function(input, output, session) {
     session_id = as.character(floor(runif(1)*1e20)),
     seed = golem::get_golem_options("seed"),
     output_field_separator = ",",
+    palette = "ggplot",
     plots_params = list(
       format = "pdf",
       res = 300,
@@ -220,6 +221,31 @@ app_server <- function(input, output, session) {
               width = "100%"
             )
           )
+        ),
+        shiny::hr(),
+        shiny::fluidRow(
+          shiny::column(12,
+            shinyWidgets::awesomeRadio(
+              inputId = 'condition_palette',
+              label = 'Plot colours : ',
+              c(
+                "ggplot default" = "ggplot",
+                "DIANE" = "diane",
+                "Okabe-Ito" = "okabe",
+                "Nature" = "npg",
+                "Science" = "aaas",
+                "Lancet" = "lancet",
+                "NEJM" = "nejm"
+              ),
+              selected = r$palette,
+              inline = TRUE,
+              status = "success"
+            ),
+            shiny::helpText("Colours conditions, samples or replicates in the plots.
+              Heatmaps keep their gradients. Okabe-Ito is the colour blind safe one. The journal
+              palettes come from the ggsci package, they are not issued by those
+              journals.")
+          )
         )
       )
     )
@@ -236,6 +262,11 @@ app_server <- function(input, output, session) {
     if (!shiny::isTruthy(input$seed)) return()
     r$seed <- as.integer(max(0, min(2 ^ 8, input$seed)))
     golem::print_dev(paste("global seed set to", r$seed))
+  })
+
+  shiny::observeEvent(input$condition_palette, {
+    r$palette <- input$condition_palette
+    golem::print_dev(paste("condition palette set to", r$palette))
   })
   
   observeEvent(input$debug, {

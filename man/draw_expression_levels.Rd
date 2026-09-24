@@ -10,7 +10,8 @@ draw_expression_levels(
   conds = unique(stringr::str_split_fixed(colnames(data), "_", 2)[, 1]),
   gene.name.size = 12,
   log2_count = FALSE,
-  start_from_zero = FALSE
+  start_from_zero = FALSE,
+  palette = getOption("DIANE.palette", "ggplot")
 )
 }
 \arguments{
@@ -29,6 +30,11 @@ the column names of data before the _rep suffix). Default : all conditions.}
 avoid negative values.}
 
 \item{start_from_zero}{set the beginning of the y axis to 0.}
+
+\item{palette}{categorical palette : "ggplot", "diane", "okabe", "npg",
+"aaas", "lancet" or "nejm". Defaults to
+getOption("DIANE.palette"), else "ggplot". Here it
+colours the replicates.}
 }
 \description{
 The normalized counts of the desired genes in the specified conditions are

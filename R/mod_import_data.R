@@ -298,7 +298,40 @@ mod_import_data_ui <- function(id,
     
     shiny::br(),
     shiny::hr(),
-    DT::dataTableOutput(ns("raw_data_preview"))
+
+
+    #   ____________________________________________________________________________
+    #   Raw data quality control                                                ####
+
+    shiny::fluidRow(
+      shinydashboardPlus::box(
+        title = "Raw data quality control",
+        width = 12,
+        solidHeader = FALSE,
+        status = "success",
+        collapsible = TRUE,
+        closable = FALSE,
+        shiny::fluidRow(
+          col_6(shiny::plotOutput(ns("depth_preview"), height = 420)),
+          col_6(shiny::plotOutput(ns("detected_preview"), height = 420))
+        ),
+        footer = "Read together, those two separate a shallow library, which sees
+      less of everything, from a degraded one, which sees fewer genes. The first
+      stays usable, the second does not."
+      ),
+
+      # Not collapsible : this table's rendering is what loads r$raw_counts, and
+      # shiny stops rendering what is hidden.
+      shinydashboardPlus::box(
+        title = "Raw count table",
+        width = 12,
+        solidHeader = FALSE,
+        status = "success",
+        collapsible = FALSE,
+        closable = FALSE,
+        DT::dataTableOutput(ns("raw_data_preview"))
+      )
+    )
   )
 }
 
@@ -1285,7 +1318,26 @@ mod_import_data_server <- function(input, output, session, r) {
       ))
     )
   })
-  
+
+  ########## raw data quality control
+
+  # r$raw_counts, not preview_counts() : dropping low count genes would falsify
+  # the depth and empty the count of detected genes.
+  qc_plot <- function(expr) {
+    tryCatch(expr,
+             error = function(e) shiny::validate(shiny::need(FALSE, e$message)))
+  }
+
+  output$depth_preview <- shiny::renderPlot({
+    shiny::req(r$raw_counts)
+    qc_plot(draw_sequencing_depth(r$raw_counts, palette = r$palette))
+  })
+
+  output$detected_preview <- shiny::renderPlot({
+    shiny::req(r$raw_counts)
+    qc_plot(draw_detected_genes(r$raw_counts, palette = r$palette))
+  })
+
   
   
   #   ____________________________________________________________________________

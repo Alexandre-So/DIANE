@@ -204,7 +204,9 @@ mod_normalisation_ui <- function(id) {
           shiny::plotOutput(ns('heatmap_preview_norm'), height = 900)
         ),
          
-        shiny::tabPanel(title = "Summary",
+        shiny::tabPanel(title = "Normalisation factors",
+                        shiny::plotOutput(ns("norm_factors"), height = 500),
+                        shiny::hr(),
                         shiny::verbatimTextOutput(ns("tcc_summary")))
       )
       
@@ -388,6 +390,15 @@ mod_normalisation_server <- function(input, output, session, r) {
     if(input$norm_method != 'none') print(r$tcc)
     else print("No normalization was performed, all normalization factors equal 1.")
   })
+
+  # tcc_raw, and not tcc : the factors are the same, but tcc only exists once the
+  # low count filter has been applied.
+  output$norm_factors <- shiny::renderPlot({
+    shiny::validate(shiny::need(
+      !is.null(r$tcc_raw) && !is.null(r$norm_method) && r$norm_method != "none",
+      "Normalize the data to see its factors."))
+    draw_normalisation_factors(r$tcc_raw, palette = r$palette)
+  })
   
  # toDownload <- shiny::reactiveVal()
   
@@ -444,7 +455,8 @@ mod_normalisation_server <- function(input, output, session, r) {
         d <- r$normalized_counts
       }
     }
-    draw_distributions(data = d, type = input$count_distribution_type) + 
+    draw_distributions(data = d, type = input$count_distribution_type,
+                       palette = r$palette) +
       ggplot2::ggtitle("Per-condition expression ditributions")
   })
   

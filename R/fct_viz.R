@@ -70,18 +70,23 @@ draw_heatmap <-
 #'
 #' @param data expression dataframe, with samples as columns and genes as rows
 #' @param type one of the following : boxplot, density, density_ridges
+#' @param palette categorical palette : "ggplot", "diane", "okabe", "npg",
+#' "aaas", "lancet" or "nejm". Defaults to
+#' getOption("DIANE.palette"), else "ggplot". The
+#' density_ridges type keeps its own colours.
 #' @export
 #' @examples
 #' data("abiotic_stresses")
 #' DIANE::draw_distributions(abiotic_stresses$normalized_counts, type = "boxplot")
 #' DIANE::draw_distributions(abiotic_stresses$raw_counts)
-draw_distributions <- function(data, type = "boxplot") {
-  
+draw_distributions <- function(data, type = "boxplot",
+                               palette = getOption("DIANE.palette", "ggplot")) {
+
   # Check input
   if(! type %in% c("boxplot", "density", "density_ridges")){
     stop("type must be one of the following : boxplot, density, density_ridges")
   }
-  
+
   
   d <-
     suppressMessages(reshape2::melt(log(data[sample(rownames(data),
@@ -102,7 +107,9 @@ draw_distributions <- function(data, type = "boxplot") {
       ggplot2::aes(fill = condition),
       outlier.color = "black",
       outlier.alpha = 0.1
-    )
+    ) +
+      ggplot2::scale_fill_manual(
+        values = diane_palette(palette, length(unique(d$condition)))$colours)
   } else if(type == "density_ridges"){
     g <-
       ggplot2::ggplot(data = d,
@@ -112,8 +119,12 @@ draw_distributions <- function(data, type = "boxplot") {
     g <-
       ggplot2::ggplot(data = d,
                       ggplot2::aes(x = logCount)) + ggplot2::theme_bw() +
-      ggplot2::geom_line(ggplot2::aes(color=sample), stat="density", linewidth=0.5, alpha=0.5)
-  } 
+      ggplot2::geom_line(ggplot2::aes(color=sample), stat="density", linewidth=0.5, alpha=0.5) +
+      # one colour per sample, not per condition : past the palette cap,
+      # diane_palette interpolates.
+      ggplot2::scale_colour_manual(
+        values = diane_palette(palette, length(unique(d$sample)))$colours)
+  }
   
   g <-
     g + ggplot2::theme_bw() + ggplot2::theme(
@@ -327,6 +338,10 @@ draw_PCA_legacy <- function(data) {
 #' @param log2_count transform count using the log2 function. A pseudocount of 1 is added to
 #' avoid negative values.
 #' @param start_from_zero set the beginning of the y axis to 0.
+#' @param palette categorical palette : "ggplot", "diane", "okabe", "npg",
+#' "aaas", "lancet" or "nejm". Defaults to
+#' getOption("DIANE.palette"), else "ggplot". Here it
+#' colours the replicates.
 #'
 #' @import ggplot2
 #'
@@ -343,8 +358,9 @@ draw_expression_levels <-
            conds = unique(stringr::str_split_fixed(colnames(data), '_', 2)[, 1]),
            gene.name.size = 12,
            log2_count = FALSE,
-           start_from_zero = FALSE) {
-    
+           start_from_zero = FALSE,
+           palette = getOption("DIANE.palette", "ggplot")) {
+
     # trimming the gene names to allow more flexible use in the UI
     genes <- stringr::str_trim(genes)
     
@@ -382,6 +398,8 @@ draw_expression_levels <-
       ggplot2::theme_bw() + 
      {if(start_from_zero) ggplot2::expand_limits(y=0)} + ###Make the y axis start at 0
       ggplot2::geom_point(size = 4, alpha = 0.8) +
+      ggplot2::scale_colour_manual(
+        values = diane_palette(palette, length(unique(d$replicate)))$colours) +
       ggplot2::facet_wrap(~ gene, scales = "free") +
       # {if(log2_count){ ggplot2::ggtitle("Log2 Normalized expression levels") } else {ggplot2::ggtitle("Normalized expression levels")}} +
       ggplot2::ggtitle("Normalized expression levels") +
@@ -479,6 +497,9 @@ compute_pca <- function(data, kept_axes = 4){
 #' @param component_1 First component to plot
 #' @param component_2 Second component to plot
 #' @param legend Display legend on the plot.
+#' @param palette categorical palette : "ggplot", "diane", "okabe", "npg",
+#' "aaas", "lancet" or "nejm". Defaults to
+#' getOption("DIANE.palette"), else "ggplot".
 #'
 #' @export
 #' @import ggplot2
@@ -488,8 +509,9 @@ compute_pca <- function(data, kept_axes = 4){
 #' data("abiotic_stresses")
 #' pca <- compute_pca(abiotic_stresses$normalized_counts)
 #' draw_specific_pca(pca, 1, 2)
-draw_specific_pca <- function(pca, component_1, component_2, legend = TRUE){
-  
+draw_specific_pca <- function(pca, component_1, component_2, legend = TRUE,
+                              palette = getOption("DIANE.palette", "ggplot")){
+
   acp_plot <- ggplot2::ggplot(data = pca$co,
                               ggplot2::aes_string(
                                 x = paste0("Comp",component_1),
@@ -507,6 +529,8 @@ draw_specific_pca <- function(pca, component_1, component_2, legend = TRUE){
                                 # nudge_x = 0.07,
                                 # nudge_y = 0.07
                               ) +
+    ggplot2::scale_colour_manual(
+      values = diane_palette(palette, length(unique(pca$co$condition)))$colours) +
     ggplot2::geom_point(size = 6, alpha = 0.7) + ggplot2::xlim(-1, 1) +
     ggplot2::ylim(-1, 1) + ggplot2::geom_vline(xintercept = 0) + ggplot2::geom_hline(yintercept = 0) +
     # ggplot2::theme_light() +
@@ -578,6 +602,10 @@ draw_pca_scree <- function(pca){
 #' First to fourth principal components are shown.
 #' 
 #' @param data normalized expression data with samples as columns and genes as rows.
+#' @param palette categorical palette : "ggplot", "diane", "okabe", "npg",
+#' "aaas", "lancet" or "nejm". Defaults to
+#' getOption("DIANE.palette"), else "ggplot". The
+#' screeplot keeps its own colours.
 #'
 #' @export
 #' @import ggplot2
@@ -586,23 +614,23 @@ draw_pca_scree <- function(pca){
 #' @examples
 #' data("abiotic_stresses")
 #' quick_pca(abiotic_stresses$normalized_counts)
-quick_pca <- function(data) {
+quick_pca <- function(data, palette = getOption("DIANE.palette", "ggplot")) {
   
  pca_results <- compute_pca(data = data, kept_axes = 4)
   
   ###FIXME : the last component will not exist if the number of condition is too low.
   if(ncol(pca_results$l1) >= 4){
     gridExtra::grid.arrange(
-      draw_specific_pca(pca_results, 1, 2, legend = FALSE),
-      draw_specific_pca(pca_results, 2, 3, legend = FALSE),
-      draw_specific_pca(pca_results, 3, 4, legend = TRUE),
+      draw_specific_pca(pca_results, 1, 2, legend = FALSE, palette = palette),
+      draw_specific_pca(pca_results, 2, 3, legend = FALSE, palette = palette),
+      draw_specific_pca(pca_results, 3, 4, legend = TRUE, palette = palette),
       draw_pca_scree(pca_results), newpage = FALSE,
       ncol = 2
     )
   } else {
     gridExtra::grid.arrange(
-      draw_specific_pca(pca_results, 1, 2, legend = FALSE),
-      draw_specific_pca(pca_results, 2, 3, legend = TRUE),
+      draw_specific_pca(pca_results, 1, 2, legend = FALSE, palette = palette),
+      draw_specific_pca(pca_results, 2, 3, legend = TRUE, palette = palette),
       draw_pca_scree(pca_results),
       ncol = 2
     )
@@ -932,16 +960,9 @@ detect_sample_outliers <-
     group_overall <- stats::ave(overall, condition,
                                 FUN = function(v) stats::median(v, na.rm = TRUE))
 
-    low <- function(x) {
-      if (all(is.na(x))) return(rep(NA, length(x)))
-      centre <- stats::median(x, na.rm = TRUE)
-      spread <- stats::mad(x, na.rm = TRUE)
-      relative <- if (is.finite(spread) && spread > 0)
-        x < centre - k * spread else rep(TRUE, length(x))
-      out <- relative & (x < centre - delta)
-      out[is.na(x)] <- NA
-      out
-    }
+    # delta absolu : on compare des correlations, qui ont deja leur echelle.
+    low <- function(x)
+      flag_deviant(x, k = k, delta = delta, sided = "low", relative = FALSE)
     fired <- function(v) v %in% TRUE
     bad_dev <- low(deviation)
     bad_gap <- low(gap)
@@ -1104,3 +1125,341 @@ draw_correlation_heatmap_interactive <-
       plotly::layout(title = title, xaxis = axis_x, yaxis = axis_y,
                      margin = list(l = 60, b = 60, t = if (is.null(title)) 10 else 40))
   }
+
+
+#' Samples that stand apart from the others
+#'
+#' @description One measurement per sample in, a logical vector out. A sample is
+#' flagged when it is more than \code{k} median absolute deviations from the
+#' median AND at least \code{delta} away from it. Both are required : without the
+#' second, a distribution with almost no spread flags half of its samples.
+#'
+#' Shared by \code{\link{detect_sample_outliers}} and by the per sample quality
+#' control plots, so that the whole package calls the same samples deviant.
+#'
+#' @param x a numeric vector, one value per sample. NA in, NA out.
+#' @param k number of median absolute deviations from the median
+#' @param delta minimal deviation from the median
+#' @param sided "low" to flag only what falls short, "both" for either direction
+#' @param relative TRUE reads \code{delta} as a fraction of the median, for
+#' quantities with no natural scale such as read counts. FALSE reads it as is,
+#' for quantities that already have one, such as correlations.
+#' @return a logical vector
+#' @noRd
+#' @importFrom stats median mad
+flag_deviant <- function(x, k = 5, delta = 0.05,
+                         sided = c("low", "both"), relative = TRUE) {
+  sided <- match.arg(sided)
+  positive_scalar <- function(v)
+    is.numeric(v) && length(v) == 1L && is.finite(v) && v > 0
+  if (!positive_scalar(k))     stop("`k` must be a single finite positive number")
+  if (!positive_scalar(delta)) stop("`delta` must be a single finite positive number")
+
+  centre <- stats::median(x, na.rm = TRUE)
+  spread <- stats::mad(x, na.rm = TRUE)
+  floor  <- if (relative) delta * abs(centre) else delta
+  gap    <- if (sided == "low") centre - x else abs(x - centre)
+
+  if (!is.finite(spread) || spread == 0) return(gap > floor)
+  gap > k * spread & gap > floor
+}
+
+#' One row per sample, in the order of the matrix
+#'
+#' @param data a matrix of counts, samples as columns
+#' @return a data.frame with a sample and a condition column, both ordered as the
+#' data is rather than alphabetically
+#' @noRd
+sample_frame <- function(data) {
+  condition <- stringr::str_split_fixed(colnames(data), '_', 2)[, 1]
+  data.frame(
+    sample = factor(colnames(data), levels = colnames(data)),
+    condition = factor(condition, levels = unique(condition)),
+    row.names = NULL
+  )
+}
+
+#' Common look of the per sample quality control plots
+#'
+#' @param title,subtitle,ylab,caption texts of the plot
+#' @return a list of ggplot layers
+#' @noRd
+#' @import ggplot2
+qc_layout <- function(title, subtitle, ylab, caption) {
+  list(
+    ggplot2::labs(title = title, subtitle = subtitle, x = NULL, y = ylab,
+                  caption = caption),
+    ggplot2::theme_bw(base_size = 13),
+    ggplot2::theme(
+      axis.text.x = ggplot2::element_text(angle = 45, hjust = 1),
+      panel.grid.major.x = ggplot2::element_blank(),
+      plot.caption = ggplot2::element_text(colour = "grey40")
+    )
+  )
+}
+
+#' Colours of the condition palettes
+#'
+#' Journal palettes are the hexadecimal values of the ggsci package, which reads
+#' them from published figures. They are not palettes issued by those journals.
+#'
+#' @noRd
+diane_palettes <- list(
+  diane  = list(type = "ramp",
+                colours = c("#114223", "#25BA40", "#92D9A2")),
+  ggplot = list(type = "hue", colours = NULL),
+  okabe  = list(type = "qualitative",
+                colours = c("#E69F00", "#56B4E9", "#009E73", "#F0E442",
+                            "#0072B2", "#D55E00", "#CC79A7", "#999999")),
+  npg    = list(type = "qualitative",
+                colours = c("#E64B35", "#4DBBD5", "#00A087", "#3C5488",
+                            "#F39B7F", "#8491B4", "#91D1C2", "#DC0000",
+                            "#7E6148", "#B09C85")),
+  aaas   = list(type = "qualitative",
+                colours = c("#3B4992", "#EE0000", "#008B45", "#631879",
+                            "#008280", "#BB0021", "#5F559B", "#A20056",
+                            "#808180", "#1B1919")),
+  lancet = list(type = "qualitative",
+                colours = c("#00468B", "#ED0000", "#42B540", "#0099B4",
+                            "#925E9F", "#FDAF91", "#AD002A", "#ADB6B6",
+                            "#1B1919")),
+  nejm   = list(type = "qualitative",
+                colours = c("#BC3C29", "#0072B5", "#E18727", "#20854E",
+                            "#7876B1", "#6F99AD", "#FFDC91", "#EE4C97"))
+)
+
+#' Colour of the alert marker, read against the palette it will sit next to
+#'
+#' @param cols the condition colours
+#' @return red, or near black when the palette already holds a red
+#' @noRd
+alert_colour <- function(cols) {
+  red <- "#D7191C"
+  gap <- sqrt(colSums((grDevices::col2rgb(cols) -
+                         as.vector(grDevices::col2rgb(red))) ^ 2))
+  if (min(gap) < 120) "#1A1A1A" else red
+}
+
+#' Colours for a given number of conditions
+#'
+#' Qualitative palettes cap between 8 and 10 colours. Past their cap they are
+#' interpolated rather than recycled or dropped : a silently uncoloured sample
+#' would be worse than an approximate hue.
+#'
+#' @param name a palette of \code{diane_palettes}
+#' @param n how many conditions to colour
+#' @return a list with the condition colours and the alert colour
+#' @noRd
+diane_palette <- function(name = getOption("DIANE.palette", "ggplot"), n) {
+  # match.arg(NULL, ...) returns the first choice rather than the default, and a
+  # module can well pass a reactive value that is not set yet.
+  if (is.null(name)) name <- getOption("DIANE.palette", "ggplot")
+  name <- match.arg(name, names(diane_palettes))
+  if (!is.numeric(n) || length(n) != 1L || !is.finite(n) || n < 1)
+    stop("`n` must be a single positive number of conditions")
+  n <- as.integer(n)
+
+  p <- diane_palettes[[name]]
+  cols <- switch(
+    p$type,
+    # ggplot2 hue wheel, without depending on scales
+    hue         = grDevices::hcl(h = seq(15, 375, length.out = n + 1)[seq_len(n)],
+                                 c = 100, l = 65),
+    ramp        = grDevices::colorRampPalette(p$colours)(n),
+    qualitative = if (n <= length(p$colours)) p$colours[seq_len(n)]
+                  else grDevices::colorRampPalette(p$colours)(n)
+  )
+  list(colours = cols, alert = alert_colour(cols))
+}
+
+#' Star over the samples that were flagged
+#'
+#' A mark rather than a colour, so that changing the palette cannot put out the
+#' alert, and so that it survives dichromatic vision.
+#'
+#' @param d the flagged rows, carrying a ypos column
+#' @param colour the alert colour
+#' @return a ggplot layer, or NULL when nothing is flagged
+#' @noRd
+#' @import ggplot2
+flag_mark <- function(d, colour) {
+  if (nrow(d) == 0L) return(NULL)
+  ggplot2::geom_text(
+    data = d, ggplot2::aes(x = sample, y = ypos), label = "*",
+    colour = colour, size = 7, vjust = 0.6,
+    inherit.aes = FALSE, show.legend = FALSE
+  )
+}
+
+#' Sequencing depth of each sample
+#'
+#' @description Total counts per sample. A library that stands far from the others
+#' cannot be compared to them, in either direction : too few reads and its gene
+#' counts are mostly noise, too many and the excess usually belongs to a handful
+#' of genes rather than to the whole transcriptome.
+#'
+#' Normalisation does not equalise depth, it corrects composition, so this plot
+#' says the same thing before and after it. See
+#' \code{\link{draw_normalisation_factors}} for what normalisation does change.
+#'
+#' @param data a matrix of raw counts, samples as columns.
+#' @param conds conditions to keep. Default : all of them.
+#' @param k number of median absolute deviations from the median beyond which a
+#' sample is flagged.
+#' @param delta minimal deviation from the median, as a fraction of it. A sample
+#' must exceed both thresholds to be flagged.
+#' @param palette categorical palette : "ggplot", "diane", "okabe", "npg",
+#' "aaas", "lancet" or "nejm". Defaults to
+#' getOption("DIANE.palette"), else "ggplot".
+#'
+#' @return a ggplot object
+#' @export
+#' @import ggplot2
+#' @importFrom stats median
+#' @examples
+#' data("abiotic_stresses")
+#' draw_sequencing_depth(abiotic_stresses$raw_counts)
+draw_sequencing_depth <- function(data,
+                                  conds = unique(stringr::str_split_fixed(
+                                    colnames(data), '_', 2)[, 1]),
+                                  k = 5, delta = 0.05,
+                                  palette = getOption("DIANE.palette", "ggplot")) {
+  data <- usable_counts(data, conds)
+  d <- sample_frame(data)
+  d$depth <- colSums(data) / 1e6
+  d$flagged <- flag_deviant(d$depth, k, delta, sided = "both")
+  d$ypos <- d$depth + 0.04 * max(d$depth)
+  pal <- diane_palette(palette, nlevels(d$condition))
+
+  ggplot2::ggplot(d, ggplot2::aes(x = sample, y = depth)) +
+    ggplot2::geom_col(ggplot2::aes(fill = condition), width = .7) +
+    ggplot2::geom_col(data = d[d$flagged, , drop = FALSE], fill = NA,
+                      colour = pal$alert, linewidth = .8, width = .7) +
+    flag_mark(d[d$flagged, , drop = FALSE], pal$alert) +
+    ggplot2::geom_hline(yintercept = stats::median(d$depth),
+                        linetype = "dashed", linewidth = .4) +
+    ggplot2::scale_fill_manual(values = pal$colours) +
+    ggplot2::scale_y_continuous(expand = ggplot2::expansion(mult = c(0, .12))) +
+    ggplot2::labs(fill = "Condition") +
+    qc_layout("Sequencing depth", "Total counts per sample.", "million counts",
+              paste("dashed: median  |  * : more than", k, "MADs from it"))
+}
+
+#' Number of genes detected in each sample
+#'
+#' @description Genes with at least one count. Read together with
+#' \code{\link{draw_sequencing_depth}}, it separates a shallow library, which sees
+#' less of everything, from a degraded one, which sees fewer genes : the first
+#' stays usable, the second does not.
+#'
+#' Only a deficit is flagged. A sample detecting more genes than the others is
+#' not failing.
+#'
+#' @param data a matrix of raw counts, samples as columns.
+#' @param conds conditions to keep. Default : all of them.
+#' @param k number of median absolute deviations below the median beyond which a
+#' sample is flagged.
+#' @param delta minimal deviation from the median, as a fraction of it. A sample
+#' must exceed both thresholds to be flagged.
+#' @param palette categorical palette : "ggplot", "diane", "okabe", "npg",
+#' "aaas", "lancet" or "nejm". Defaults to
+#' getOption("DIANE.palette"), else "ggplot".
+#'
+#' @return a ggplot object
+#' @export
+#' @import ggplot2
+#' @importFrom stats median
+#' @examples
+#' data("abiotic_stresses")
+#' draw_detected_genes(abiotic_stresses$raw_counts)
+draw_detected_genes <- function(data,
+                                conds = unique(stringr::str_split_fixed(
+                                  colnames(data), '_', 2)[, 1]),
+                                k = 5, delta = 0.05,
+                                palette = getOption("DIANE.palette", "ggplot")) {
+  data <- usable_counts(data, conds)
+  d <- sample_frame(data)
+  d$detected <- colSums(data > 0)
+  d$flagged <- flag_deviant(d$detected, k, delta, sided = "low")
+  med <- stats::median(d$detected)
+  # sous le point : seul un deficit est signale, l'etoile s'ecarte de la mediane
+  d$ypos <- d$detected - 0.09 * diff(range(d$detected))
+  pal <- diane_palette(palette, nlevels(d$condition))
+
+  # des points, pas des barres : l'ecart est de quelques pour cent, et une barre
+  # qui ne part pas de zero ment sur les proportions.
+  ggplot2::ggplot(d, ggplot2::aes(x = sample, y = detected)) +
+    ggplot2::geom_segment(ggplot2::aes(xend = sample, y = med, yend = detected,
+                                       colour = condition), linewidth = .8) +
+    ggplot2::geom_point(ggplot2::aes(colour = condition), size = 3) +
+    ggplot2::geom_point(data = d[d$flagged, , drop = FALSE], shape = 21,
+                        size = 5, colour = pal$alert, stroke = 1) +
+    flag_mark(d[d$flagged, , drop = FALSE], pal$alert) +
+    ggplot2::geom_hline(yintercept = med, linetype = "dashed", linewidth = .4) +
+    ggplot2::scale_colour_manual(values = pal$colours) +
+    ggplot2::scale_y_continuous(expand = ggplot2::expansion(mult = .1)) +
+    ggplot2::labs(colour = "Condition") +
+    qc_layout("Genes detected", "Genes with at least one count.", "genes",
+              paste("dashed: median  |  * : more than", k, "MADs below it"))
+}
+
+#' Normalisation factor of each sample
+#'
+#' @description How far normalisation had to move each sample to make it
+#' comparable to the others. A factor near 1 means the library needed almost no
+#' correction ; one far from it means a skewed composition, where a small number
+#' of genes take a large share of the reads.
+#'
+#' This is what changes between raw and normalised counts. The sequencing depth
+#' itself does not, see \code{\link{draw_sequencing_depth}}.
+#'
+#' @param tcc a TCC object, as returned by \code{\link{normalize}}.
+#' @param k number of median absolute deviations from the median beyond which a
+#' sample is flagged.
+#' @param delta minimal deviation from the median, as a fraction of it. A sample
+#' must exceed both thresholds to be flagged.
+#' @param palette categorical palette : "ggplot", "diane", "okabe", "npg",
+#' "aaas", "lancet" or "nejm". Defaults to
+#' getOption("DIANE.palette"), else "ggplot".
+#'
+#' @return a ggplot object
+#' @export
+#' @import ggplot2
+#' @examples
+#' data("abiotic_stresses")
+#' tcc <- DIANE::normalize(abiotic_stresses$raw_counts,
+#'                         abiotic_stresses$conditions, iteration = FALSE)
+#' draw_normalisation_factors(tcc)
+draw_normalisation_factors <- function(tcc, k = 5, delta = 0.05,
+                                       palette = getOption("DIANE.palette",
+                                                           "ggplot")) {
+  if (is.null(tcc$norm.factors) || is.null(tcc$count))
+    stop("`tcc` must be a TCC object, as returned by normalize()")
+  if (length(tcc$norm.factors) != ncol(tcc$count))
+    stop("one normalisation factor per sample is expected, got ",
+         length(tcc$norm.factors), " for ", ncol(tcc$count), " samples")
+
+  d <- sample_frame(tcc$count)
+  d$factor <- as.numeric(tcc$norm.factors)
+  d$flagged <- flag_deviant(d$factor, k, delta, sided = "both")
+  # l'etoile part du cote ou va la barre, puisqu'elles divergent de 1
+  d$ypos <- (d$factor - 1) +
+    sign(d$factor - 1) * 0.12 * max(abs(d$factor - 1))
+  pal <- diane_palette(palette, nlevels(d$condition))
+
+  # des barres qui divergent de 1 : c'est la reference ici, pas zero.
+  ggplot2::ggplot(d, ggplot2::aes(x = sample, y = factor - 1)) +
+    ggplot2::geom_col(ggplot2::aes(fill = condition), width = .7) +
+    ggplot2::geom_col(data = d[d$flagged, , drop = FALSE], fill = NA,
+                      colour = pal$alert, linewidth = .8, width = .7) +
+    flag_mark(d[d$flagged, , drop = FALSE], pal$alert) +
+    ggplot2::geom_hline(yintercept = 0, linewidth = .4) +
+    ggplot2::scale_fill_manual(values = pal$colours) +
+    ggplot2::scale_y_continuous(labels = function(b) sprintf("%.2f", b + 1),
+                                expand = ggplot2::expansion(mult = .16)) +
+    ggplot2::labs(fill = "Condition") +
+    qc_layout("Normalisation factors",
+              "How far each sample had to be moved to be comparable.", "factor",
+              paste("solid: 1, no correction  |  * : more than", k,
+                    "MADs from the median"))
+}

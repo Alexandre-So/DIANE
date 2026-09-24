@@ -76,7 +76,7 @@ First to fourth principal components are shown.</p>
     </div>
 
     <div id="ref-usage">
-    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">quick_pca</span><span class="op">(</span><span class="va">data</span><span class="op">)</span></span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">quick_pca</span><span class="op">(</span><span class="va">data</span>, palette <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">getOption</a></span><span class="op">(</span><span class="st">"DIANE.palette"</span>, <span class="st">"ggplot"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div id="arguments">
@@ -85,6 +85,13 @@ First to fourth principal components are shown.</p>
 
 <dl><dt id="arg-data">data<a class="anchor" aria-label="anchor" href="#arg-data"></a></dt>
 <dd><p>normalized expression data with samples as columns and genes as rows.</p></dd>
+
+
+<dt id="arg-palette">palette<a class="anchor" aria-label="anchor" href="#arg-palette"></a></dt>
+<dd><p>categorical palette : "ggplot", "diane", "okabe", "npg",
+"aaas", "lancet" or "nejm". Defaults to
+getOption("DIANE.palette"), else "ggplot". The
+screeplot keeps its own colours.</p></dd>
 
 </dl></div>
 

@@ -165,7 +165,8 @@ mod_module_levels_server <- function(input, output, session, r){
     
     draw_expression_levels(as.data.frame(r$normalized_counts),
                            conds = input$input_conditions,
-                           genes = genes, gene.name.size = 22, log2_count = input$take_log_count, start_from_zero = input$start_y_from_zero)
+                           genes = genes, gene.name.size = 22, log2_count = input$take_log_count, start_from_zero = input$start_y_from_zero,
+                           palette = r$palette)
   })
   
   
@@ -261,7 +262,7 @@ mod_module_levels_server <- function(input, output, session, r){
   output$pca_plot <- shiny::renderPlot({
     shiny::req(r$normalized_counts)
     golem::print_dev("quick pca plot")
-    quick_pca(r$normalized_counts)
+    quick_pca(r$normalized_counts, palette = r$palette)
   })
   
   ##  ............................................................................
@@ -275,7 +276,8 @@ mod_module_levels_server <- function(input, output, session, r){
       pca_raw_results(),
       component_1 = input$component_1_choice,
       component_2 = input$component_2_choice,
-      legend = TRUE
+      legend = TRUE,
+      palette = r$palette
     )
   })
   
@@ -363,7 +365,7 @@ mod_module_levels_server <- function(input, output, session, r){
     },
     contentType = "image",
     content = function(file) {
-      download_plot_hd(plot = quick_pca(r$normalized_counts), file = file, format = r[["plots_params"]][["format"]], res = r[["plots_params"]][["res"]], width = r[["plots_params"]][["width"]], height = r[["plots_params"]][["height"]], type = "ggplot")
+      download_plot_hd(plot = quick_pca(r$normalized_counts, palette = r$palette), file = file, format = r[["plots_params"]][["format"]], res = r[["plots_params"]][["res"]], width = r[["plots_params"]][["width"]], height = r[["plots_params"]][["height"]], type = "ggplot")
     }
   )
   

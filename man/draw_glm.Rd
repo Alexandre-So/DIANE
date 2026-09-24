@@ -4,10 +4,15 @@
 \alias{draw_glm}
 \title{Plots the coefficients value of a Poisson generalized linear model}
 \usage{
-draw_glm(glm)
+draw_glm(glm, palette = getOption("DIANE.palette", "ggplot"))
 }
 \arguments{
 \item{glm}{glm object returned by \code{DIANE::fit_glm()}}
+
+\item{palette}{categorical palette : "ggplot", "diane", "okabe", "npg",
+"aaas", "lancet" or "nejm". Defaults to
+getOption("DIANE.palette"), else "ggplot". Here it
+colours the coefficients, not the conditions.}
 }
 \description{
 Plots the coefficients value of a Poisson generalized linear model

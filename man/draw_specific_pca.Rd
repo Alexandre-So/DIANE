@@ -4,7 +4,13 @@
 \alias{draw_specific_pca}
 \title{draw_specific_pca}
 \usage{
-draw_specific_pca(pca, component_1, component_2, legend = TRUE)
+draw_specific_pca(
+  pca,
+  component_1,
+  component_2,
+  legend = TRUE,
+  palette = getOption("DIANE.palette", "ggplot")
+)
 }
 \arguments{
 \item{pca}{PCA data obtained from compute_pca function.}
@@ -14,6 +20,10 @@ draw_specific_pca(pca, component_1, component_2, legend = TRUE)
 \item{component_2}{Second component to plot}
 
 \item{legend}{Display legend on the plot.}
+
+\item{palette}{categorical palette : "ggplot", "diane", "okabe", "npg",
+"aaas", "lancet" or "nejm". Defaults to
+getOption("DIANE.palette"), else "ggplot".}
 }
 \description{
 plot PCA results.

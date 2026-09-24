@@ -4,12 +4,21 @@
 \alias{draw_distributions}
 \title{Draw distributions of expression data}
 \usage{
-draw_distributions(data, type = "boxplot")
+draw_distributions(
+  data,
+  type = "boxplot",
+  palette = getOption("DIANE.palette", "ggplot")
+)
 }
 \arguments{
 \item{data}{expression dataframe, with samples as columns and genes as rows}
 
 \item{type}{one of the following : boxplot, density, density_ridges}
+
+\item{palette}{categorical palette : "ggplot", "diane", "okabe", "npg",
+"aaas", "lancet" or "nejm". Defaults to
+getOption("DIANE.palette"), else "ggplot". The
+density_ridges type keeps its own colours.}
 }
 \description{
 Draw distributions of expression data

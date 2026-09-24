@@ -77,6 +77,10 @@ fit_glm <-
 #' Plots the coefficients value of a Poisson generalized linear model 
 #'
 #' @param glm glm object returned by \code{DIANE::fit_glm()}
+#' @param palette categorical palette : "ggplot", "diane", "okabe", "npg",
+#' "aaas", "lancet" or "nejm". Defaults to
+#' getOption("DIANE.palette"), else "ggplot". Here it
+#' colours the coefficients, not the conditions.
 #' @export
 #' @examples 
 #' data("abiotic_stresses")
@@ -85,7 +89,7 @@ fit_glm <-
 #' glm <- DIANE::fit_glm(abiotic_stresses$normalized_counts, genes_cluster, 
 #' abiotic_stresses$design)
 #' draw_glm(glm)
-draw_glm <- function(glm) {
+draw_glm <- function(glm, palette = getOption("DIANE.palette", "ggplot")) {
   #remove the intercept
   coefs <- glm$coefficients[2:length(glm$coefficients)]
   
@@ -97,6 +101,8 @@ draw_glm <- function(glm) {
     ggplot2::geom_bar(color = 'black',
              stat = "identity",
              alpha = 0.4) +
+    ggplot2::scale_fill_manual(
+      values = diane_palette(palette, length(unique(d$Coefficient)))$colours) +
     ggplot2::theme(
       axis.text.x = ggplot2::element_text(size = 25, angle = 320),
       legend.position = "none",

@@ -72,7 +72,11 @@
     </div>
 
     <div id="ref-usage">
-    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">draw_distributions</span><span class="op">(</span><span class="va">data</span>, type <span class="op">=</span> <span class="st">"boxplot"</span><span class="op">)</span></span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">draw_distributions</span><span class="op">(</span></span>
+<span>  <span class="va">data</span>,</span>
+<span>  type <span class="op">=</span> <span class="st">"boxplot"</span>,</span>
+<span>  palette <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">getOption</a></span><span class="op">(</span><span class="st">"DIANE.palette"</span>, <span class="st">"ggplot"</span><span class="op">)</span></span>
+<span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div id="arguments">
@@ -86,12 +90,24 @@
 <dt id="arg-type">type<a class="anchor" aria-label="anchor" href="#arg-type"></a></dt>
 <dd><p>one of the following : boxplot, density, density_ridges</p></dd>
 
+
+<dt id="arg-palette">palette<a class="anchor" aria-label="anchor" href="#arg-palette"></a></dt>
+<dd><p>categorical palette : "ggplot", "diane", "okabe", "npg",
+"aaas", "lancet" or "nejm". Defaults to
+getOption("DIANE.palette"), else "ggplot". The
+density_ridges type keeps its own colours.</p></dd>
+
 </dl></div>
 
     <div id="ref-examples">
     <h2>Examples</h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="st">"abiotic_stresses"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu">DIANE</span><span class="fu">::</span><span class="fu">draw_distributions</span><span class="op">(</span><span class="va">abiotic_stresses</span><span class="op">$</span><span class="va">normalized_counts</span>, type <span class="op">=</span> <span class="st">"boxplot"</span><span class="op">)</span></span></span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>`aes_string()` was deprecated in ggplot2 3.0.0.</span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Please use tidy evaluation idioms with `aes()`.</span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> See also `vignette("ggplot2-in-packages")` for more information.</span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> The deprecated feature was likely used in the <span style="color: #0000BB;">DIANE</span> package.</span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span>   Please report the issue at <span style="color: #0000BB; font-style: italic;">&lt;https://github.com/Alexandre-So/DIANE/issues&gt;</span>.</span>
 <span class="r-plt img"><img src="draw_distributions-1.png" alt="" width="700" height="433"></span>
 <span class="r-in"><span><span class="fu">DIANE</span><span class="fu">::</span><span class="fu">draw_distributions</span><span class="op">(</span><span class="va">abiotic_stresses</span><span class="op">$</span><span class="va">raw_counts</span><span class="op">)</span></span></span>
 <span class="r-plt img"><img src="draw_distributions-2.png" alt="" width="700" height="433"></span>

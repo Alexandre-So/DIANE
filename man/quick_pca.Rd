@@ -4,10 +4,15 @@
 \alias{quick_pca}
 \title{Quick PCA}
 \usage{
-quick_pca(data)
+quick_pca(data, palette = getOption("DIANE.palette", "ggplot"))
 }
 \arguments{
 \item{data}{normalized expression data with samples as columns and genes as rows.}
+
+\item{palette}{categorical palette : "ggplot", "diane", "okabe", "npg",
+"aaas", "lancet" or "nejm". Defaults to
+getOption("DIANE.palette"), else "ggplot". The
+screeplot keeps its own colours.}
 }
 \description{
 Draws variables contributions to principal components,

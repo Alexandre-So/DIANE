@@ -337,7 +337,7 @@ mod_cluster_exploration_server <-
     })
     
     output$glm_plot <- shiny::renderPlot({
-      draw_glm(glm())
+      draw_glm(glm(), palette = r$palette)
     })
     #   ____________________________________________________________________________
     #   custom go                                                               ####

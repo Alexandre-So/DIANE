@@ -286,7 +286,8 @@ mod_network_analysis_server <- function(input, output, session, r) {
                            genes = c(input$click),
                            conds = r$networks[[r$current_network]]$conditions,
                            log2_count = input$take_log_count,
-                           start_from_zero = input$start_y_from_zero
+                           start_from_zero = input$start_y_from_zero,
+                           palette = r$palette
     )
   })
   

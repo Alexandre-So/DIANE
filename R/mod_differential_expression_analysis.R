@@ -815,7 +815,7 @@ mod_differential_expression_analysis_server <-
     
     
     output$count_table_plot <- shiny::renderPlot({
-      DIANE::draw_expression_levels(r$normalized_counts, genes = rownames(r_dea$top_tags[input$deg_table_rows_selected,]),  log2_count = input$take_log_count, start_from_zero = input$start_y_from_zero)
+      DIANE::draw_expression_levels(r$normalized_counts, genes = rownames(r_dea$top_tags[input$deg_table_rows_selected,]),  log2_count = input$take_log_count, start_from_zero = input$start_y_from_zero, palette = r$palette)
     })
     
     #   ____________________________________________________________________________
